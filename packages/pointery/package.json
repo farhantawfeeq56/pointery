@@ -1,6 +1,6 @@
 {
   "name": "pointery",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Ask anything in-app: palette, guides, and allowlisted actions for any SaaS.",
   "license": "MIT",
   "type": "module",
