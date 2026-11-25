@@ -14,6 +14,8 @@ export type PointeryResult = {
   spot?: string;
   go?: string;
   action?: string;
+  /** Echoed from the matched action's `confirm` flag — UI confirms only when true. */
+  confirm?: boolean;
   answer?: string;
   guide?: PointeryGuide;
   hint?: string;
@@ -30,5 +32,20 @@ export type PointeryProps = {
   suggestions?: string[];
   allowActions?: string[];
   labels?: PointeryLabels;
+  /** POST endpoint for queries. Defaults to "/api/ask". */
+  endpoint?: string;
+  /** Override default action behavior (dispatches `pointery:action` + toast otherwise). */
   onAction?: (name: string) => void | Promise<void>;
+};
+
+/** Customer's own LLM endpoint. Pointery forwards { query, context } — key and cost are theirs. */
+export type PointeryLLMAdapter = {
+  url: string;
+  key?: string;
+};
+
+export type AskHandlerOptions = {
+  llm?: PointeryLLMAdapter;
+  /** Return a result to short-circuit (e.g. block demo routes in prod), or null to continue. */
+  guard?: (query: string, local: PointeryResult) => PointeryResult | null;
 };

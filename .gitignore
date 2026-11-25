@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# kit build output (rebuild with `npm run kit:build`)
+/packages/pointery/dist

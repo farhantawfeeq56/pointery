@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "pointery/styles.css";
-import { Pointery } from "pointery";
+import PointeryMount from "./pointery-mount";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,7 +27,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col bg-zinc-50 text-zinc-900">
         {children}
-        <Pointery />
+        <PointeryMount />
       </body>
     </html>
   );

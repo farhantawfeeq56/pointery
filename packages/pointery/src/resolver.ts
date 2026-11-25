@@ -1,4 +1,4 @@
-import type { PointeryContext, PointeryResult } from "./types";
+import type { PointeryContext, PointeryResult } from "./types.js";
 
 type Target = PointeryContext["targets"][number];
 type Guide = PointeryContext["guides"][number];
@@ -76,7 +76,7 @@ export function resolveQuery(query: string, context: PointeryContext): PointeryR
   }
   if (bestAction && bestActionScore >= 12 && bestActionScore >= bestTargetScore) {
     const spot = targets.find((t) => norm(t.hint).includes(bestAction!.name.replace(/-/g, " ").split(" ")[0]))?.key;
-    return { action: bestAction.name, spot, hint: bestAction.label ?? bestAction.name };
+    return { action: bestAction.name, confirm: bestAction.confirm, spot, hint: bestAction.label ?? bestAction.name };
   }
   if (bestTarget && bestTargetScore > 0) {
     return { spot: bestTarget.key, go: bestTarget.page, hint: bestTarget.hint };

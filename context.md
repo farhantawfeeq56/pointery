@@ -35,5 +35,17 @@ Extracted the `pointery` package — no more publishing during design iteration.
 - Kept ONE Next app as the harness (did not split apps/site+apps/demo): two servers can't navigate to each other, which would break the landing→demo funnel. Prod still 404s `/demo*` and hides demo links (re-verified). True repo-split later = `git subtree split`, ~10 min.
 - Publish path (not done): kit needs a real build (tsup/tsc) replacing `main: ./src/index.ts` before npm publish.
 
+## Pass 4 (same branch, 2026-11-25)
+Package v0.1.0 starting point — publishable shape, zero new deps (tsc only).
+
+- `src/server.ts` — `createAskHandler(context, { llm, guard })`: 3-line `/api/ask` for consumers, BYOK forward + local fallback. Route uses it via `pointery/server` subpath (keeps React/Next out of the server bundle).
+- `src/validate.ts` — `validateContext()` (missing fields, dup keys, stale guide spots). CLI `--check` uses a slim copy.
+- `bin/pointery.js` (ESM) — `init` drops starter context+config, never overwrites without `--force`.
+- `Pointery.tsx` — generic now: `endpoint` prop (default `/api/ask`), `confirm` echoed from matched action (non-confirm actions run at once), default `onAction` = log + `pointery:action` event + toast. Demo CSV/mark-won/invite side-effects moved out (demo pages already consume the event).
+- Harness: `app/pointery-mount.tsx` (client wrapper for server layout), `route.ts` down to `createAskHandler` + demo guard.
+- `package.json` — real publish fields: `dist` main/types, subpath exports, `files`, MIT, `bin`, `engines`, keywords; `type: module` + `.js`-suffixed imports so Node ESM resolves (caught via plain-node check).
+- `README.md`, `LICENSE`, package `tsconfig.json`. `dist/` gitignored — rebuild with `npm run kit:build`.
+- Verified: `tsc` clean, eslint clean, `next build` clean, CLI init/check/fail-check, resolver+handler via plain node.
+
 ## Next (not done)
-Real LLM adapter wiring test, `npx pointery init` CLI, POINTERY_PROMPT per-stack versions, private-npm packaging, studio writing `pointery.config.json` to disk (currently localStorage + copy).
+Real LLM adapter wiring test, POINTERY_PROMPT per-stack versions, private-npm publish, studio writing `pointery.config.json` to disk (currently localStorage + copy).

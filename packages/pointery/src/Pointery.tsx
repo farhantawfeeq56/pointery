@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { PointeryProps, PointeryResult } from "./types";
-import { getSuggestions } from "./resolver";
+import type { PointeryProps, PointeryResult } from "./types.js";
+import { getSuggestions } from "./resolver.js";
 
 type Toast = { id: number; text: string } | null;
 type GuideState = { title: string; steps: { text: string; go: string; spot: string }[]; i: number } | null;
@@ -15,6 +15,7 @@ const DEFAULTS = {
   suggestions: getSuggestions(),
   allowActions: ["mark-won", "invite-teammate", "export-pipeline"],
   labels: { placeholder: 'Ask "where is export?" or "how do I invite?"', empty: "No match — try “export”, “invite”, or “pipeline”.", confirmTitle: "Run this action?" },
+  endpoint: "/api/ask",
 };
 
 export function pulse(key: string) {
@@ -72,23 +73,17 @@ export default function Pointery(props: PointeryProps) {
 
   useEffect(() => { if (open) setTimeout(() => inputRef.current?.focus(), 30); }, [open ]);
 
-  // cross-page action log
+  // Default action behavior: log + event + toast. Consumers override
+  // via onAction for real side-effects (their data stays theirs).
   const runAction = useCallback(async (name: string) => {
     if (props.onAction) return props.onAction(name);
-    const log = JSON.parse(localStorage.getItem("pointery-actions") ?? "[]");
-    log.push({ name, at: Date.now() });
-    localStorage.setItem("pointery-actions", JSON.stringify(log));
+    try {
+      const log = JSON.parse(localStorage.getItem("pointery-actions") ?? "[]");
+      log.push({ name, at: Date.now() });
+      localStorage.setItem("pointery-actions", JSON.stringify(log));
+    } catch { /* storage unavailable — event still fires */ }
     window.dispatchEvent(new CustomEvent("pointery:action", { detail: name }));
-    if (name === "export-pipeline") {
-      const csv = "deal,value,stage\nAcme Corp,8000,Negotiation\nGlobex,5200,Proposal\nInitech,4300,Discovery\nUmbrella,2900,Qualification\n";
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-      a.download = "pipeline.csv";
-      a.click();
-      say("Exported pipeline.csv (demo data).");
-    } else if (name === "mark-won") say("Done — Acme Corp marked as Won. See Pipeline.");
-    else if (name === "invite-teammate") say("Invite sent (demo) — check Contacts.");
-    else say(`Done — ${name}.`);
+    say(`Done — ${name}.`);
   }, [props, say]);
 
   const goSpot = useCallback((go?: string, spot?: string, hint?: string) => {
@@ -102,7 +97,7 @@ export default function Pointery(props: PointeryProps) {
     if (!queryText) return;
     setLoading(true);
     try {
-      const r = await fetch("/api/ask", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ query: queryText }) });
+      const r = await fetch(cfg.endpoint, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ query: queryText }) });
       const data = (await r.json()) as PointeryResult;
       setRes(data);
       if (data.answer) say(data.answer);
@@ -111,13 +106,16 @@ export default function Pointery(props: PointeryProps) {
         say(`Action “${data.action}” is not allowlisted.`);
         return;
       }
-      if (data.action) { setPendingAction(data.action); }
+      if (data.action) {
+        if (data.confirm === false) { setOpen(false); await runAction(data.action); }
+        else setPendingAction(data.action);
+      }
       else if (data.go || data.spot) goSpot(data.go, data.spot, data.hint);
       else if (!data.answer && !data.guide) say(cfg.labels.empty!);
     } catch {
-      say("Pointery is unreachable — is /api/ask mounted?");
+      say(`Pointery is unreachable — is ${cfg.endpoint} mounted?`);
     } finally { setLoading(false); }
-  }, [cfg.allowActions, cfg.labels.empty, goSpot, say]);
+  }, [cfg.allowActions, cfg.labels.empty, cfg.endpoint, goSpot, runAction, say]);
 
   const startGuide = (g: NonNullable<GuideState>) => {
     const s = g.steps[guideIdx];
@@ -193,7 +191,7 @@ export default function Pointery(props: PointeryProps) {
                 <div className="pointery-guide-row">
                   {(res.go || res.spot) && <button className="primary" onClick={() => { goSpot(res.go, res.spot, res.hint); setOpen(false); }}>Take me there</button>}
                   {res.guide && <button className="primary" onClick={() => { setGuideIdx(0); startGuide({ title: res.guide!.title, steps: res.guide!.steps, i: 0 }); setOpen(false); }}>Start guide</button>}
-                  {res.action && <button className="primary" onClick={async () => { const a = res.action!; const needsConfirm = true; if (needsConfirm) { setOpen(false); setPendingAction(a); } else { setOpen(false); await runAction(a); } }}>Run action</button>}
+                  {res.action && <button className="primary" onClick={async () => { const a = res.action!; if (res.confirm) { setOpen(false); setPendingAction(a); } else { setOpen(false); await runAction(a); } }}>Run action</button>}
                 </div>
               </div>
             )}

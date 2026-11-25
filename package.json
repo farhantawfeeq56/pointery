@@ -9,7 +9,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "kit:build": "npm run build -w pointery"
   },
   "dependencies": {
     "next": "16.4.6",
