@@ -1,6 +1,6 @@
 {
   "name": "pointery",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Ask anything in-app: palette, guides, and allowlisted actions for any SaaS.",
   "license": "MIT",
   "type": "module",
@@ -58,5 +58,10 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/farhantawfeeq56/pointery.git",
+    "directory": "packages/pointery"
   }
 }
