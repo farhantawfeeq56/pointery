@@ -1,7 +1,9 @@
+import { connection } from "next/server";
+
 // Read-only LLM status for Studio. Env is truth: reports whether a key is
 // set and which host it points at — the key itself never leaves the server.
-export const dynamic = "force-dynamic";
 export async function GET() {
+  await connection(); // runtime env, not build-time prerender
   const url = process.env.POINTERY_LLM_URL ?? "";
   const configured = Boolean(url && process.env.POINTERY_LLM_KEY);
   let host = "";
