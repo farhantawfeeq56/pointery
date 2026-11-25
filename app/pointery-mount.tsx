@@ -11,6 +11,17 @@ import type { PointeryProps } from "pointery";
 export default function PointeryMount() {
   const [cfg, setCfg] = useState<PointeryProps>({});
 
+  // Live updates: /pointery settings page dispatches `pointery:config` on every edit
+  // so the mounted palette follows disk without a reload.
+  useEffect(() => {
+    const onLive = (e: Event) => {
+      const detail = (e as CustomEvent).detail as PointeryProps | undefined;
+      if (detail) setCfg({ ...detail });
+    };
+    window.addEventListener("pointery:config", onLive);
+    return () => window.removeEventListener("pointery:config", onLive);
+  }, []);
+
   useEffect(() => {
     fetch("/api/admin/config")
       .then((r) => (r.ok ? r.json() : null))

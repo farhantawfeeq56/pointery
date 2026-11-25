@@ -15,7 +15,11 @@
     { "key": "studio-appearance", "page": "/admin/ask", "hint": "Studio appearance — theme, trigger, suggestions", "keywords": ["appearance", "theme", "color", "trigger", "suggestions"] },
     { "key": "studio-content", "page": "/admin/ask", "hint": "Studio content — targets, guides, actions from disk", "keywords": ["content", "targets", "guides", "context"] },
     { "key": "studio-save", "page": "/admin/ask", "hint": "Save to disk — writes pointery.config.json", "keywords": ["save", "save config", "write config", "persist"] },
-    { "key": "studio-snippet", "page": "/admin/ask", "hint": "Snippet — copy the Pointery mount code", "keywords": ["snippet", "copy", "install", "mount code"] }
+    { "key": "studio-snippet", "page": "/admin/ask", "hint": "Snippet — copy the Pointery mount code", "keywords": ["snippet", "copy", "install", "mount code"] },
+    { "key": "pointery-settings-shortcut", "page": "/pointery", "hint": "Shortcut — keyboard trigger for the palette", "keywords": ["shortcut", "keyboard", "hotkey", "trigger", "shift a", "cmd k"] },
+    { "key": "pointery-settings-brand", "page": "/pointery", "hint": "Brand — primary color and corner radius", "keywords": ["brand", "color", "theme", "radius", "primary", "appearance"] },
+    { "key": "pointery-settings-behavior", "page": "/pointery", "hint": "Behavior — position, suggestions, actions", "keywords": ["behavior", "position", "suggestions", "actions", "settings"] },
+    { "key": "pointery-settings-save", "page": "/pointery", "hint": "Save — writes pointery.config.json to disk", "keywords": ["save", "save settings", "persist", "write config"] }
   ],
   "guides": [
     {

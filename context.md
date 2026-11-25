@@ -84,5 +84,14 @@ API key = env file, agent teaches the steps. No key UI, no key storage.
 - Studio status card — new “LLM → host ✓ / keyword resolver (no key)” pill + hint pointing at prompt step 6 when unset.
 - `tsc` clean, `next build` clean.
 
+## Pass 9 (feat/studio-context, 2026-11-25)
+`/pointery` SaaS settings — disk is truth, palette follows live.
+
+- `app/pointery/page.tsx` — new settings page: Shortcut (Shift+A / Cmd+K cards), Brand (color + radius + live preview), Behavior (position, suggestions, allowActions, labels copy), status pills (ask/LLM/counts), auto-save (~700ms debounce PUT to `/api/admin/config`) + Save now. Every edit applies CSS vars and dispatches `pointery:config` so the mounted palette updates without reload.
+- `app/pointery-mount.tsx` — listens for `pointery:config` and swaps cfg live (initial load still from disk via GET).
+- `packages/pointery/src/Pointery.tsx` — trigger is now dynamic: Cmd/Ctrl+K always, Shift+A only when `trigger !== "cmd+k"` (was both-always). Effect deps `[open, cfg.trigger]`.
+- `pointery.context.json` — 19 targets (15 + 4 `pointery-settings-*` on `/pointery`: shortcut/brand/behavior/save). Page carries matching `data-pointery` ids.
+- `validateContext` clean, kit `tsc` clean.
+
 ## Next (not done)
 Real LLM adapter wiring test, POINTERY_PROMPT per-stack versions, row editing of context tables in Studio.

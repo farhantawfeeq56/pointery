@@ -58,18 +58,18 @@ export default function Pointery(props: PointeryProps) {
     if (cfg.theme.radius != null) root.style.setProperty("--pointery-radius", `${cfg.theme.radius}px`);
   }, [cfg.theme.primary, cfg.theme.radius]);
 
-  // trigger: Shift+A + Cmd/Ctrl+K always
+  // trigger: cfg.trigger is primary (Shift+A), Cmd/Ctrl+K always works as secondary
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === "INPUT" && open) return; // let them type
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); setOpen((v) => !v); return; }
-      if (e.shiftKey && e.key.toLowerCase() === "a" && !e.metaKey && !e.ctrlKey) { e.preventDefault(); setOpen((v) => !v); }
+      if (cfg.trigger !== "cmd+k" && e.shiftKey && e.key.toLowerCase() === "a" && !e.metaKey && !e.ctrlKey) { e.preventDefault(); setOpen((v) => !v); }
       if (e.key === "Escape") { setOpen(false); setGuide(null); setPendingAction(null); }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open ]);
+  }, [open, cfg.trigger]);
 
   useEffect(() => { if (open) setTimeout(() => inputRef.current?.focus(), 30); }, [open ]);
 
