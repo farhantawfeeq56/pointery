@@ -26,5 +26,14 @@ Demo CRM is dev-only now — production must not show it.
 - `app/api/ask` — refuses demo navigation in prod (returns "demo disabled" answer instead of `go:/demo…`); verified via curl both envs.
 - Known limit: demo route code still ships in the bundle (only served as 404). True exclusion = separate app; not done (see Next).
 
+## Pass 3 (same branch, 2026-11-25)
+Extracted the `pointery` package — no more publishing during design iteration.
+
+- `packages/pointery/` — the product. `name: "pointery"` (not -kit), `src/Pointery.tsx`, `src/resolver.ts`, `src/types.ts`, `src/index.ts`, `src/styles.css`. No `@/` imports inside; context comes in as a `resolveQuery(query, context)` argument per README.
+- `PointeryContext.answers[]` added — the "$20,400" answer moved out of kit code into `pointery.context.json`. Kit ships zero demo data.
+- Root renamed `pointery-harness` (private) with `workspaces: ["packages/*"]`; app consumes `pointery` via symlink + `transpilePackages`. Edit kit source → dev hot-reloads, no build/publish (verified live on :3000).
+- Kept ONE Next app as the harness (did not split apps/site+apps/demo): two servers can't navigate to each other, which would break the landing→demo funnel. Prod still 404s `/demo*` and hides demo links (re-verified). True repo-split later = `git subtree split`, ~10 min.
+- Publish path (not done): kit needs a real build (tsup/tsc) replacing `main: ./src/index.ts` before npm publish.
+
 ## Next (not done)
 Real LLM adapter wiring test, `npx pointery init` CLI, POINTERY_PROMPT per-stack versions, private-npm packaging, studio writing `pointery.config.json` to disk (currently localStorage + copy).

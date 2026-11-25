@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { PointeryProps, PointeryResult } from "@/lib/pointery/types";
-import { getSuggestions } from "@/lib/pointery/resolver";
+import type { PointeryProps, PointeryResult } from "./types";
+import { getSuggestions } from "./resolver";
 
 type Toast = { id: number; text: string } | null;
 type GuideState = { title: string; steps: { text: string; go: string; spot: string }[]; i: number } | null;

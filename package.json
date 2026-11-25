@@ -1,7 +1,10 @@
 {
-  "name": "pointery",
+  "name": "pointery-harness",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -10,6 +13,7 @@
   },
   "dependencies": {
     "next": "16.4.6",
+    "pointery": "0.1.0",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },

@@ -43,6 +43,9 @@
       ]
     }
   ],
+  "answers": [
+    { "keywords": ["how much", "pipeline value", "total", "revenue", "pipeline is", "pipeline worth"], "answer": "Open pipeline is $20,400 across 4 deals.", "spot": "pipeline-value", "go": "/demo", "hint": "Pipeline value" }
+  ],
   "actions": [
     { "name": "mark-won", "label": "Mark Acme as Won", "confirm": true, "keywords": ["mark won", "close acme", "win acme", "mark acme"] },
     { "name": "invite-teammate", "label": "Invite teammate", "confirm": true, "keywords": ["invite", "send invite"] },

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Pointery from "@/components/Pointery";
+import "pointery/styles.css";
+import { Pointery } from "pointery";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

@@ -1,13 +1,8 @@
-import context from "@/pointery.context.json";
-import type { PointeryResult } from "./types";
+import type { PointeryContext, PointeryResult } from "./types";
 
-type Target = { key: string; page: string; hint: string; keywords: string[] };
-type Guide = { id: string; title: string; keywords: string[]; steps: { text: string; go: string; spot: string }[] };
-type Action = { name: string; label?: string; confirm?: boolean; keywords: string[] };
-
-const targets = (context.targets ?? []) as Target[];
-const guides = (context.guides ?? []) as Guide[];
-const actions = (context.actions ?? []) as Action[];
+type Target = PointeryContext["targets"][number];
+type Guide = PointeryContext["guides"][number];
+type Action = PointeryContext["actions"][number];
 
 const norm = (s: string) => s.toLowerCase().trim();
 const score = (q: string, keywords: string[]) => {
@@ -29,13 +24,24 @@ const score = (q: string, keywords: string[]) => {
   return best;
 };
 
-export function resolveQuery(query: string): PointeryResult {
+export function resolveQuery(query: string, context: PointeryContext): PointeryResult {
+  const targets = context.targets ?? [];
+  const guides = context.guides ?? [];
+  const actions = context.actions ?? [];
   const q = norm(query);
   if (!q) return {};
 
-  // Direct answers (demo data)
-  if (/(how much|pipeline value|total|revenue|pipeline is)/.test(q) && /(pipeline|much|total|value|revenue)/.test(q)) {
-    return { answer: "Open pipeline is $20,400 across 4 deals.", spot: "pipeline-value", go: "/demo", hint: "Pipeline value" };
+  // Direct answers come from the consumer's context — never hardcoded here.
+  if (context.answers) {
+    let best: NonNullable<PointeryContext["answers"]>[number] | null = null;
+    let bestScore = 0;
+    for (const a of context.answers) {
+      const s = score(q, a.keywords);
+      if (s > bestScore) { bestScore = s; best = a; }
+    }
+    if (best && bestScore >= 10) {
+      return { answer: best.answer, spot: best.spot, go: best.go, hint: best.hint };
+    }
   }
 
   let bestGuide: Guide | null = null;

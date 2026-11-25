@@ -3,6 +3,13 @@ export type PointeryGuideStep = { text: string; go: string; spot: string };
 export type PointeryGuide = { id: string; title: string; steps: PointeryGuideStep[] };
 export type PointeryAction = { name: string; label?: string; confirm?: boolean };
 
+export type PointeryContext = {
+  targets: { key: string; page: string; hint: string; keywords: string[] }[];
+  guides: { id: string; title: string; keywords: string[]; steps: { text: string; go: string; spot: string }[] }[];
+  actions: { name: string; label?: string; confirm?: boolean; keywords: string[] }[];
+  answers?: { keywords: string[]; answer: string; spot?: string; go?: string; hint?: string }[];
+};
+
 export type PointeryResult = {
   spot?: string;
   go?: string;
