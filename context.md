@@ -47,5 +47,12 @@ Package v0.1.0 starting point — publishable shape, zero new deps (tsc only).
 - `README.md`, `LICENSE`, package `tsconfig.json`. `dist/` gitignored — rebuild with `npm run kit:build`.
 - Verified: `tsc` clean, eslint clean, `next build` clean, CLI init/check/fail-check, resolver+handler via plain node.
 
+## Pass 5 (same branch, 2026-11-25)
+Published `pointery@0.1.0` to npm (public, `latest` tag). Name claimed under farhantawfeeq56 (a `0.0.0-stage` stub existed first; 0.1.0 landed over it).
+
+- Fixed `bin` path to `bin/pointery.js` (npm auto-corrects `./`-prefixed bin targets with a warning — published 0.1.0 already carries the corrected form).
+- Verified the real registry tarball: `npm pack pointery@0.1.0` → CLI `init --check` ok; `validate`/`resolveQuery`/`createAskHandler` correct via subpath imports (`pointery/server`, `pointery/resolver`, `pointery/validate` — the barrel needs Next for `next/navigation`, by design).
+- Harness stays on the workspace symlink for iteration (do not switch to registry dep until the API stabilizes).
+
 ## Next (not done)
-Real LLM adapter wiring test, POINTERY_PROMPT per-stack versions, private-npm publish, studio writing `pointery.config.json` to disk (currently localStorage + copy).
+Real LLM adapter wiring test, POINTERY_PROMPT per-stack versions, studio writing `pointery.config.json` to disk (currently localStorage + copy).

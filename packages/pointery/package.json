@@ -34,7 +34,7 @@
     "LICENSE"
   ],
   "bin": {
-    "pointery": "./bin/pointery.js"
+    "pointery": "bin/pointery.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
