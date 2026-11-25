@@ -1,0 +1,7 @@
+{
+  "trigger": "shift+a",
+  "theme": { "primary": "#6d28d9", "radius": 14 },
+  "position": "top",
+  "suggestions": ["Where is export?", "How do I invite a teammate?", "What is my pipeline worth?"],
+  "allowActions": ["mark-won", "invite-teammate", "export-pipeline"]
+}

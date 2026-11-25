@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "targets": [
+    { "key": "nav-dashboard", "page": "/demo", "hint": "Dashboard — pipeline value and today's tasks", "keywords": ["dashboard", "home", "overview", "pipeline value", "how much pipeline", "20k"] },
+    { "key": "nav-pipeline", "page": "/demo/pipeline", "hint": "Pipeline — all deals and stages", "keywords": ["pipeline", "deals", "stages", "opportunities", "where is pipeline"] },
+    { "key": "nav-contacts", "page": "/demo/contacts", "hint": "Contacts — people and teammates", "keywords": ["contacts", "people", "teammates", "team"] },
+    { "key": "nav-settings", "page": "/demo/settings", "hint": "Settings — workspace preferences", "keywords": ["settings", "preferences", "config", "workspace"] },
+    { "key": "export-button", "page": "/demo/pipeline", "hint": "Export — downloads the pipeline as CSV", "keywords": ["export", "csv", "download", "where is export"] },
+    { "key": "invite-button", "page": "/demo/contacts", "hint": "Invite teammate — sends an email invite", "keywords": ["invite", "teammate", "add user", "add member", "how do i invite"] },
+    { "key": "add-deal-button", "page": "/demo/pipeline", "hint": "Add deal — creates a new opportunity", "keywords": ["add deal", "new deal", "create deal", "new opportunity"] },
+    { "key": "pipeline-value", "page": "/demo", "hint": "Pipeline value — total open pipeline is $20,400", "keywords": ["how much", "pipeline value", "total", "revenue", "what is pipeline"] },
+    { "key": "deal-acme", "page": "/demo/pipeline", "hint": "Acme Corp — $8,000 deal in Negotiation", "keywords": ["acme", "mark won", "close deal", "won"] },
+    { "key": "search-contacts", "page": "/demo/contacts", "hint": "Search contacts — filter people by name", "keywords": ["search", "find contact", "find someone", "filter"] }
+  ],
+  "guides": [
+    {
+      "id": "invite-teammate",
+      "title": "Invite a teammate",
+      "keywords": ["invite", "teammate", "onboard", "add member"],
+      "steps": [
+        { "text": "Go to Contacts", "go": "/demo/contacts", "spot": "nav-contacts" },
+        { "text": "Click “Invite teammate”", "go": "/demo/contacts", "spot": "invite-button" },
+        { "text": "Enter their email and send", "go": "/demo/contacts", "spot": "invite-button" }
+      ]
+    },
+    {
+      "id": "export-pipeline",
+      "title": "Export your pipeline",
+      "keywords": ["export", "csv", "download", "report"],
+      "steps": [
+        { "text": "Open the Pipeline", "go": "/demo/pipeline", "spot": "nav-pipeline" },
+        { "text": "Click “Export” (top right)", "go": "/demo/pipeline", "spot": "export-button" }
+      ]
+    },
+    {
+      "id": "close-deal",
+      "title": "Close the Acme deal",
+      "keywords": ["close", "won", "win deal", "acme"],
+      "steps": [
+        { "text": "Open the Pipeline", "go": "/demo/pipeline", "spot": "nav-pipeline" },
+        { "text": "Find the Acme Corp row", "go": "/demo/pipeline", "spot": "deal-acme" },
+        { "text": "Run “Mark Acme as Won” (confirm)", "go": "/demo/pipeline", "spot": "deal-acme" }
+      ]
+    }
+  ],
+  "actions": [
+    { "name": "mark-won", "label": "Mark Acme as Won", "confirm": true, "keywords": ["mark won", "close acme", "win acme", "mark acme"] },
+    { "name": "invite-teammate", "label": "Invite teammate", "confirm": true, "keywords": ["invite", "send invite"] },
+    { "name": "export-pipeline", "label": "Export pipeline CSV", "confirm": false, "keywords": ["export", "download csv"] }
+  ]
+}
