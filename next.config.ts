@@ -7,7 +7,11 @@ const nextConfig: NextConfig = {
   },
   cacheComponents: true,
   partialPrefetching: true,
+  transpilePackages: ["pointery"],
   turbopack: {
+    // pnpm-lock.yaml in HOME makes Turbopack watch the whole home dir
+    // (agent session logs, tmp files) → recompile + tab reload storms. Pin it.
+    root: import.meta.dirname,
     rules: {
       "*.css": {
         loaders: ["@tailwindcss/turbopack"],
