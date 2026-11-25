@@ -113,5 +113,11 @@ Personalize-the-starter-page rule in step 7 (both prompt copies).
 - Step 7 now orders first-run personalization: status probe + example suggestions use real queries from the context (guide title / answer keyword, never the "export" placeholder when the app has none); defaults (trigger, theme, position, allowActions) mirror `pointery.config.json`; `data-pointery` ids + `pointery-settings-*` targets stay in sync; re-run `--check`. (Brand colors need no code change — the page GET-loads config and applies theme vars live.)
 - Verified: `node --check` clean, fresh Next-like `init` ships the rule, generated prompt matches root ignoring CRLF.
 
+## Pass 13 (feat/studio-context, 2026-11-25)
+Harness page is the shipped page — no fork.
+
+- `app/pointery/page.tsx` is single source of truth. `scripts/sync-starter-page.mjs` (`npm run pointery:sync-page`) re-embeds it verbatim into `bin/pointery.js` as `STARTER_SETTINGS_PAGE`. Rule: edit the harness page, run sync, commit both.
+- Verified: shipped `app/pointery/page.tsx` from fresh `init` is byte-identical to harness (ignoring CRLF); `node --check` clean.
+
 ## Next (not done)
 Real LLM adapter wiring test, POINTERY_PROMPT per-stack versions, row editing of context tables in Studio.
