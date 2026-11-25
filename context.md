@@ -119,5 +119,11 @@ Harness page is the shipped page — no fork.
 - `app/pointery/page.tsx` is single source of truth. `scripts/sync-starter-page.mjs` (`npm run pointery:sync-page`) re-embeds it verbatim into `bin/pointery.js` as `STARTER_SETTINGS_PAGE`. Rule: edit the harness page, run sync, commit both.
 - Verified: shipped `app/pointery/page.tsx` from fresh `init` is byte-identical to harness (ignoring CRLF); `node --check` clean.
 
+## Pass 14 (feat/studio-context, 2026-11-25)
+Security: unauthenticated admin PUT closed in production.
+
+- `init` scaffolds `/api/admin/config` with no login — anyone could overwrite `pointery.config.json`. Fix: PUT refuses with 403 when `NODE_ENV=production` unless `POINTERY_ADMIN=1/true`. GET stays public (theme/trigger are client-visible by design). Applied to harness config + context PUTs and the scaffolded `STARTER_ADMIN_CONFIG_ROUTE` alike; step 7 documents the rule in both prompt copies.
+- Verified: tsc clean, `node --check` clean, fresh `init` ships the guard.
+
 ## Next (not done)
 Real LLM adapter wiring test, POINTERY_PROMPT per-stack versions, row editing of context tables in Studio.

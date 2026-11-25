@@ -86,6 +86,11 @@ export async function GET() {
 }
 
 export async function PUT(req: Request) {
+  // No login on this route by design (local disk-truth Studio): refuse writes
+  // in production unless explicitly enabled — otherwise anyone could overwrite the file.
+  if (process.env.NODE_ENV === "production" && process.env.POINTERY_ADMIN !== "1" && process.env.POINTERY_ADMIN !== "true") {
+    return Response.json({ error: "Refusing to write pointery.config.json in production. Set POINTERY_ADMIN=1 to enable." }, { status: 403 });
+  }
   let config: unknown;
   try {
     const body = await req.json();
@@ -395,7 +400,8 @@ the bundled keyword resolver when no LLM is set). Re-run whenever your UI change
 >    (trigger), brand (primary color + radius with live preview), and
 >    behavior (position, suggestions, allowActions, palette copy). It loads
 >    \`pointery.config.json\` via GET, auto-saves edits via PUT (debounced)
->    plus a Save button, applies theme vars live, and dispatches a
+>    plus a Save button (PUT is dev-only by default; production writes need
+>    \`POINTERY_ADMIN=1\`), applies theme vars live, and dispatches a
 >    \`pointery:config\` CustomEvent with the new config so the mounted
 >    \`<Pointery/>\` (whose client wrapper listens for it) updates without
 >    reload. Personalize it on first run from the files you just wrote:

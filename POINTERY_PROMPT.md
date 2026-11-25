@@ -42,7 +42,8 @@ the bundled keyword resolver when no LLM is set). Re-run whenever your UI change
 >    (trigger), brand (primary color + radius with live preview), and
 >    behavior (position, suggestions, allowActions, palette copy). It loads
 >    `pointery.config.json` via GET, auto-saves edits via PUT (debounced)
->    plus a Save button, applies theme vars live, and dispatches a
+>    plus a Save button (PUT is dev-only by default; production writes need
+>    `POINTERY_ADMIN=1`), applies theme vars live, and dispatches a
 >    `pointery:config` CustomEvent with the new config so the mounted
 >    `<Pointery/>` (whose client wrapper listens for it) updates without
 >    reload. Personalize it on first run from the files you just wrote:

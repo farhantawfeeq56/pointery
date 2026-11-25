@@ -15,6 +15,11 @@ export async function GET() {
 }
 
 export async function PUT(req: Request) {
+  // No login on this route by design (local disk-truth Studio): refuse writes
+  // in production unless explicitly enabled — otherwise anyone could overwrite the file.
+  if (process.env.NODE_ENV === "production" && process.env.POINTERY_ADMIN !== "1" && process.env.POINTERY_ADMIN !== "true") {
+    return Response.json({ error: "Refusing to write pointery.context.json in production. Set POINTERY_ADMIN=1 to enable." }, { status: 403 });
+  }
   let body: unknown;
   try {
     body = await req.json();
