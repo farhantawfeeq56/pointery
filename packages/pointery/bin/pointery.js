@@ -81,6 +81,10 @@ the bundled keyword resolver when no LLM is set). Re-run whenever your UI change
 >    Delete stale keys for removed UI.
 > 5. Run \`npx pointery init --check\` and fix whatever it reports (guide step
 >    pointing at a missing target).
+> 6. Brain (my key, my bill): if I want the LLM instead of the keyword
+>    resolver, walk me through it — add \`POINTERY_LLM_URL\` (my model
+>    endpoint) and \`POINTERY_LLM_KEY\` to \`.env.local\`, restart dev, and
+>    verify with “where is export?”. Never print or commit the key.
 >
 > Then show me the 10-line wiring diff: mount \`<Pointery/>\` once in
 > \`layout.tsx\`, ensure \`/api/ask\` calls \`createAskHandler(context)\` (or my

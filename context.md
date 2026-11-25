@@ -76,5 +76,13 @@ Single Studio page, disk is truth — branch renamed from `feat/pointery-demo`.
 - `pointery.context.json` — 15 targets now (10 demo + 5 studio: status/appearance/content/save/snippet on `/admin/ask`). `validateContext` clean, `tsc` clean, `next build` clean.
 - Row editing of targets/guides/answers/actions in the page is next (content is read-only this pass).
 
+## Pass 8 (feat/studio-context, 2026-11-25)
+API key = env file, agent teaches the steps. No key UI, no key storage.
+
+- `POINTERY_PROMPT.md` + embedded `STARTER_PROMPT` in `bin/pointery.js` — new step 6 (Brain): agent walks the owner through `POINTERY_LLM_URL` + `POINTERY_LLM_KEY` in `.env.local`, restart, verify with “where is export?”, never prints/commits the key.
+- `app/api/admin/llm` — read-only GET: `{ configured, host }` from env only (`force-dynamic` so it reflects runtime env). Key never leaves the server.
+- Studio status card — new “LLM → host ✓ / keyword resolver (no key)” pill + hint pointing at prompt step 6 when unset.
+- `tsc` clean, `next build` clean.
+
 ## Next (not done)
 Real LLM adapter wiring test, POINTERY_PROMPT per-stack versions, row editing of context tables in Studio.

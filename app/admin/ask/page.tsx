@@ -25,6 +25,7 @@ export default function StudioPage() {
   const [ctx, setCtx] = useState<PointeryContext | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [askOk, setAskOk] = useState<boolean | null>(null);
+  const [llm, setLlm] = useState<{ configured: boolean; host: string } | null>(null);
   const [saved, setSaved] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
@@ -39,6 +40,11 @@ export default function StudioPage() {
       if (t?.errors) setErrors(t.errors);
       setLoaded(true);
     });
+    // Read-only LLM status: env is truth, key never leaves the server.
+    fetch("/api/admin/llm")
+      .then((r) => r.json().catch(() => null))
+      .then((d) => d && setLlm(d))
+      .catch(() => {});
     // Liveness probe: can /api/ask answer the canonical query?
     fetch("/api/ask", {
       method: "POST",
@@ -86,6 +92,9 @@ export default function StudioPage() {
           <span className={`rounded-full px-3 py-1 font-medium ${askOk ? "bg-green-100 text-green-800" : "bg-zinc-100 text-zinc-500"}`}>
             /api/ask {askOk == null ? "…" : askOk ? "reachable ✓" : "unreachable"}
           </span>
+          <span className={`rounded-full px-3 py-1 font-medium ${llm?.configured ? "bg-green-100 text-green-800" : "bg-zinc-100 text-zinc-500"}`}>
+            {llm == null ? "brain …" : llm.configured ? `LLM → ${llm.host || "env"} ✓` : "keyword resolver (no key)"}
+          </span>
           <span className={`rounded-full px-3 py-1 font-medium ${errors.length === 0 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
             context {errors.length === 0 ? "valid ✓" : `${errors.length} error${errors.length > 1 ? "s" : ""}`}
           </span>
@@ -95,6 +104,11 @@ export default function StudioPage() {
             </span>
           )}
         </div>
+        {llm && !llm.configured && (
+          <p className="mt-2 text-xs text-zinc-500">
+            No LLM key — paste this prompt&apos;s step 6 into your coding agent and it walks you through `.env.local` setup. The key stays in env; Studio never handles it.
+          </p>
+        )}
         {errors.length > 0 && (
           <ul className="mt-2 list-disc pl-5 text-xs text-red-700">
             {errors.map((e) => (
