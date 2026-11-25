@@ -49,12 +49,12 @@ Two developers. GitHub Issues is the only to-do list. WhatsApp is for talking, G
 | Pricing, business plans, customer names | WhatsApp or a private doc. This repo is public |
 | An unfixed security hole | A private channel (a private security advisory once reporting is on), never a public issue |
 
-- **Board:** [Pointery](https://github.com/users/AathilFelix/projects/2), with Backlog, This week, In progress, In review, Done. Card order is the priority; there are no priority labels. One card in progress per person.
+- **Board:** a GitHub Project that Farhan creates and manages, with Backlog, This week, In progress, In review, Done. Card order is the priority; there are no priority labels. One card in progress per person.
 - **Labels:** a type (`bug`, `enhancement`, `documentation`, `decision`) and, where it fits, an area (`area:kit`, `area:app`, `area:ci`).
 - **Milestones** are named by outcome, not by version.
-- **Flow:** write the issue with a "Done when" line (split it into sub-issues if it needs more than about two days), assign yourself, branch as `<issue>-<short-name>`, and open a PR with `Closes #<issue>`. The other person reviews within a day. Treat that review as required for changes under `packages/pointery`.
+- **Flow:** write the issue with a "Done when" line (split it into sub-issues if it needs more than about two days), assign yourself, branch as `<issue>-<short-name>`, and open a PR with `Closes #<issue>`. PRs exist to run the automated checks: no review from the other person is needed, and each of you merges your own PR once the check passes. Agents still merge only when asked, and the release rule below still applies.
 - **Updates:** a short note is enough, such as "on #12, blocked by #14".
-- **Ownership:** Farhan leads the product and package; Aathil leads release, CI and testing.
+- **Ownership:** Aathil leads engineering, including the package, releases, CI and testing; Farhan leads product.
 - Don't add story points, sprint burndowns, a second task tool or a chat bot until they solve a real problem.
 
 ## Current state
