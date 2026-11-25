@@ -1,0 +1,154 @@
+# Releases packages/pointery to npm when a pull request is merged into main.
+#
+# Bump size: patch by default. Label the PR "release:minor" or "release:major"
+# for a bigger bump, or "release:skip" to merge without publishing.
+#
+# Auth: npm trusted publishing (OIDC), so there is no NPM_TOKEN secret.
+# The trusted publisher on npmjs.com names this file: publish.yml.
+name: Publish pointery to npm
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Version bump
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+
+permissions: {}
+
+# One release at a time, so two merges can't claim the same version.
+concurrency:
+  group: publish-pointery
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # push the version commit and tag
+      id-token: write # npm trusted publishing
+      pull-requests: read # find the merged PR and its labels
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - name: Decide whether to release
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          INPUT_BUMP: ${{ inputs.bump }}
+        run: |
+          set -euo pipefail
+          skip() { echo "Not releasing: $1"; echo "release=false" >> "$GITHUB_OUTPUT"; exit 0; }
+
+          [ -f packages/pointery/package.json ] || skip "packages/pointery is not on main yet"
+
+          bump="${INPUT_BUMP:-patch}"
+          if [ "$EVENT" = "push" ]; then
+            labels=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/pulls" \
+              --jq '[.[] | select(.merged_at != null and .base.ref == "main")] | if length == 0 then "NO_PR" else .[0].labels | map(.name) | join("\n") end')
+            [ "$labels" != "NO_PR" ] || skip "this push did not come from a merged PR"
+            if grep -qx "release:skip" <<< "$labels"; then skip "PR is labelled release:skip"; fi
+            if grep -qx "release:major" <<< "$labels"; then bump=major
+            elif grep -qx "release:minor" <<< "$labels"; then bump=minor
+            fi
+
+            last=$(git tag --list 'pointery-v*' --sort=-v:refname | head -n 1)
+            if [ -n "$last" ] && git diff --quiet "$last" HEAD -- packages/pointery; then
+              skip "packages/pointery is unchanged since $last"
+            fi
+          fi
+
+          echo "release=true" >> "$GITHUB_OUTPUT"
+          echo "bump=$bump" >> "$GITHUB_OUTPUT"
+
+      - name: Install
+        if: steps.plan.outputs.release == 'true'
+        run: npm ci
+
+      - name: Bump version
+        if: steps.plan.outputs.release == 'true'
+        id: version
+        env:
+          BUMP: ${{ steps.plan.outputs.bump }}
+        run: |
+          set -euo pipefail
+          local_version=$(node -p "require('./packages/pointery/package.json').version")
+          published=$(npm view pointery version)
+          # Start from whichever is higher, in case an earlier run published
+          # but failed to push its version commit.
+          base=$(printf '%s\n%s\n' "$local_version" "$published" | sort -V | tail -n 1)
+          # shellcheck disable=SC2016 # JavaScript, not shell
+          next=$(node -e '
+            const [base, bump] = process.argv.slice(1);
+            if (!/^\d+\.\d+\.\d+$/.test(base)) throw new Error("unsupported version " + base);
+            const [x, y, z] = base.split(".").map(Number);
+            console.log({ major: `${x + 1}.0.0`, minor: `${x}.${y + 1}.0`, patch: `${x}.${y}.${z + 1}` }[bump]);
+          ' "$base" "$BUMP")
+
+          # repository.url must match this repo or npm rejects the OIDC publish.
+          npm pkg set -w pointery \
+            "version=$next" \
+            "repository.type=git" \
+            "repository.url=git+https://github.com/$GITHUB_REPOSITORY.git" \
+            "repository.directory=packages/pointery"
+
+          # The demo app pins the workspace package, so move its pin too.
+          if [ -n "$(node -p "require('./package.json').dependencies?.pointery ?? ''")" ]; then
+            npm pkg set "dependencies.pointery=$next"
+          fi
+          # Edit only the version strings in the lockfile. Regenerating it with
+          # npm rewrites unrelated entries.
+          # shellcheck disable=SC2016 # JavaScript, not shell
+          node -e '
+            const fs = require("fs");
+            const next = process.argv[1];
+            const lock = JSON.parse(fs.readFileSync("package-lock.json", "utf8"));
+            lock.packages["packages/pointery"].version = next;
+            const pins = lock.packages[""].dependencies;
+            if (pins?.pointery) pins.pointery = next;
+            fs.writeFileSync("package-lock.json", JSON.stringify(lock, null, 2) + "\n");
+          ' "$next"
+
+          echo "next=$next" >> "$GITHUB_OUTPUT"
+
+      - name: Check
+        if: steps.plan.outputs.release == 'true'
+        run: |
+          npm run lint
+          npm run build -w pointery
+          npm run build
+
+      - name: Publish
+        if: steps.plan.outputs.release == 'true'
+        run: npm publish -w pointery
+
+      - name: Commit and tag the release
+        if: steps.plan.outputs.release == 'true'
+        env:
+          NEXT: ${{ steps.version.outputs.next }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json packages/pointery/package.json
+          git commit -m "chore(release): pointery v$NEXT"
+          # Tag before rebasing: the tag must mark exactly what was published.
+          git tag "pointery-v$NEXT"
+          git push origin "pointery-v$NEXT"
+          git pull --rebase origin main
+          git push origin HEAD:main
