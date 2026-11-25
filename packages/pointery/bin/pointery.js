@@ -19,6 +19,30 @@ const STARTER_CONTEXT = {
       hint: "Export — downloads the report as CSV",
       keywords: ["export", "csv", "download", "where is export"],
     },
+    {
+      key: "pointery-settings-shortcut",
+      page: "/pointery",
+      hint: "Shortcut — keyboard trigger for the palette",
+      keywords: ["shortcut", "keyboard", "hotkey", "trigger", "shift a", "cmd k"],
+    },
+    {
+      key: "pointery-settings-brand",
+      page: "/pointery",
+      hint: "Brand — primary color and corner radius",
+      keywords: ["brand", "color", "theme", "radius", "primary", "appearance"],
+    },
+    {
+      key: "pointery-settings-behavior",
+      page: "/pointery",
+      hint: "Behavior — position, suggestions, actions",
+      keywords: ["behavior", "position", "suggestions", "actions", "settings"],
+    },
+    {
+      key: "pointery-settings-save",
+      page: "/pointery",
+      hint: "Save — writes pointery.config.json to disk",
+      keywords: ["save", "save settings", "persist", "write config"],
+    },
   ],
   guides: [
     {
@@ -44,6 +68,209 @@ const STARTER_CONFIG = {
   suggestions: ["Where is export?"],
   allowActions: ["export-report"],
 };
+
+// Minimal GET+PUT for pointery.config.json (disk is truth). The /pointery
+// settings page reads via GET and auto-saves via PUT.
+const STARTER_ADMIN_CONFIG_ROUTE = `import { promises as fs } from "fs";
+import path from "path";
+
+const FILE = path.join(process.cwd(), "pointery.config.json");
+
+export async function GET() {
+  try {
+    const raw = await fs.readFile(FILE, "utf8");
+    return Response.json({ config: JSON.parse(raw) });
+  } catch (e) {
+    return Response.json({ error: \`Cannot read pointery.config.json: \${e}\` }, { status: 500 });
+  }
+}
+
+export async function PUT(req: Request) {
+  let config: unknown;
+  try {
+    const body = await req.json();
+    config = (body as { config?: unknown }).config ?? body;
+  } catch {
+    return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+  if (!config || typeof config !== "object" || Array.isArray(config)) {
+    return Response.json({ error: "Config must be a JSON object" }, { status: 400 });
+  }
+  await fs.writeFile(FILE, JSON.stringify(config, null, 2) + "\\n", "utf8");
+  return Response.json({ ok: true });
+}
+`;
+
+// Starter SaaS settings page. Same contract as the harness /pointery page:
+// loads config via GET, auto-saves via PUT (debounced) + Save button,
+// applies theme vars live, dispatches pointery:config so the mounted
+// <Pointery/> (wrapper listens) updates without reload. Degrades gracefully
+// when /api/admin/context or /api/admin/llm are absent.
+const STARTER_SETTINGS_PAGE = `"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+
+type Config = {
+  trigger: string;
+  theme: { primary: string; radius: number };
+  position: "top" | "center" | "bottom";
+  suggestions: string[];
+  allowActions: string[];
+  labels?: { placeholder?: string; empty?: string; confirmTitle?: string };
+};
+
+const DEFAULTS: Config = {
+  trigger: "shift+a",
+  theme: { primary: "#6d28d9", radius: 14 },
+  position: "top",
+  suggestions: [],
+  allowActions: [],
+};
+
+type SaveState = "idle" | "saving" | "saved" | "error";
+
+export default function PointerySettingsPage() {
+  const [cfg, setCfg] = useState<Config>(DEFAULTS);
+  const [loaded, setLoaded] = useState(false);
+  const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [askOk, setAskOk] = useState<boolean | null>(null);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const firstRun = useRef(true);
+
+  useEffect(() => {
+    fetch("/api/admin/config")
+      .then((r) => r.json().catch(() => null))
+      .then((d) => {
+        if (d?.config) setCfg({ ...DEFAULTS, ...d.config, theme: { ...DEFAULTS.theme, ...d.config.theme } });
+        setLoaded(true);
+      })
+      .catch(() => setLoaded(true));
+    fetch("/api/ask", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ query: "where is export?" }),
+    })
+      .then((r) => r.json())
+      .then((d) => setAskOk(Boolean(d.spot || d.go || d.action || d.guide || d.answer)))
+      .catch(() => setAskOk(false));
+  }, []);
+
+  const broadcast = useCallback((next: Config) => {
+    document.documentElement.style.setProperty("--pointery-primary", next.theme.primary);
+    document.documentElement.style.setProperty("--pointery-radius", \`\${next.theme.radius}px\`);
+    window.dispatchEvent(new CustomEvent("pointery:config", { detail: next }));
+  }, []);
+
+  useEffect(() => {
+    if (!loaded || firstRun.current) {
+      if (loaded) firstRun.current = false;
+      return;
+    }
+    broadcast(cfg);
+    setSaveState("saving");
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(async () => {
+      try {
+        const r = await fetch("/api/admin/config", {
+          method: "PUT",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ config: cfg }),
+        });
+        setSaveState(r.ok ? "saved" : "error");
+      } catch {
+        setSaveState("error");
+      }
+    }, 700);
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+    };
+  }, [cfg, loaded, broadcast]);
+
+  const saveNow = useCallback(async () => {
+    setSaveState("saving");
+    try {
+      const r = await fetch("/api/admin/config", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ config: cfg }),
+      });
+      setSaveState(r.ok ? "saved" : "error");
+    } catch {
+      setSaveState("error");
+    }
+  }, [cfg]);
+
+  if (!loaded) return <div>Loading Pointery settings…</div>;
+
+  return (
+    <div>
+      <p>Pointery · Settings</p>
+      <h1>Make it yours</h1>
+      <p>
+        Shortcuts, brand, behavior — auto-saves to <code>pointery.config.json</code> and updates the palette live.
+      </p>
+      <span data-pointery="pointery-settings-save">
+        {saveState === "saved" ? "Saved ✓" : saveState === "saving" ? "Saving…" : saveState === "error" ? "Save failed" : "Auto-save on"}
+      </span>
+      <span>
+        /api/ask {askOk == null ? "…" : askOk ? "reachable ✓" : "unreachable"}
+      </span>
+
+      <section data-pointery="pointery-settings-shortcut">
+        <h2>Keyboard shortcut</h2>
+        <p>Primary trigger. ⌘/Ctrl+K always works as a secondary.</p>
+        {(["shift+a", "cmd+k"] as const).map((v) => (
+          <button key={v} onClick={() => setCfg({ ...cfg, trigger: v })}>
+            {v === "shift+a" ? "Shift + A" : "⌘/Ctrl + K"}
+          </button>
+        ))}
+      </section>
+
+      <section data-pointery="pointery-settings-brand">
+        <h2>Brand</h2>
+        <label>
+          Primary color
+          <input type="color" value={cfg.theme.primary} onChange={(e) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: e.target.value } })} />
+          <code>{cfg.theme.primary}</code>
+        </label>
+        <label>
+          Corner radius — {cfg.theme.radius}px
+          <input type="range" min={4} max={24} value={cfg.theme.radius} onChange={(e) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: Number(e.target.value) } })} />
+        </label>
+      </section>
+
+      <section data-pointery="pointery-settings-behavior">
+        <h2>Behavior</h2>
+        <label>
+          Palette position
+          <select value={cfg.position} onChange={(e) => setCfg({ ...cfg, position: e.target.value as Config["position"] })}>
+            <option value="top">Top</option>
+            <option value="center">Center</option>
+            <option value="bottom">Bottom</option>
+          </select>
+        </label>
+        <label>
+          Suggestions (one per line)
+          <textarea
+            value={cfg.suggestions.join("\\n")}
+            onChange={(e) => setCfg({ ...cfg, suggestions: e.target.value.split("\\n").map((s) => s.trim()).filter(Boolean) })}
+            rows={3}
+          />
+        </label>
+        <label>
+          Allowed actions (comma-separated)
+          <input
+            value={cfg.allowActions.join(", ")}
+            onChange={(e) => setCfg({ ...cfg, allowActions: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })}
+          />
+        </label>
+      </section>
+
+      <button onClick={saveNow}>{saveState === "saved" ? "Saved ✓" : "Save now"}</button>
+    </div>
+  );
+}
+`;
 
 // One-shot map-maker prompt. Same content ships as POINTERY_PROMPT.md
 // so `init` alone gives the buyer everything: package + prompt.
@@ -85,15 +312,17 @@ the bundled keyword resolver when no LLM is set). Re-run whenever your UI change
 >    resolver, walk me through it — add \`POINTERY_LLM_URL\` (my model
 >    endpoint) and \`POINTERY_LLM_KEY\` to \`.env.local\`, restart dev, and
 >    verify with “where is export?”. Never print or commit the key.
-> 7. Settings page (\`/pointery\`): SaaS-style controls for shortcut
+> 7. Settings page (\`/pointery\`): \`init\` already dropped a starter
+>    (Next: \`app/pointery/page.tsx\` + \`app/api/admin/config/route.ts\`;
+>    other stacks: build the equivalent). SaaS-style controls for shortcut
 >    (trigger), brand (primary color + radius with live preview), and
 >    behavior (position, suggestions, allowActions, palette copy). It loads
 >    \`pointery.config.json\` via GET, auto-saves edits via PUT (debounced)
 >    plus a Save button, applies theme vars live, and dispatches a
 >    \`pointery:config\` CustomEvent with the new config so the mounted
 >    \`<Pointery/>\` (whose client wrapper listens for it) updates without
->    reload. Tag its controls with \`data-pointery\` ids and add matching
->    \`pointery-settings-*\` targets on page \`/pointery\`; re-run step 5.
+>    reload. Tag its controls with \`data-pointery\` ids and keep the matching
+>    \`pointery-settings-*\` targets on page \`/pointery\` in sync; re-run step 5.
 >
 > Then show me the wiring diff: mount \`<Pointery/>\` once in \`layout.tsx\`
 > (via a client wrapper that loads \`pointery.config.json\` and listens for
@@ -128,6 +357,7 @@ import "pointery/styles.css";
 
 function write(name, data) {
   const p = path.join(cwd, name);
+  fs.mkdirSync(path.dirname(p), { recursive: true });
   if (fs.existsSync(p) && !force) {
     console.log(`skip  ${name} (exists — use --force to overwrite)`);
     return;
@@ -162,6 +392,13 @@ if (cmd === "init") {
   write("pointery.context.json", STARTER_CONTEXT);
   write("pointery.config.json", STARTER_CONFIG);
   write("POINTERY_PROMPT.md", STARTER_PROMPT);
+  // Starter /pointery settings page (Next App Router only — other stacks: see prompt step 7).
+  if (fs.existsSync(path.join(cwd, "app"))) {
+    write("app/pointery/page.tsx", STARTER_SETTINGS_PAGE);
+    write("app/api/admin/config/route.ts", STARTER_ADMIN_CONFIG_ROUTE);
+  } else {
+    console.log("skip  app/pointery/page.tsx (no app/ dir — non-Next stack; see prompt step 7)");
+  }
   upsertAgents();
   console.log("\nNext: paste POINTERY_PROMPT.md into your coding agent to map your UI,");
   console.log("then mount <Pointery/> once in layout.tsx:\n\n" + SNIPPET);

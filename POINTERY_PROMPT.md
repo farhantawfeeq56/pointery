@@ -36,15 +36,17 @@ the bundled keyword resolver when no LLM is set). Re-run whenever your UI change
 >    resolver, walk me through it — add `POINTERY_LLM_URL` (my model
 >    endpoint) and `POINTERY_LLM_KEY` to `.env.local`, restart dev, and
 >    verify with “where is export?”. Never print or commit the key.
-> 7. Settings page (`/pointery`): SaaS-style controls for shortcut
+> 7. Settings page (`/pointery`): `init` already dropped a starter
+>    (Next: `app/pointery/page.tsx` + `app/api/admin/config/route.ts`;
+>    other stacks: build the equivalent). SaaS-style controls for shortcut
 >    (trigger), brand (primary color + radius with live preview), and
 >    behavior (position, suggestions, allowActions, palette copy). It loads
 >    `pointery.config.json` via GET, auto-saves edits via PUT (debounced)
 >    plus a Save button, applies theme vars live, and dispatches a
 >    `pointery:config` CustomEvent with the new config so the mounted
 >    `<Pointery/>` (whose client wrapper listens for it) updates without
->    reload. Tag its controls with `data-pointery` ids and add matching
->    `pointery-settings-*` targets on page `/pointery`; re-run step 5.
+>    reload. Tag its controls with `data-pointery` ids and keep the matching
+>    `pointery-settings-*` targets on page `/pointery` in sync; re-run step 5.
 >
 > Then show me the wiring diff: mount `<Pointery/>` once in `layout.tsx`
 > (via a client wrapper that loads `pointery.config.json` and listens for

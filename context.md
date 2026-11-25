@@ -99,5 +99,13 @@ Prompt-only `/pointery` rollout (option 1) — no package code change.
 - `POINTERY_PROMPT.md` + embedded `STARTER_PROMPT` in `bin/pointery.js` — new step 7: agent scaffolds a SaaS-style `/pointery` settings page (shortcut/brand/behavior), loading `pointery.config.json` via GET, auto-saving via PUT (debounced) + Save button, applying theme vars live, dispatching `pointery:config` for reload-free palette updates; tags controls with `data-pointery` ids + matching `pointery-settings-*` targets on `/pointery`; re-runs `--check`. Closing wiring diff now mentions the client wrapper + disk-save confirm. Verified: `node --check` clean, fresh `init` in temp dir ships step 7, generated prompt IDENTICAL to root.
 - Not published: next publish carries the new CLI prompt behavior (minor bump).
 
+## Pass 11 (feat/studio-context, 2026-11-25)
+`init` scaffolds the settings page (option 2, done in-harness).
+
+- `bin/pointery.js` — `init` now drops `app/pointery/page.tsx` (shortcut/brand/behavior, auto-save PUT debounced + Save, theme vars live, `pointery:config` dispatch) + `app/api/admin/config/route.ts` (GET/PUT disk truth), but only when `app/` exists (Next); otherwise skips with a pointer to prompt step 7. `write()` creates parent dirs. `STARTER_CONTEXT` gains the 4 `pointery-settings-*` targets so the starter map matches the starter page.
+- Step 7 reworded in both `POINTERY_PROMPT.md` and `STARTER_PROMPT`: init already dropped the starter — agent verifies/adapts, keeps `pointery-settings-*` targets in sync, re-runs `--check`.
+- Verified: `node --check` clean; Next-like tmp dir gets 6 files with working dispatch/route; bare tmp dir skips page; generated prompt IDENTICAL to root; starter context 5 targets.
+- Not published: next minor bump carries new init + prompt behavior.
+
 ## Next (not done)
 Real LLM adapter wiring test, POINTERY_PROMPT per-stack versions, row editing of context tables in Studio.
