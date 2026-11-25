@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { isDemoEnabled } from "@/lib/demo";
 
 const NAV = [
   { href: "/demo", label: "Dashboard", key: "nav-dashboard" },
@@ -8,6 +10,7 @@ const NAV = [
 ];
 
 export default function DemoLayout({ children }: { children: React.ReactNode }) {
+  if (!isDemoEnabled()) notFound();
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-1 gap-6 px-6 py-8">
       <aside className="w-48 shrink-0">

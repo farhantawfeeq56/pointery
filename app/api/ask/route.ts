@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { resolveQuery } from "@/lib/pointery/resolver";
+import { isDemoEnabled } from "@/lib/demo";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
@@ -18,5 +19,12 @@ export async function POST(req: Request) {
       if (r.ok) return NextResponse.json(await r.json());
     } catch { /* fall through to local resolver */ }
   }
-  return NextResponse.json(resolveQuery(query));
+  const result = resolveQuery(query);
+  // Never navigate into the demo CRM when it's disabled (production).
+  if (!isDemoEnabled() && (result.go?.startsWith("/demo") || result.guide)) {
+    return NextResponse.json({
+      answer: "The demo CRM is disabled in this environment. Set POINTERY_DEMO=1 to explore it.",
+    });
+  }
+  return NextResponse.json(result);
 }

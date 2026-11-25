@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { isDemoEnabled } from "@/lib/demo";
 
 const STEPS = [
   { n: "01", t: "Drop in the UI", d: "<Pointery/> — palette, toast, pulse on data-pointery, guides, allowlisted actions. 10 lines in layout.tsx." },
@@ -9,14 +10,17 @@ const STEPS = [
 const TRIES = ["Where is export?", "How do I invite a teammate?", "What is my pipeline worth?"];
 
 export default function Home() {
+  const demo = isDemoEnabled();
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-6">
       <header className="flex items-center justify-between py-5">
         <span className="text-lg font-bold tracking-tight">◉ Pointery</span>
         <nav className="flex items-center gap-2 text-sm font-medium">
-          <Link href="/demo" className="rounded-full px-4 py-2 text-zinc-600 hover:bg-zinc-100">Live demo</Link>
-          <Link href="/admin/ask" className="rounded-full px-4 py-2 text-zinc-600 hover:bg-zinc-100">Studio</Link>
-          <Link href="/demo/pipeline" data-pointery="demo-cta" className="rounded-full bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-700">Try it →</Link>
+          {demo && <Link href="/demo" className="rounded-full px-4 py-2 text-zinc-600 hover:bg-zinc-100">Live demo</Link>}
+          {demo && <Link href="/admin/ask" className="rounded-full px-4 py-2 text-zinc-600 hover:bg-zinc-100">Studio</Link>}
+          {demo
+            ? <Link href="/demo/pipeline" data-pointery="demo-cta" className="rounded-full bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-700">Try it →</Link>
+            : <Link href="/admin/ask" className="rounded-full bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-700">Open Studio →</Link>}
         </nav>
       </header>
 
@@ -32,8 +36,17 @@ export default function Home() {
           Answers and acts with confirmation. The CRM here is just the demo — <strong className="text-zinc-800">Pointery is the product.</strong>
         </p>
         <div className="mt-8 flex gap-3">
-          <Link href="/demo" className="rounded-full bg-violet-700 px-6 py-3 text-sm font-semibold text-white hover:bg-violet-600">Open the live demo</Link>
-          <Link href="/admin/ask" className="rounded-full border bg-white px-6 py-3 text-sm font-semibold hover:bg-zinc-50">Theme it in Studio</Link>
+          {demo ? (
+            <>
+              <Link href="/demo" className="rounded-full bg-violet-700 px-6 py-3 text-sm font-semibold text-white hover:bg-violet-600">Open the live demo</Link>
+              <Link href="/admin/ask" className="rounded-full border bg-white px-6 py-3 text-sm font-semibold hover:bg-zinc-50">Theme it in Studio</Link>
+            </>
+          ) : (
+            <>
+              <Link href="/admin/ask" className="rounded-full bg-violet-700 px-6 py-3 text-sm font-semibold text-white hover:bg-violet-600">Open Studio</Link>
+              <a href="#how" className="rounded-full border bg-white px-6 py-3 text-sm font-semibold hover:bg-zinc-50">How it works ↓</a>
+            </>
+          )}
         </div>
         <div className="mt-6 flex flex-wrap justify-center gap-2 text-xs">
           {TRIES.map((t) => (
@@ -41,7 +54,7 @@ export default function Home() {
           ))}
         </div>
 
-        <div className="mt-14 grid w-full gap-4 text-left sm:grid-cols-3">
+        <div id="how" className="mt-14 grid w-full gap-4 text-left sm:grid-cols-3">
           {STEPS.map((s) => (
             <div key={s.n} className="rounded-2xl border bg-white p-5">
               <p className="font-mono text-xs text-violet-700">{s.n}</p>
@@ -59,7 +72,7 @@ export default function Home() {
 
       <footer className="flex items-center justify-between border-t py-6 text-xs text-zinc-400">
         <span>Pointery — self-hosted · BYOK · no data to us</span>
-        <span><Link href="/demo/settings" className="underline">Demo settings</Link> · POINTERY_PROMPT.md ships on purchase</span>
+        <span>{demo && (<><Link href="/demo/settings" className="underline">Demo settings</Link> · </>)}POINTERY_PROMPT.md ships on purchase</span>
       </footer>
     </div>
   );
