@@ -145,10 +145,15 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # npm ci makes the workspace's bin file executable. Ignore that
+          # mode change, or it blocks the rebase below.
+          git config core.fileMode false
           git add package.json package-lock.json packages/pointery/package.json
           git commit -m "chore(release): pointery v$NEXT"
           # Tag before rebasing: the tag must mark exactly what was published.
           git tag "pointery-v$NEXT"
           git push origin "pointery-v$NEXT"
-          git pull --rebase origin main
+          # --autostash: a file changed by the build must not strand a release
+          # that is already on npm.
+          git pull --rebase --autostash origin main
           git push origin HEAD:main
