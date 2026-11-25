@@ -40,7 +40,7 @@ Naming a product as part of the work is fine, such as an Anthropic adapter or "p
 
 ## Current state
 
-`main` is still the `create-next-app` scaffold. The implementation is on `feat/studio-context`, which builds on `feat/pointery-demo` and is not merged. Until it merges, the paths below exist only there. Check the tree before importing or referencing anything, and update this section when it merges.
+`main` has the first implementation, and `pointery` is on public npm. Check the tree before importing or referencing anything.
 
 | Path | What it is |
 | --- | --- |
@@ -60,7 +60,7 @@ Rules for that code:
 - `POINTERY_PROMPT.md` is also embedded in the CLI as `STARTER_PROMPT`. There is no sync script for it, so change both.
 - `npx pointery init --check` runs `init` first, so it writes any missing starter files before checking.
 - The LLM is set with `POINTERY_LLM_URL` and `POINTERY_LLM_KEY` in `.env.local`. Without a URL, the bundled keyword resolver answers.
-- Any route that writes to disk, including ones `init` scaffolds into a user's app, must require authentication or be disabled in production.
+- Any route that writes to disk, including ones `init` scaffolds into a user's app, must require authentication or be disabled in production. The admin `PUT` routes return 403 in production unless `POINTERY_ADMIN=1`, and have no login of their own.
 
 Known gaps between `README.md` and the code. Ask before resolving one:
 
@@ -82,7 +82,8 @@ Known gaps between `README.md` and the code. Ask before resolving one:
 - Authentication is npm trusted publishing (OIDC). There is no `NPM_TOKEN`; don't add one.
 - The trusted publisher on npmjs.com is tied to this repository and the filename `publish.yml`, with direct `npm publish` allowed. Renaming either breaks publishing. A new connection expires if it doesn't publish successfully within 2 days; delete it and create it again.
 - Keep `repository.url` in the package pointing at this GitHub repository.
-- To retry a failed release, run the workflow from the Actions tab. A manual run publishes a new version even if the package hasn't changed.
+- Every run that reaches the publish step releases a new version, including "Re-run jobs" and manual runs. Use them only if the failed run did not publish. Check with `npm view pointery version`.
+- If a run published but failed afterwards, don't re-run it. Get the version bump into `main` with a PR: branch from the `pointery-v*` tag if it was pushed. Merge nothing else first.
 - The workflow pushes to `main`. If `main` gets branch protection, allow the workflow through.
 - The release commit is authored by `github-actions[bot]`. That is CI, not agent attribution.
 
@@ -140,7 +141,7 @@ npm run lint     # ESLint
 npx next typegen && npx tsc --noEmit   # type check without a full build
 ```
 
-On `feat/studio-context`, also:
+For the package:
 
 ```bash
 npm run kit:build           # build the package to packages/pointery/dist
