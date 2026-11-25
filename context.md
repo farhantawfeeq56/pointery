@@ -64,5 +64,17 @@ Published `pointery@0.1.0` to npm (public, `latest` tag). Name claimed under far
 - Not published yet: this changes the last published `0.1.0` CLI behavior, so next publish should bump (minor) — not done here.
 - Known lint state: `npm run lint` reports 10 pre-existing errors in `dist/Pointery.js` (react-hooks/refs in compiled output); identical with these changes stashed, so unrelated.
 
+## Next (done below)
+Real LLM adapter wiring test, POINTERY_PROMPT per-stack versions.
+
+## Pass 7 (feat/studio-context, 2026-11-25)
+Single Studio page, disk is truth — branch renamed from `feat/pointery-demo`.
+
+- `app/api/admin/config` + `app/api/admin/context` — GET reads the file from disk, PUT writes it back. Context PUT is gated by `validateContext` (400 + errors on stale spots); config PUT requires a JSON object.
+- `app/admin/ask/page.tsx` — rewritten as the one page: status (`/api/ask` probe + `validateContext` errors + target/guide/answer/action counts), appearance (primary, radius, trigger, position, suggestions list, allowActions list, live CSS-var preview), Save-to-disk button, read-only content table from disk, snippet. Initial state loads from the admin API, not localStorage.
+- `app/pointery-mount.tsx` — loads `pointery.config.json` via the admin API and passes it to `<Pointery/>`, so visitors get the saved theme/trigger/position. Falls back to kit defaults offline.
+- `pointery.context.json` — 15 targets now (10 demo + 5 studio: status/appearance/content/save/snippet on `/admin/ask`). `validateContext` clean, `tsc` clean, `next build` clean.
+- Row editing of targets/guides/answers/actions in the page is next (content is read-only this pass).
+
 ## Next (not done)
-Real LLM adapter wiring test, POINTERY_PROMPT per-stack versions, studio writing `pointery.config.json` to disk (currently localStorage + copy).
+Real LLM adapter wiring test, POINTERY_PROMPT per-stack versions, row editing of context tables in Studio.

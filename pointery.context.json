@@ -10,7 +10,12 @@
     { "key": "add-deal-button", "page": "/demo/pipeline", "hint": "Add deal — creates a new opportunity", "keywords": ["add deal", "new deal", "create deal", "new opportunity"] },
     { "key": "pipeline-value", "page": "/demo", "hint": "Pipeline value — total open pipeline is $20,400", "keywords": ["how much", "pipeline value", "total", "revenue", "what is pipeline"] },
     { "key": "deal-acme", "page": "/demo/pipeline", "hint": "Acme Corp — $8,000 deal in Negotiation", "keywords": ["acme", "mark won", "close deal", "won"] },
-    { "key": "search-contacts", "page": "/demo/contacts", "hint": "Search contacts — filter people by name", "keywords": ["search", "find contact", "find someone", "filter"] }
+    { "key": "search-contacts", "page": "/demo/contacts", "hint": "Search contacts — filter people by name", "keywords": ["search", "find contact", "find someone", "filter"] },
+    { "key": "studio-status", "page": "/admin/ask", "hint": "Studio status — ask health and context validity", "keywords": ["studio status", "health", "valid", "is ask working"] },
+    { "key": "studio-appearance", "page": "/admin/ask", "hint": "Studio appearance — theme, trigger, suggestions", "keywords": ["appearance", "theme", "color", "trigger", "suggestions"] },
+    { "key": "studio-content", "page": "/admin/ask", "hint": "Studio content — targets, guides, actions from disk", "keywords": ["content", "targets", "guides", "context"] },
+    { "key": "studio-save", "page": "/admin/ask", "hint": "Save to disk — writes pointery.config.json", "keywords": ["save", "save config", "write config", "persist"] },
+    { "key": "studio-snippet", "page": "/admin/ask", "hint": "Snippet — copy the Pointery mount code", "keywords": ["snippet", "copy", "install", "mount code"] }
   ],
   "guides": [
     {
