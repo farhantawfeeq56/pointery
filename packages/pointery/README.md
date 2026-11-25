@@ -12,10 +12,13 @@ npm i pointery
 npx pointery init
 ```
 
-`init` drops `pointery.context.json` (starter map) and
-`pointery.config.json` (theme/shortcut). It never overwrites
-without `--force`. `npx pointery init --check` validates that
-every guide step points at a real target.
+`init` drops four things: `pointery.context.json` (starter map — the LLM
+context your `/api/ask` forwards as `{ query, context }`), `pointery.config.json`
+(theme/shortcut), `POINTERY_PROMPT.md` (the map-maker prompt to paste into your
+coding agent), and a sync block in `AGENTS.md` (keeps the map fresh on every
+later UI change). It never overwrites without `--force` — except `AGENTS.md`,
+where it appends/refreshes only its own delimited block. `npx pointery init --check`
+validates that every guide step points at a real target.
 
 ## Wire up (10 lines)
 

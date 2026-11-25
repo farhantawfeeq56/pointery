@@ -54,5 +54,15 @@ Published `pointery@0.1.0` to npm (public, `latest` tag). Name claimed under far
 - Verified the real registry tarball: `npm pack pointery@0.1.0` → CLI `init --check` ok; `validate`/`resolveQuery`/`createAskHandler` correct via subpath imports (`pointery/server`, `pointery/resolver`, `pointery/validate` — the barrel needs Next for `next/navigation`, by design).
 - Harness stays on the workspace symlink for iteration (do not switch to registry dep until the API stabilizes).
 
+## Pass 6 (same branch, 2026-11-25)
+`npx pointery init` is now the whole starter: package + prompt + sync rule.
+
+- `bin/pointery.js` — `init` drops four things: `pointery.context.json` (the LLM context `/api/ask` forwards as `{ query, context }`), `pointery.config.json`, `POINTERY_PROMPT.md` (map-maker prompt, embedded as `STARTER_PROMPT` so no extra publish file needed), and a delimited `<!-- pointery:start/end -->` sync block in `AGENTS.md`. Idempotent: creates/appends/skips, refreshes only with `--force`; pre-existing `AGENTS.md` content is never clobbered (verified: fresh init, re-init skip, append, --force refresh, `--check` fail exit 1 on stale spot).
+- `POINTERY_PROMPT.md` (root) — rewritten around the context-file story: the prompt tells the agent `pointery.context.json` is what the LLM reads every ask, adds `answers[]` to the schema, adds step 5 (`npx pointery init --check`), and documents the AGENTS.md sync rule. Ends at the 10-line wiring diff.
+- Package `README.md` — install section now describes the four dropped files.
+- Naming note: canonical file is `pointery.context.json` (dot — already published, sent as `context` in server.ts). `pointery-context.json` (dash) means the same thing when it comes up in discussion.
+- Not published yet: this changes the last published `0.1.0` CLI behavior, so next publish should bump (minor) — not done here.
+- Known lint state: `npm run lint` reports 10 pre-existing errors in `dist/Pointery.js` (react-hooks/refs in compiled output); identical with these changes stashed, so unrelated.
+
 ## Next (not done)
 Real LLM adapter wiring test, POINTERY_PROMPT per-stack versions, studio writing `pointery.config.json` to disk (currently localStorage + copy).
