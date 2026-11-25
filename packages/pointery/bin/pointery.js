@@ -321,7 +321,12 @@ the bundled keyword resolver when no LLM is set). Re-run whenever your UI change
 >    plus a Save button, applies theme vars live, and dispatches a
 >    \`pointery:config\` CustomEvent with the new config so the mounted
 >    \`<Pointery/>\` (whose client wrapper listens for it) updates without
->    reload. Tag its controls with \`data-pointery\` ids and keep the matching
+>    reload. Personalize it on first run from the files you just wrote:
+>    status probe and example suggestions must use real queries from the
+>    context (a guide title, an answer keyword — never the "export"
+>    placeholder if the app has no export), and defaults (trigger, theme,
+>    position, allowActions) must mirror \`pointery.config.json\`. Tag its
+>    controls with \`data-pointery\` ids and keep the matching
 >    \`pointery-settings-*\` targets on page \`/pointery\` in sync; re-run step 5.
 >
 > Then show me the wiring diff: mount \`<Pointery/>\` once in \`layout.tsx\`

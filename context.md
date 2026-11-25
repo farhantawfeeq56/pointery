@@ -107,5 +107,11 @@ Prompt-only `/pointery` rollout (option 1) — no package code change.
 - Verified: `node --check` clean; Next-like tmp dir gets 6 files with working dispatch/route; bare tmp dir skips page; generated prompt IDENTICAL to root; starter context 5 targets.
 - Not published: next minor bump carries new init + prompt behavior.
 
+## Pass 12 (feat/studio-context, 2026-11-25)
+Personalize-the-starter-page rule in step 7 (both prompt copies).
+
+- Step 7 now orders first-run personalization: status probe + example suggestions use real queries from the context (guide title / answer keyword, never the "export" placeholder when the app has none); defaults (trigger, theme, position, allowActions) mirror `pointery.config.json`; `data-pointery` ids + `pointery-settings-*` targets stay in sync; re-run `--check`. (Brand colors need no code change — the page GET-loads config and applies theme vars live.)
+- Verified: `node --check` clean, fresh Next-like `init` ships the rule, generated prompt matches root ignoring CRLF.
+
 ## Next (not done)
 Real LLM adapter wiring test, POINTERY_PROMPT per-stack versions, row editing of context tables in Studio.
