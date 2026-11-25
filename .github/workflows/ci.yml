@@ -1,0 +1,38 @@
+# Runs the checks from publish.yml on every pull request, so a broken change
+# is caught before merging (merging a package change releases it to npm).
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: Install
+        run: npm ci
+
+      # Lint runs before the builds: ESLint reports errors from the built dist/.
+      - name: Lint
+        run: npm run lint
+
+      - name: Build package
+        run: npm run build -w pointery
+
+      - name: Build app
+        run: npm run build
