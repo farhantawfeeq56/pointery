@@ -38,6 +38,25 @@ Naming a product as part of the work is fine, such as an Anthropic adapter or "p
 - GitHub may reject a push that exposes a private email address. Commit with your GitHub no-reply address.
 - Never commit `.env*` files or keys.
 
+## Project management
+
+Two developers. GitHub Issues is the only to-do list. WhatsApp is for talking, GitHub is for remembering: anything that must still be true next week goes in an issue. There is no scheduled call or standup.
+
+| What comes up | Where it goes |
+| --- | --- |
+| A bug or an idea | A new issue the same day, even if it is one line |
+| A decision | A comment on the issue: what was chosen and why |
+| Pricing, business plans, customer names | WhatsApp or a private doc. This repo is public |
+| An unfixed security hole | A private channel (a private security advisory once reporting is on), never a public issue |
+
+- **Board:** a GitHub Project that Farhan creates and manages, with Backlog, This week, In progress, In review, Done. Card order is the priority; there are no priority labels. One card in progress per person.
+- **Labels:** a type (`bug`, `enhancement`, `documentation`, `decision`) and, where it fits, an area (`area:kit`, `area:app`, `area:ci`).
+- **Milestones** are named by outcome, not by version.
+- **Flow:** write the issue with a "Done when" line (split it into sub-issues if it needs more than about two days), assign yourself, branch as `<issue>-<short-name>`, and open a PR with `Closes #<issue>`. PRs exist to run the automated checks: no review from the other person is needed, and each of you merges your own PR once the check passes. Agents still merge only when asked, and the release rule below still applies.
+- **Updates:** a short note is enough, such as "on #12, blocked by #14".
+- **Ownership:** Aathil leads engineering, including the package, releases, CI and testing; Farhan leads product.
+- Don't add story points, sprint burndowns, a second task tool or a chat bot until they solve a real problem.
+
 ## Current state
 
 `main` has the first implementation, and `pointery` is on public npm. Check the tree before importing or referencing anything.
@@ -75,7 +94,7 @@ Known gaps between `README.md` and the code. Ask before resolving one:
 
 **Merging is releasing.** A published version goes straight to public npm and its number can't be reused. Don't merge a PR that touches `packages/pointery` until the maintainers have said to release.
 
-- The bump is patch by default. Label the PR `release:minor`, `release:major` or `release:skip` before merging to change that. Create the label in the repo if it doesn't exist.
+- The bump is patch by default. Label the PR `release:minor`, `release:major` or `release:skip` before merging to change that.
 - While the version is below 1.0, use `release:minor` for changes to the public API or to what `init` writes.
 - Don't edit the package version by hand, and don't run `npm publish` locally.
 - Only a change under `packages/pointery` triggers a release. A change to the root `POINTERY_PROMPT.md` or `app/pointery/page.tsx` ships only once it is copied into the CLI.
@@ -152,7 +171,7 @@ npm run pointery:sync-page  # copy the settings page into the CLI
 
 Run `next typegen` before a bare `tsc`: global route types such as `LayoutProps<"/">` are generated, so `tsc` alone fails on a fresh clone.
 
-There is no test framework yet. Before calling a change done, run `npm run lint` and `npm run build`, and check UI changes in a browser.
+There is no test framework yet. Before calling a change done, run `npm run lint` and `npm run build`, and check UI changes in a browser. `.github/workflows/ci.yml` runs lint, the package build and the app build on every PR to `main`.
 
 ## Next.js setup in this repo
 
