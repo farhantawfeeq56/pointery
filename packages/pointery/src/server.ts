@@ -5,6 +5,7 @@ import type { AskHandlerOptions, PointeryContext, PointeryResult } from "./types
 function sanitizeResult(r: PointeryResult, context: PointeryContext): PointeryResult {
   const out: PointeryResult = {};
   const ids = new Set((context.entries ?? []).map((e) => e.id));
+  const byId = new Map((context.entries ?? []).map((e) => [e.id, e]));
   const pages = new Set((context.entries ?? []).map((e) => e.page));
   const actionNames = new Set((context.actions ?? []).map((a) => a.name));
   const flows = new Map((context.flows ?? []).map((f) => [f.id, f]));
@@ -14,7 +15,12 @@ function sanitizeResult(r: PointeryResult, context: PointeryContext): PointeryRe
     out.confirm = confirmOf(r.action);
   }
   if (r.guide && flows.has(r.guide.id)) out.guide = buildGuide(flows.get(r.guide.id)!, context.entries ?? []);
-  if (r.spot && ids.has(r.spot)) out.spot = r.spot;
+  if (r.spot && ids.has(r.spot)) {
+    out.spot = r.spot;
+    // Row search text survives only on rows:true containers — never per-record ids.
+    const f = typeof r.filter === "string" ? r.filter.trim().slice(0, 80) : "";
+    if (f && byId.get(r.spot)?.rows) out.filter = f;
+  }
   if (r.go && pages.has(r.go)) out.go = r.go;
   if ((out.spot || out.go || out.action || out.guide) && r.hint) out.hint = r.hint;
   if (r.answer && (out.spot || out.go)) { out.answer = r.answer; if (r.hint) out.hint = r.hint; }

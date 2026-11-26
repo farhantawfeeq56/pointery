@@ -158,5 +158,6 @@ export function getSuggestions(): string[] {
     "How do I invite a teammate?",
     "Show me the pipeline table",
     "Walk me through closing a deal",
+    "Where is the Acme deal?",
   ];
 }

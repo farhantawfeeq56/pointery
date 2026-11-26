@@ -19,6 +19,9 @@ is set). Re-run whenever your UI changes.
 >    anchors only — never per-record ids (no `deal-acme`), never live values
 >    (no `$8,000`, counts, totals). For lists, index the container
 >    (`pipeline-table`), not the rows; the client finds the row text at runtime.
+>    Mark the container with rows:true so the model can answer instance queries
+>    ("where is the Acme deal") with filter ("Acme") alongside that spot —
+>    the client pulses the matching row, else the container.
 > 2. Add a stable `data-pointery="kebab-id"` to each. Only real selectors that
 >    exist in the rendered DOM — never invent ids. Keep ids stable across
 >    refactors.
@@ -34,6 +37,9 @@ is set). Re-run whenever your UI changes.
 >    - `flows[].steps` = entry ids in walk order; wording is generated, not stored.
 >    - `actions[].at` = the entry id it runs against.
 >    - `confirm: true` for anything destructive (delete, charge, send, close).
+>    - rows:true on containers whose children are runtime data (deal, contact,
+>      chat rows). Only then may the model set filter alongside that spot —
+>      the server drops it otherwise, and the keyword fallback never sets it.
 > 4. Keep it small: max ~40 entries, ~10 flows, only allowlisted actions.
 >    Delete stale ids for removed UI.
 > 5. Run `npx pointery init --check` and fix whatever it reports (guide step

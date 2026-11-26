@@ -48,6 +48,8 @@ export type PointeryResult = {
   spot?: string;
   go?: string;
   action?: string;
+  /** Row search text — kept only alongside a `spot` whose entry has `rows: true`. */
+  filter?: string;
   /** Echoed from the matched action's `confirm` flag — UI confirms only when true. */
   confirm?: boolean;
   answer?: string;

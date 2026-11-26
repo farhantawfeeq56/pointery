@@ -18,16 +18,39 @@ const DEFAULTS = {
   endpoint: "/api/ask",
 };
 
-export function pulse(key: string) {
+export function pulse(key: string, filter?: string) {
+  // Toast-friendly row title: join cells, not raw textContent (which glues words).
+  const rowTitle = (row: Element) => {
+    const cells = Array.from(row.querySelectorAll("td, th"))
+      .map((c) => (c.textContent ?? "").trim())
+      .filter(Boolean);
+    const text = cells.length ? cells.join(" · ") : ((row.textContent ?? "").trim().replace(/\s+/g, " "));
+    return text.slice(0, 60);
+  };
   requestAnimationFrame(() => {
     const el = document.querySelector(`[data-pointery="${key}"]`);
     if (!el) return;
-    el.scrollIntoView({ behavior: "smooth", block: "center" });
-    el.classList.remove("pointery-pulse");
+    // rows:true container + filter: pulse the matching row, else the container.
+    let target: Element = el;
+    const needle = filter?.trim().toLowerCase();
+    if (needle) {
+      const rows = el.querySelectorAll("tr, li, [role=row]");
+      const pool: Element[] = rows.length ? Array.from(rows) : Array.from(el.children);
+      const hits = pool.filter((n) => (n.textContent ?? "").toLowerCase().includes(needle));
+      if (hits[0]) {
+        target = hits[0];
+        if (hits.length > 1) {
+          const title = rowTitle(hits[0]);
+          if (title) window.dispatchEvent(new CustomEvent("pointery:ambiguous", { detail: title }));
+        }
+      }
+    }
+    target.scrollIntoView({ behavior: "smooth", block: "center" });
+    target.classList.remove("pointery-pulse");
     // restart animation
-    void (el as HTMLElement).offsetWidth;
-    el.classList.add("pointery-pulse");
-    window.setTimeout(() => el.classList.remove("pointery-pulse"), 2600);
+    void (target as HTMLElement).offsetWidth;
+    target.classList.add("pointery-pulse");
+    window.setTimeout(() => target.classList.remove("pointery-pulse"), 2600);
   });
 }
 
@@ -58,6 +81,16 @@ export default function Pointery(props: PointeryProps) {
     if (cfg.theme.radius != null) root.style.setProperty("--pointery-radius", `${cfg.theme.radius}px`);
   }, [cfg.theme.primary, cfg.theme.radius]);
 
+  // Several rows matched the filter — toast which one is shown.
+  useEffect(() => {
+    const onAmbiguous = (e: Event) => {
+      const title = (e as CustomEvent<string>).detail;
+      if (title) say(`Several rows match — showing “${title}”.`);
+    };
+    window.addEventListener("pointery:ambiguous", onAmbiguous);
+    return () => window.removeEventListener("pointery:ambiguous", onAmbiguous);
+  }, [say]);
+
   // trigger: cfg.trigger is primary (Shift+A), Cmd/Ctrl+K always works as secondary
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -86,9 +119,9 @@ export default function Pointery(props: PointeryProps) {
     say(`Done — ${name}.`);
   }, [props, say]);
 
-  const goSpot = useCallback((go?: string, spot?: string, hint?: string) => {
+  const goSpot = useCallback((go?: string, spot?: string, hint?: string, filter?: string) => {
     if (go) router.push(go as never);
-    if (spot) setTimeout(() => pulse(spot), go ? 450 : 50);
+    if (spot) setTimeout(() => pulse(spot, filter), go ? 450 : 50);
     if (hint) say(hint);
   }, [router, say]);
 
@@ -110,7 +143,7 @@ export default function Pointery(props: PointeryProps) {
         if (data.confirm === false) { setOpen(false); await runAction(data.action); }
         else setPendingAction(data.action);
       }
-      else if (data.go || data.spot) goSpot(data.go, data.spot, data.hint);
+      else if (data.go || data.spot) goSpot(data.go, data.spot, data.hint, data.filter);
       else if (!data.answer && !data.guide) say(cfg.labels.empty!);
     } catch {
       say(`Pointery is unreachable — is ${cfg.endpoint} mounted?`);
@@ -189,7 +222,7 @@ export default function Pointery(props: PointeryProps) {
               <div className="pointery-result">
                 {res.hint && <p><strong>{res.hint}</strong></p>}
                 <div className="pointery-guide-row">
-                  {(res.go || res.spot) && <button className="primary" onClick={() => { goSpot(res.go, res.spot, res.hint); setOpen(false); }}>Take me there</button>}
+                  {(res.go || res.spot) && <button className="primary" onClick={() => { goSpot(res.go, res.spot, res.hint, res.filter); setOpen(false); }}>Take me there</button>}
                   {res.guide && <button className="primary" onClick={() => { setGuideIdx(0); startGuide({ title: res.guide!.title, steps: res.guide!.steps, i: 0 }); setOpen(false); }}>Start guide</button>}
                   {res.action && <button className="primary" onClick={async () => { const a = res.action!; if (res.confirm) { setOpen(false); setPendingAction(a); } else { setOpen(false); await runAction(a); } }}>Run action</button>}
                 </div>

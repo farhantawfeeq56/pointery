@@ -66,7 +66,7 @@ export default function PipelinePage() {
           </tbody>
         </table>
       </div>
-      <p className="text-xs text-zinc-400">Try: Shift+A → “mark deal as won” (confirm) · “where is export?”</p>
+      <p className="text-xs text-zinc-400">Try: Shift+A → “mark deal as won” (confirm) · “where is export?” · “where is the Acme deal?” (row pulse via LLM filter)</p>
     </div>
   );
 }
