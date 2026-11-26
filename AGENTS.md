@@ -65,7 +65,7 @@ Two developers. GitHub Issues is the only to-do list. WhatsApp is for talking, G
 | --- | --- |
 | `packages/pointery/` | The product: the `pointery` npm package (public, MIT), built with `tsc` to `dist/` |
 | `packages/pointery/bin/pointery.js` | The `npx pointery init` CLI, with the starter files embedded as strings |
-| `app/` | The harness app (`pointery-harness`, private): landing page, demo CRM, `/api/ask`, `/api/admin/*`, `/admin/ask`, `/pointery` |
+| `app/` | The harness app (`pointery-harness`, private): landing page, demo CRM, `/api/ask`, `/api/admin/*`, `/pointery` (settings, dev-only) |
 | `lib/demo.ts` | Turns the demo CRM off in production unless `POINTERY_DEMO=1` |
 | `pointery.context.json`, `pointery.config.json` | The harness app's map and settings |
 | `context.md` | Pass-by-pass build log. Read it for recent decisions |
@@ -126,7 +126,7 @@ Shape of `pointery.context.json`:
 }
 ```
 
-**Customization** is props only: `<Pointery trigger="shift+a" theme={{ primary, radius }} position suggestions allowActions labels />`, plus `--pointery-*` CSS variables for white-labelling. `<PointeryStudio/>` is the options UI (color pickers, shortcut recorder, toggles), mounted at `/admin/ask`, and writes `pointery.config.json` locally. The docs site has the same thing as a static playground.
+**Customization** is props only: `<Pointery trigger="shift+a" theme={{ primary, radius }} position suggestions allowActions labels />`, plus `--pointery-*` CSS variables for white-labelling. `<PointeryStudio/>` is the options UI (shortcut, brand, behavior, status, context table, snippet), mounted at `/pointery`, and writes `pointery.config.json` locally. The docs site has the same thing as a static playground.
 
 **Delivery:** private npm, repo or zip. `npm install` brings the UI, adapters and CLI; `npx pointery init` drops a starter context file and a pointer to the prompt. The developer's wiring should stay around 10 lines.
 

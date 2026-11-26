@@ -13,7 +13,7 @@ export default function SettingsPage() {
         <span className="font-medium">Pointery suggestions</span>
         <input type="checkbox" defaultChecked className="h-4 w-4 accent-violet-700" />
       </label>
-      <p className="text-xs text-zinc-400">Pointery itself is configured via props + <code className="font-mono">pointery.config.json</code> — see <a className="underline" href="/admin/ask">/admin/ask</a>.</p>
+      <p className="text-xs text-zinc-400">Pointery itself is configured via props + <code className="font-mono">pointery.config.json</code> — see <a className="underline" href="/pointery">/pointery</a>.</p>
     </div>
   );
 }

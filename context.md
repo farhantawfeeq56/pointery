@@ -178,3 +178,12 @@ Package fix: buyers now gate the palette off marketing pages.
 Standing rule: package-first.
 
 - `AGENTS.md` "Rules for that code" now leads with: buyer-facing changes go in `packages/pointery`, never only in the harness (`app/` is the demo, nothing there ships). Harness updated to match, not vice versa; `app/`-only changes must be called out as demo-specific. (This rule itself lives in the harness repo's AGENTS.md, not the npm package — correctly, since it's a contributor rule.)
+
+## Pass 24 (feat/basic-changes, 2026-11-26)
+Settings union: A∪B in /pointery, /admin/ask deleted.
+
+- `app/pointery/page.tsx` now carries everything the Studio had: status pill + context-validity pill + error list + LLM hint (`pointery-settings-status`), read-only entries/flows/actions table (`pointery-settings-context`), snippet + copy (`pointery-settings-snippet`). Kept its own shortcut cards, live brand preview, auto-save + Save now, labels.
+- Prod guard lives in the page itself (`notFound()` when `NODE_ENV === "production"`) so it ships to buyers via `pointery:sync-page` — re-synced into `STARTER_SETTINGS_PAGE`.
+- `app/admin/` route deleted (it was only the page). Landing + demo-settings links now point at `/pointery` ("Settings" copy). README + AGENTS.md route mentions updated.
+- `pointery.context.json`: 5 `studio-*` entries replaced with `pointery-settings-status/context/snippet`. Same 3 added to `STARTER_CONTEXT` in `bin/pointery.js` (hand-kept in sync — no sync script for it).
+- Verified: `init --check` ok, `tsc` clean (after `next typegen` to drop stale `/admin/ask` route types), `npm run build` clean (`/pointery` prerenders as not-found in prod), lint unchanged (only pre-existing `dist/` noise).

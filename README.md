@@ -22,7 +22,7 @@ Separate .md we deliver on purchase. They paste into Cursor/Claude: "scan app/**
 
 All via props, no hosted dashboard:
 `<Pointery trigger="shift+a" theme={{primary,radius}} position suggestions allowActions labels />` + CSS vars `--pointery-*` for white-label.
-Options UI = `<PointeryStudio/>` in same package, mounted at `/admin/ask` — color pickers, shortcut recorder, toggles → writes `pointery.config.json` locally. Same as static playground on docs site. Separate import so no bundle bloat.
+Options UI = `<PointeryStudio/>` in same package, mounted at `/pointery` — color pickers, shortcut recorder, toggles → writes `pointery.config.json` locally. Same as static playground on docs site. Separate import so no bundle bloat.
 
 ## Business model
 

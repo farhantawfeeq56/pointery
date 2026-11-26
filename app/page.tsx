@@ -17,10 +17,10 @@ export default function Home() {
         <span className="text-lg font-bold tracking-tight">◉ Pointery</span>
         <nav className="flex items-center gap-2 text-sm font-medium">
           {demo && <Link href="/demo" className="rounded-full px-4 py-2 text-zinc-600 hover:bg-zinc-100">Live demo</Link>}
-          {demo && <Link href="/admin/ask" className="rounded-full px-4 py-2 text-zinc-600 hover:bg-zinc-100">Studio</Link>}
+          {demo && <Link href="/pointery" className="rounded-full px-4 py-2 text-zinc-600 hover:bg-zinc-100">Settings</Link>}
           {demo
             ? <Link href="/demo/pipeline" data-pointery="demo-cta" className="rounded-full bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-700">Try it →</Link>
-            : <Link href="/admin/ask" className="rounded-full bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-700">Open Studio →</Link>}
+            : <Link href="/pointery" className="rounded-full bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-700">Open settings →</Link>}
         </nav>
       </header>
 
@@ -39,11 +39,11 @@ export default function Home() {
           {demo ? (
             <>
               <Link href="/demo" className="rounded-full bg-violet-700 px-6 py-3 text-sm font-semibold text-white hover:bg-violet-600">Open the live demo</Link>
-              <Link href="/admin/ask" className="rounded-full border bg-white px-6 py-3 text-sm font-semibold hover:bg-zinc-50">Theme it in Studio</Link>
+              <Link href="/pointery" className="rounded-full border bg-white px-6 py-3 text-sm font-semibold hover:bg-zinc-50">Theme it in settings</Link>
             </>
           ) : (
             <>
-              <Link href="/admin/ask" className="rounded-full bg-violet-700 px-6 py-3 text-sm font-semibold text-white hover:bg-violet-600">Open Studio</Link>
+              <Link href="/pointery" className="rounded-full bg-violet-700 px-6 py-3 text-sm font-semibold text-white hover:bg-violet-600">Open settings</Link>
               <a href="#how" className="rounded-full border bg-white px-6 py-3 text-sm font-semibold hover:bg-zinc-50">How it works ↓</a>
             </>
           )}

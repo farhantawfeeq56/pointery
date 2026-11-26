@@ -14,10 +14,13 @@ const STARTER_CONTEXT = {
   version: 2,
   entries: [
     { id: "export-button", page: "/dashboard", label: "Export", for: "Downloads the report as CSV", type: "button", aliases: ["csv"] },
+    { id: "pointery-settings-status", page: "/pointery", label: "Status", for: "Ask health, brain and context validity", type: "section" },
     { id: "pointery-settings-shortcut", page: "/pointery", label: "Shortcut", for: "Keyboard trigger for the palette", type: "section" },
     { id: "pointery-settings-brand", page: "/pointery", label: "Brand", for: "Primary color and corner radius", type: "section" },
     { id: "pointery-settings-behavior", page: "/pointery", label: "Behavior", for: "Position, suggestions and actions", type: "section" },
     { id: "pointery-settings-save", page: "/pointery", label: "Save", for: "Writes pointery.config.json to disk", type: "button" },
+    { id: "pointery-settings-context", page: "/pointery", label: "Context", for: "Entries, flows and actions from disk", type: "section" },
+    { id: "pointery-settings-snippet", page: "/pointery", label: "Snippet", for: "The Pointery mount code to copy", type: "section" },
   ],
   flows: [
     { id: "export-report", title: "Export your report", aliases: ["export"], steps: ["export-button"] },
@@ -80,6 +83,7 @@ export async function PUT(req: Request) {
 const STARTER_SETTINGS_PAGE = `"use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { notFound } from "next/navigation";
 import type { PointeryContext } from "pointery";
 
 type Config = {
@@ -106,7 +110,8 @@ export default function PointerySettingsPage() {
   const [loaded, setLoaded] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [askOk, setAskOk] = useState<boolean | null>(null);
-  const [counts, setCounts] = useState<string | null>(null);
+  const [ctx, setCtx] = useState<PointeryContext | null>(null);
+  const [errors, setErrors] = useState<string[]>([]);
   const [llm, setLlm] = useState<{ configured: boolean; host: string } | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const firstRun = useRef(true);
@@ -123,8 +128,8 @@ export default function PointerySettingsPage() {
     fetch("/api/admin/context")
       .then((r) => r.json().catch(() => null))
       .then((d) => {
-        const c = d?.context as PointeryContext | undefined;
-        if (c) setCounts(\`\${c.entries?.length ?? 0} entries · \${c.flows?.length ?? 0} flows · \${c.actions?.length ?? 0} actions\`);
+        if (d?.context) setCtx(d.context);
+        if (d?.errors) setErrors(d.errors);
       })
       .catch(() => {});
     fetch("/api/ask", {
@@ -188,6 +193,13 @@ export default function PointerySettingsPage() {
     }
   }, [cfg]);
 
+  // Dev-only: writes to disk with no login, so it never renders in production.
+  if (process.env.NODE_ENV === "production") notFound();
+
+  const counts = ctx ? \`\${ctx.entries?.length ?? 0} entries · \${ctx.flows?.length ?? 0} flows · \${ctx.actions?.length ?? 0} actions\` : null;
+
+  const snippet = \`<Pointery\\n  trigger="\${cfg.trigger}"\\n  theme={{ primary: "\${cfg.theme.primary}", radius: \${cfg.theme.radius} }}\\n  position="\${cfg.position}"\\n/>\`;
+
   if (!loaded) return <div className="mx-auto w-full max-w-4xl flex-1 px-6 py-10 text-sm text-zinc-500">Loading Pointery settings…</div>;
 
   return (
@@ -208,7 +220,7 @@ export default function PointerySettingsPage() {
         </span>
       </div>
 
-      <div className="flex flex-wrap gap-2 text-xs">
+      <div data-pointery="pointery-settings-status" className="flex flex-wrap gap-2 text-xs">
         <span className={\`rounded-full px-3 py-1 font-medium \${askOk ? "bg-green-100 text-green-800" : "bg-zinc-100 text-zinc-500"}\`}>
           /api/ask {askOk == null ? "…" : askOk ? "reachable ✓" : "unreachable"}
         </span>
@@ -216,7 +228,22 @@ export default function PointerySettingsPage() {
           {llm == null ? "brain …" : llm.configured ? \`LLM → \${llm.host || "env"} ✓\` : "keyword resolver (no key)"}
         </span>
         {counts && <span className="rounded-full bg-violet-50 px-3 py-1 font-medium text-violet-900">{counts}</span>}
+        <span className={\`rounded-full px-3 py-1 font-medium \${errors.length === 0 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}\`}>
+          context {errors.length === 0 ? "valid ✓" : \`\${errors.length} error\${errors.length > 1 ? "s" : ""}\`}
+        </span>
       </div>
+      {llm && !llm.configured && (
+        <p className="text-xs text-zinc-500">
+          No LLM key — paste this prompt&apos;s step 6 into your coding agent and it walks you through \`.env.local\` setup. The key stays in env; this page never handles it.
+        </p>
+      )}
+      {errors.length > 0 && (
+        <ul className="list-disc pl-5 text-xs text-red-700">
+          {errors.map((e) => (
+            <li key={e}>{e}</li>
+          ))}
+        </ul>
+      )}
 
       <section data-pointery="pointery-settings-shortcut" className="rounded-2xl border bg-white p-5">
         <h2 className="text-sm font-semibold">Keyboard shortcut</h2>
@@ -314,6 +341,38 @@ export default function PointerySettingsPage() {
           {saveState === "saved" ? "Saved ✓" : "Save now"}
         </button>
         <p className="text-xs text-zinc-500">Edits auto-save ~1s after you stop typing — no reload needed.</p>
+      </div>
+
+      {ctx && (
+        <div data-pointery="pointery-settings-context" className="rounded-2xl border bg-white p-5 text-sm">
+          <h2 className="text-sm font-semibold">Context <span className="font-normal text-zinc-500">(read-only — edit <code className="font-mono">pointery.context.json</code>)</span></h2>
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead className="text-left uppercase tracking-wider text-zinc-400">
+                <tr><th className="py-1 pr-3">id</th><th className="py-1 pr-3">page</th><th className="py-1">label — for</th></tr>
+              </thead>
+              <tbody className="divide-y font-mono">
+                {(ctx.entries ?? []).map((t) => (
+                  <tr key={t.id}><td className="py-1 pr-3">{t.id}</td><td className="py-1 pr-3">{t.page}</td><td className="py-1 font-sans">{t.label}{t.for ? \` — \${t.for}\` : ""}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-3 font-mono text-xs text-zinc-500">
+            flows: {(ctx.flows ?? []).map((g) => \`\${g.id} (\${g.steps.length})\`).join(", ") || "—"} · actions:{" "}
+            {(ctx.actions ?? []).map((a) => \`\${a.name}\${a.confirm ? " ⚠" : ""}\`).join(", ") || "—"}
+          </p>
+        </div>
+      )}
+
+      <div data-pointery="pointery-settings-snippet" className="rounded-2xl bg-zinc-950 p-5 text-sm text-zinc-100">
+        <pre className="overflow-x-auto font-mono text-[13px] leading-6">{snippet}</pre>
+        <button
+          onClick={() => { navigator.clipboard.writeText(snippet); }}
+          className="mt-3 rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-zinc-900"
+        >
+          Copy snippet
+        </button>
       </div>
     </div>
   );
