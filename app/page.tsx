@@ -3,7 +3,7 @@ import { isDemoEnabled } from "@/lib/demo";
 
 const STEPS = [
   { n: "01", t: "Drop in the UI", d: "<Pointery/> — palette, toast, pulse on data-pointery, guides, allowlisted actions. 10 lines in layout.tsx." },
-  { n: "02", t: "Map your app", d: "pointery.context.json — targets, guides, actions. Your agent builds it with POINTERY_PROMPT.md." },
+  { n: "02", t: "Map your app", d: "pointery.context.json — entries, flows, actions. Your agent builds it with POINTERY_PROMPT.md." },
   { n: "03", t: "Bring your key", d: "resolver(query, context) in /api/ask. OpenAI, Anthropic, Gemini — you pay, nothing touches us." },
 ];
 

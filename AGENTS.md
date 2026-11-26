@@ -86,7 +86,6 @@ Known gaps between `README.md` and the code. Ask before resolving one:
 - The README describes a private, paid `pointery-kit`. The code is the public, MIT-licensed `pointery`.
 - The README keeps `POINTERY_PROMPT.md` out of npm. The CLI embeds it.
 - The README describes `<PointeryStudio/>` and OpenAI, Anthropic and Gemini adapters. Neither exists in the package.
-- The context file also has an `answers` array that the README doesn't list.
 
 ## Releasing to npm
 
@@ -120,9 +119,9 @@ Shape of `pointery.context.json`:
 
 ```
 {
-  targets: [{ key, page, hint, keywords }],
-  guides:  [{ title, steps: [{ text, go, spot }] }],
-  actions: [{ name, confirm }]
+  entries: [{ id, page, label, for }],
+  flows:   [{ title, steps: [entryId] }],
+  actions: [{ name, confirm, at }]
 }
 ```
 
@@ -182,7 +181,7 @@ There is no test framework yet. Before calling a change done, run `npm run lint`
 
 <!-- pointery:start --> — do not remove; `npx pointery init --force` refreshes this block.
 ## Pointery — keep pointery.context.json in sync
-- `pointery.context.json` is the LLM context for in-app ask-anything (`/api/ask` forwards `{ query, context }` to our own model). Keep it small and current: max ~40 targets, ~10 guides, allowlisted actions only.
-- Whenever you add, move, rename, or remove a user-facing control, value, or route: update its `data-pointery="kebab-id"` in code AND its entry in `pointery.context.json` (hint + keywords; `confirm: true` for destructive actions). Keep ids stable; never invent selectors — only ids present in the rendered DOM.
-- After any UI change, run `npx pointery init --check` (fails when a guide step points at a missing target) and fix what it reports.
+- `pointery.context.json` is the index of stable UI anchors for in-app ask-anything (`/api/ask` forwards `{ query, candidates, page }` to our own model). Keep it small and current: max ~40 entries, ~10 flows, allowlisted actions only.
+- Whenever you add, move, rename, or remove a user-facing control or route: update its `data-pointery="kebab-id"` in code AND its entry in `pointery.context.json` (label + purpose; `confirm: true` for destructive actions). Keep ids stable; never invent selectors — only ids present in the rendered DOM.
+- After any UI change, run `npx pointery init --check` (fails when a flow step points at a missing entry) and fix what it reports.
 <!-- pointery:end -->

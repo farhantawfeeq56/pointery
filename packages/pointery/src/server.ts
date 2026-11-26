@@ -1,20 +1,20 @@
-import { resolveQuery, retrieveCandidates } from "./resolver.js";
+import { buildGuide, resolveQuery, retrieveCandidates } from "./resolver.js";
 import type { AskHandlerOptions, PointeryContext, PointeryResult } from "./types.js";
 
-/** Drop LLM fields that point outside the shipped map (Fix 4/5: LLM text is untrusted). */
+/** Drop LLM fields that point outside the shipped map (LLM text is untrusted). Guide steps are rebuilt from the flow — the model picks anchors, never wording. */
 function sanitizeResult(r: PointeryResult, context: PointeryContext): PointeryResult {
   const out: PointeryResult = {};
-  const keys = new Set((context.targets ?? []).map((t) => t.key));
-  const pages = new Set((context.targets ?? []).map((t) => t.page));
+  const ids = new Set((context.entries ?? []).map((e) => e.id));
+  const pages = new Set((context.entries ?? []).map((e) => e.page));
   const actionNames = new Set((context.actions ?? []).map((a) => a.name));
-  const guideIds = new Set((context.guides ?? []).map((g) => g.id));
+  const flows = new Map((context.flows ?? []).map((f) => [f.id, f]));
   const confirmOf = (name: string) => (context.actions ?? []).find((a) => a.name === name)?.confirm;
   if (r.action && actionNames.has(r.action)) {
     out.action = r.action;
     out.confirm = confirmOf(r.action);
   }
-  if (r.guide && guideIds.has(r.guide.id)) out.guide = r.guide;
-  if (r.spot && keys.has(r.spot)) out.spot = r.spot;
+  if (r.guide && flows.has(r.guide.id)) out.guide = buildGuide(flows.get(r.guide.id)!, context.entries ?? []);
+  if (r.spot && ids.has(r.spot)) out.spot = r.spot;
   if (r.go && pages.has(r.go)) out.go = r.go;
   if ((out.spot || out.go || out.action || out.guide) && r.hint) out.hint = r.hint;
   if (r.answer && (out.spot || out.go)) { out.answer = r.answer; if (r.hint) out.hint = r.hint; }
@@ -44,8 +44,8 @@ export function createAskHandler(context: PointeryContext, opts: AskHandlerOptio
     if (opts.llm?.url) {
       try {
         const candidates = retrieveCandidates(query, context, {
-          targets: opts.retrieve?.targets ?? 8,
-          guides: opts.retrieve?.guides ?? 3,
+          entries: opts.retrieve?.entries ?? 8,
+          flows: opts.retrieve?.flows ?? 3,
           actions: opts.retrieve?.actions ?? 3,
           page,
         });

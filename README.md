@@ -8,7 +8,7 @@ CRM in the demo is just the demo. Pointery is the product.
 
 1. **UI (pointery-kit npm):** `<Pointery/>` engine. Opens palette, shows toast, pulses `data-pointery="..."` element, navigates, walks guides Next/Back, runs allowlisted actions. Mount once in `layout.tsx`.
 
-2. **Map (pointery.context.json):** Where things live. `{targets[{key,page,hint,keywords}], guides[{title,steps[{text,go,spot}]}], actions[{name,confirm}]}`. Built by their coding agent running our prompt, not by us.
+2. **Map (pointery.context.json):** Where things live. `{entries[{id,page,label,for}], flows[{title,steps:[entryId]}], actions[{name,confirm,at}]}`. Built by their coding agent running our prompt, not by us.
 
 3. **Brain (their key):** `resolver(query, context)` — their LLM call in their `/api/ask` route (OpenAI/Anthropic/Gemini). We ship adapters, they pay key costs. No calls to us, no data to us.
 

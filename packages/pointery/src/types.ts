@@ -1,18 +1,48 @@
 export type PointerySpot = { key: string; page: string; hint: string };
 export type PointeryGuideStep = { text: string; go: string; spot: string };
 export type PointeryGuide = { id: string; title: string; steps: PointeryGuideStep[] };
-export type PointeryAction = { name: string; label?: string; confirm?: boolean };
+
+/** One UI anchor: identity + purpose + place. No sentences, no live values. */
+export type PointeryEntry = {
+  id: string;
+  page: string;
+  label: string;
+  /** Stable purpose, one clause ("Downloads the pipeline as CSV") — never an instruction. */
+  for?: string;
+  type?: "nav" | "button" | "table" | "card" | "field" | "section" | string;
+  /** Non-obvious synonyms only ("csv"); matching derives from label + for. */
+  aliases?: string[];
+  /** Container whose rows are found by text at runtime (never per-record ids). */
+  rows?: boolean;
+};
+
+/** Ordered anchor ids — the model (or the "Go to {label}" template) writes the wording. */
+export type PointeryFlow = {
+  id: string;
+  title: string;
+  steps: string[];
+  /** Non-obvious synonyms / verb forms ("closing"); matching derives from title + id. */
+  aliases?: string[];
+};
+
+export type PointeryAction = {
+  name: string;
+  label?: string;
+  confirm?: boolean;
+  /** Entry id the action runs against. */
+  at?: string;
+  aliases?: string[];
+};
 
 export type PointeryContext = {
-  targets: { key: string; page: string; hint: string; keywords: string[] }[];
-  guides: { id: string; title: string; keywords: string[]; steps: { text: string; go: string; spot: string }[] }[];
-  actions: { name: string; label?: string; confirm?: boolean; keywords: string[] }[];
-  /** Static copy only — never live per-user data (counts, totals, record names). */
-  answers?: { keywords: string[]; answer: string; spot?: string; go?: string; hint?: string }[];
+  version?: number;
+  entries: PointeryEntry[];
+  flows: PointeryFlow[];
+  actions: PointeryAction[];
 };
 
 /** Top-ranked slice of the map sent to the LLM — never the whole file. */
-export type PointeryCandidates = Pick<PointeryContext, "targets" | "guides" | "actions">;
+export type PointeryCandidates = Pick<PointeryContext, "entries" | "flows" | "actions">;
 
 export type PointeryResult = {
   spot?: string;
@@ -51,7 +81,7 @@ export type PointeryLLMAdapter = {
 export type AskHandlerOptions = {
   llm?: PointeryLLMAdapter;
   /** Cap the candidates slice forwarded to the LLM (defaults 8/3/3). */
-  retrieve?: { targets?: number; guides?: number; actions?: number };
+  retrieve?: { entries?: number; flows?: number; actions?: number };
   /** Return a result to short-circuit (e.g. block demo routes in prod), or null to continue. */
   guard?: (query: string, local: PointeryResult) => PointeryResult | null;
 };

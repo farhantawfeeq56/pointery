@@ -11,53 +11,19 @@ const check = args.includes("--check");
 const cwd = process.cwd();
 
 const STARTER_CONTEXT = {
-  version: 1,
-  targets: [
-    {
-      key: "export-button",
-      page: "/dashboard",
-      hint: "Export — downloads the report as CSV",
-      keywords: ["export", "csv", "download", "where is export"],
-    },
-    {
-      key: "pointery-settings-shortcut",
-      page: "/pointery",
-      hint: "Shortcut — keyboard trigger for the palette",
-      keywords: ["shortcut", "keyboard", "hotkey", "trigger", "shift a", "cmd k"],
-    },
-    {
-      key: "pointery-settings-brand",
-      page: "/pointery",
-      hint: "Brand — primary color and corner radius",
-      keywords: ["brand", "color", "theme", "radius", "primary", "appearance"],
-    },
-    {
-      key: "pointery-settings-behavior",
-      page: "/pointery",
-      hint: "Behavior — position, suggestions, actions",
-      keywords: ["behavior", "position", "suggestions", "actions", "settings"],
-    },
-    {
-      key: "pointery-settings-save",
-      page: "/pointery",
-      hint: "Save — writes pointery.config.json to disk",
-      keywords: ["save", "save settings", "persist", "write config"],
-    },
+  version: 2,
+  entries: [
+    { id: "export-button", page: "/dashboard", label: "Export", for: "Downloads the report as CSV", type: "button", aliases: ["csv"] },
+    { id: "pointery-settings-shortcut", page: "/pointery", label: "Shortcut", for: "Keyboard trigger for the palette", type: "section" },
+    { id: "pointery-settings-brand", page: "/pointery", label: "Brand", for: "Primary color and corner radius", type: "section" },
+    { id: "pointery-settings-behavior", page: "/pointery", label: "Behavior", for: "Position, suggestions and actions", type: "section" },
+    { id: "pointery-settings-save", page: "/pointery", label: "Save", for: "Writes pointery.config.json to disk", type: "button" },
   ],
-  guides: [
-    {
-      id: "export-report",
-      title: "Export your report",
-      keywords: ["export", "csv", "download", "report"],
-      steps: [
-        { text: "Open the Dashboard", go: "/dashboard", spot: "export-button" },
-        { text: "Click “Export” (top right)", go: "/dashboard", spot: "export-button" },
-      ],
-    },
+  flows: [
+    { id: "export-report", title: "Export your report", aliases: ["export"], steps: ["export-button"] },
   ],
-  answers: [],
   actions: [
-    { name: "export-report", label: "Export report CSV", confirm: false, keywords: ["export", "download csv"] },
+    { name: "export-report", label: "Export report CSV", confirm: false, at: "export-button" },
   ],
 };
 
@@ -158,7 +124,7 @@ export default function PointerySettingsPage() {
       .then((r) => r.json().catch(() => null))
       .then((d) => {
         const c = d?.context as PointeryContext | undefined;
-        if (c) setCounts(\`\${c.targets?.length ?? 0} targets · \${c.guides?.length ?? 0} guides · \${c.answers?.length ?? 0} answers · \${c.actions?.length ?? 0} actions\`);
+        if (c) setCounts(\`\${c.entries?.length ?? 0} entries · \${c.flows?.length ?? 0} flows · \${c.actions?.length ?? 0} actions\`);
       })
       .catch(() => {});
     fetch("/api/ask", {
@@ -380,20 +346,20 @@ is set). Re-run whenever your UI changes.
 > 2. Add a stable \`data-pointery="kebab-id"\` to each. Only real selectors that
 >    exist in the rendered DOM — never invent ids. Keep ids stable across
 >    refactors.
-> 3. Update \`pointery.context.json\` to match:
->    \`{ targets: [{ key, page, hint, keywords[] }], guides: [{ id, title,
->    keywords[], steps: [{ text, go, spot }] }], answers: [{ keywords[],
->    answer, spot?, go? }], actions: [{ name, label, confirm, keywords[] }] }\`
->    - \`hint\`: one line a user would understand ("Export — downloads CSV").
->    - \`keywords\`: every phrasing a user might type ("export", "csv",
->      "download report", "where is export").
->    - \`answers[]\` holds static copy only ("Export downloads a CSV") — never
->      live per-user data. If it needs a number or a name, it doesn't belong here.
+> 3. Update \`pointery.context.json\` to match — identity + purpose + place,
+>    no sentences, no live values:
+>    \`{ version: 2, entries: [{ id, page, label, for, type, aliases?, rows? }],
+>    flows: [{ id, title, steps: [entryId...], aliases? }],
+>    actions: [{ name, label, confirm, at, aliases? }] }\`
+>    - \`label\`: the element's own words ("Export"). \`for\`: stable purpose,
+>      one clause ("Downloads the pipeline as CSV") — never an instruction.
+>    - \`aliases\`: non-obvious synonyms only ("csv"). Matching derives from
+>      label + for; never list phrasings ("where is export" doesn't belong here).
+>    - \`flows[].steps\` = entry ids in walk order; wording is generated, not stored.
+>    - \`actions[].at\` = the entry id it runs against.
 >    - \`confirm: true\` for anything destructive (delete, charge, send, close).
->    - \`steps[].go\` = route, \`steps[].spot\` = an id from step 2 on that route
->      (same page as the step's \`go\`).
-> 4. Keep it small: max ~40 targets, ~10 guides, only allowlisted actions.
->    Delete stale keys for removed UI.
+> 4. Keep it small: max ~40 entries, ~10 flows, only allowlisted actions.
+>    Delete stale ids for removed UI.
 > 5. Run \`npx pointery init --check\` and fix whatever it reports (guide step
 >    pointing at a missing target or wrong page, live \`$\` data baked into the map).
 > 6. Brain (my key, my bill): if I want the LLM instead of the keyword
@@ -412,11 +378,11 @@ is set). Re-run whenever your UI changes.
 >    \`<Pointery/>\` (whose client wrapper listens for it) updates without
 >    reload. Personalize it on first run from the files you just wrote:
 >    status probe and example suggestions must use real queries from the
->    context (a guide title, an answer keyword — never the "export"
+>    context (a flow title, an entry label — never the "export"
 >    placeholder if the app has no export), and defaults (trigger, theme,
 >    position, allowActions) must mirror \`pointery.config.json\`. Tag its
 >    controls with \`data-pointery\` ids and keep the matching
->    \`pointery-settings-*\` targets on page \`/pointery\` in sync; re-run step 5.
+>    \`pointery-settings-*\` entries on page \`/pointery\` in sync; re-run step 5.
 >
 > Then show me the wiring diff: mount \`<Pointery/>\` once in \`layout.tsx\`
 > (via a client wrapper that loads \`pointery.config.json\` and listens for
@@ -434,9 +400,9 @@ const AGENTS_START = "<!-- pointery:start -->";
 const AGENTS_END = "<!-- pointery:end -->";
 const AGENTS_BLOCK = `${AGENTS_START} — do not remove; \`npx pointery init --force\` refreshes this block.
 ## Pointery — keep pointery.context.json in sync
-- \`pointery.context.json\` is the LLM context for in-app ask-anything (\`/api/ask\` forwards \`{ query, context }\` to our own model). Keep it small and current: max ~40 targets, ~10 guides, allowlisted actions only.
-- Whenever you add, move, rename, or remove a user-facing control, value, or route: update its \`data-pointery="kebab-id"\` in code AND its entry in \`pointery.context.json\` (hint + keywords; \`confirm: true\` for destructive actions). Keep ids stable; never invent selectors — only ids present in the rendered DOM.
-- After any UI change, run \`npx pointery init --check\` (fails when a guide step points at a missing target) and fix what it reports.
+- \`pointery.context.json\` is the index of stable UI anchors (\`/api/ask\` forwards \`{ query, candidates, page }\` to our own model). Keep it small and current: max ~40 entries, ~10 flows, allowlisted actions only.
+- Whenever you add, move, rename, or remove a user-facing control or route: update its \`data-pointery="kebab-id"\` in code AND its entry in \`pointery.context.json\` (label + purpose; \`confirm: true\` for destructive actions). Keep ids stable; never invent selectors — only ids present in the rendered DOM.
+- After any UI change, run \`npx pointery init --check\` (fails when a flow step points at a missing entry) and fix what it reports.
 ${AGENTS_END}`;
 
 const SNIPPET = `import { Pointery } from "pointery";
@@ -500,22 +466,23 @@ if (cmd === "init") {
   if (check) {
     const ctx = JSON.parse(fs.readFileSync(path.join(cwd, "pointery.context.json"), "utf8"));
     const problems = [];
-    const keys = new Set((ctx.targets || []).map((t) => t.key));
-    const pageOf = new Map((ctx.targets || []).map((t) => [t.key, t.page]));
+    const ids = new Set((ctx.entries || []).map((t) => t.id));
     const looksLive = (s) => typeof s === "string" && /\$\s*\d/.test(s);
-    (ctx.targets || []).forEach((t, i) => {
-      if (t.hint && looksLive(t.hint)) problems.push(`targets[${i}] (${t.key}): hint looks like live data — keep stable anchors only`);
+    (ctx.entries || []).forEach((t, i) => {
+      if (!t.id) problems.push(`entries[${i}]: missing id`);
+      if (!t.page) problems.push(`entries[${i}] (${t.id || "?"}): missing page`);
+      if (!t.label) problems.push(`entries[${i}] (${t.id || "?"}): missing label`);
+      if (t.label && looksLive(t.label)) problems.push(`entries[${i}] (${t.id}): label looks like live data — keep stable anchors only`);
+      if (t.for && looksLive(t.for)) problems.push(`entries[${i}] (${t.id}): for looks like live data — keep stable anchors only`);
     });
-    (ctx.answers || []).forEach((a, i) => {
-      if (a.answer && looksLive(a.answer)) problems.push(`answers[${i}]: answer looks like live data — answers hold static copy only`);
-      if (a.spot && !keys.has(a.spot)) problems.push(`answers[${i}]: spot "${a.spot}" matches no target`);
-    });
-    (ctx.guides || []).forEach((g, i) =>
+    (ctx.flows || []).forEach((g, i) =>
       (g.steps || []).forEach((s) => {
-        if (s.spot && !keys.has(s.spot)) problems.push(`guides[${i}]: spot "${s.spot}" matches no target`);
-        else if (s.spot && s.go && pageOf.get(s.spot) !== s.go) problems.push(`guides[${i}]: go "${s.go}" differs from target "${s.spot}" page "${pageOf.get(s.spot)}"`);
+        if (!ids.has(s)) problems.push(`flows[${i}]: step "${s}" matches no entry`);
       })
     );
+    (ctx.actions || []).forEach((a, i) => {
+      if (a.at && !ids.has(a.at)) problems.push(`actions[${i}] (${a.name || "?"}): at "${a.at}" matches no entry`);
+    });
     console.log(problems.length ? "\ncheck failed:\n- " + problems.join("\n- ") : "\ncheck ok");
     process.exit(problems.length ? 1 : 0);
   }

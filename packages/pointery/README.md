@@ -51,8 +51,8 @@ your app.
 
 1. **UI (this package):** `<Pointery/>` palette, toast, pulse on
    `data-pointery="..."` elements, guide walk, allowlisted actions.
-2. **Map (`pointery.context.json`, yours):** `{ targets, guides,
-   actions, answers }` — a ship-time index of stable UI anchors (never
+2. **Map (`pointery.context.json`, yours):** `{ entries, flows,
+   actions }` — a ship-time index of stable UI anchors (never
    per-record ids, never live values). Built by your coding agent running our
    prompt (`POINTERY_PROMPT.md`), not by us.
 3. **Brain (your key):** pass `llm: { url, key }` to

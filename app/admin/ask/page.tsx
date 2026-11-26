@@ -100,7 +100,7 @@ export default function StudioPage() {
           </span>
           {ctx && (
             <span className="rounded-full bg-violet-50 px-3 py-1 font-medium text-violet-900">
-              {ctx.targets?.length ?? 0} targets · {ctx.guides?.length ?? 0} guides · {ctx.answers?.length ?? 0} answers · {ctx.actions?.length ?? 0} actions
+              {(ctx.entries?.length ?? 0)} entries · {(ctx.flows?.length ?? 0)} flows · {(ctx.actions?.length ?? 0)} actions
             </span>
           )}
         </div>
@@ -178,18 +178,18 @@ export default function StudioPage() {
           <div className="mt-3 overflow-x-auto">
             <table className="w-full text-xs">
               <thead className="text-left uppercase tracking-wider text-zinc-400">
-                <tr><th className="py-1 pr-3">key</th><th className="py-1 pr-3">page</th><th className="py-1">hint</th></tr>
+                <tr><th className="py-1 pr-3">id</th><th className="py-1 pr-3">page</th><th className="py-1">label — for</th></tr>
               </thead>
               <tbody className="divide-y font-mono">
-                {ctx.targets.map((t) => (
-                  <tr key={t.key}><td className="py-1 pr-3">{t.key}</td><td className="py-1 pr-3">{t.page}</td><td className="py-1 font-sans">{t.hint}</td></tr>
+                {(ctx.entries ?? []).map((t) => (
+                  <tr key={t.id}><td className="py-1 pr-3">{t.id}</td><td className="py-1 pr-3">{t.page}</td><td className="py-1 font-sans">{t.label}{t.for ? ` — ${t.for}` : ""}</td></tr>
                 ))}
               </tbody>
             </table>
           </div>
           <p className="mt-3 font-mono text-xs text-zinc-500">
-            guides: {ctx.guides.map((g) => `${g.id} (${g.steps.length})`).join(", ") || "—"} · actions:{" "}
-            {ctx.actions.map((a) => `${a.name}${a.confirm ? " ⚠" : ""}`).join(", ") || "—"}
+            flows: {(ctx.flows ?? []).map((g) => `${g.id} (${g.steps.length})`).join(", ") || "—"} · actions:{" "}
+            {(ctx.actions ?? []).map((a) => `${a.name}${a.confirm ? " ⚠" : ""}`).join(", ") || "—"}
           </p>
         </div>
       )}

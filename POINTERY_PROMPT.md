@@ -22,20 +22,20 @@ is set). Re-run whenever your UI changes.
 > 2. Add a stable `data-pointery="kebab-id"` to each. Only real selectors that
 >    exist in the rendered DOM — never invent ids. Keep ids stable across
 >    refactors.
-> 3. Update `pointery.context.json` to match:
->    `{ targets: [{ key, page, hint, keywords[] }], guides: [{ id, title,
->    keywords[], steps: [{ text, go, spot }] }], answers: [{ keywords[],
->    answer, spot?, go? }], actions: [{ name, label, confirm, keywords[] }] }`
->    - `hint`: one line a user would understand ("Export — downloads CSV").
->    - `keywords`: every phrasing a user might type ("export", "csv",
->      "download report", "where is export").
->    - `answers[]` holds static copy only ("Export downloads a CSV") — never
->      live per-user data. If it needs a number or a name, it doesn't belong here.
+> 3. Update `pointery.context.json` to match — identity + purpose + place,
+>    no sentences, no live values:
+>    `{ version: 2, entries: [{ id, page, label, for, type, aliases?, rows? }],
+>    flows: [{ id, title, steps: [entryId...], aliases? }],
+>    actions: [{ name, label, confirm, at, aliases? }] }`
+>    - `label`: the element's own words ("Export"). `for`: stable purpose,
+>      one clause ("Downloads the pipeline as CSV") — never an instruction.
+>    - `aliases`: non-obvious synonyms only ("csv"). Matching derives from
+>      label + for; never list phrasings ("where is export" doesn't belong here).
+>    - `flows[].steps` = entry ids in walk order; wording is generated, not stored.
+>    - `actions[].at` = the entry id it runs against.
 >    - `confirm: true` for anything destructive (delete, charge, send, close).
->    - `steps[].go` = route, `steps[].spot` = an id from step 2 on that route
->      (same page as the step's `go`).
-> 4. Keep it small: max ~40 targets, ~10 guides, only allowlisted actions.
->    Delete stale keys for removed UI.
+> 4. Keep it small: max ~40 entries, ~10 flows, only allowlisted actions.
+>    Delete stale ids for removed UI.
 > 5. Run `npx pointery init --check` and fix whatever it reports (guide step
 >    pointing at a missing target or wrong page, live `$` data baked into the map).
 > 6. Brain (my key, my bill): if I want the LLM instead of the keyword
@@ -54,11 +54,11 @@ is set). Re-run whenever your UI changes.
 >    `<Pointery/>` (whose client wrapper listens for it) updates without
 >    reload. Personalize it on first run from the files you just wrote:
 >    status probe and example suggestions must use real queries from the
->    context (a guide title, an answer keyword — never the "export"
+>    context (a flow title, an entry label — never the "export"
 >    placeholder if the app has no export), and defaults (trigger, theme,
 >    position, allowActions) must mirror `pointery.config.json`. Tag its
 >    controls with `data-pointery` ids and keep the matching
->    `pointery-settings-*` targets on page `/pointery` in sync; re-run step 5.
+>    `pointery-settings-*` entries on page `/pointery` in sync; re-run step 5.
 >
 > Then show me the wiring diff: mount `<Pointery/>` once in `layout.tsx`
 > (via a client wrapper that loads `pointery.config.json` and listens for

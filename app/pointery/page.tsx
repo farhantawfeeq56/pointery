@@ -45,7 +45,7 @@ export default function PointerySettingsPage() {
       .then((r) => r.json().catch(() => null))
       .then((d) => {
         const c = d?.context as PointeryContext | undefined;
-        if (c) setCounts(`${c.targets?.length ?? 0} targets · ${c.guides?.length ?? 0} guides · ${c.answers?.length ?? 0} answers · ${c.actions?.length ?? 0} actions`);
+        if (c) setCounts(`${c.entries?.length ?? 0} entries · ${c.flows?.length ?? 0} flows · ${c.actions?.length ?? 0} actions`);
       })
       .catch(() => {});
     fetch("/api/ask", {
