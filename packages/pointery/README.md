@@ -55,10 +55,11 @@ your app.
    actions }` — a ship-time index of stable UI anchors (never
    per-record ids, never live values). Built by your coding agent running our
    prompt (`POINTERY_PROMPT.md`), not by us.
-3. **Brain (your key):** pass `llm: { url, key }` to
-   `createAskHandler` to forward `{ query, candidates, page }` — the
+3. **Brain (your key, only when needed):** pass `llm: { url, key }` to
+   `createAskHandler` — local keywords answer `where/how/do` first (fast,
+   free); only on a local miss it forwards `{ query, candidates, page }` — the
    top-ranked slice of the map, never the whole file — to your own
-   model endpoint. Otherwise the bundled keyword resolver answers
+   model endpoint for answers, row `filter`, paraphrase. Otherwise the bundled keyword resolver answers
    locally. No calls to us, no data to us.
 
 ## Props

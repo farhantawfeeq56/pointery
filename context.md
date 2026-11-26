@@ -153,3 +153,10 @@ Actions blocked by default, fall through to spot/go/guide.
 - `Pointery.tsx`: `DEFAULTS.allowActions` `["mark-won",…]` → `[]`; blocked action no longer returns early — toasts "needs approval — taking you there instead", strips `action`, continues to `go/spot/guide` handling. Also drops the CRM demo leak from kit defaults.
 - `server.ts` + `types.ts`: new `AskHandlerOptions.allowActions`; `sanitizeResult` drops non-listed actions but keeps `spot/go/guide/hint` (verified: `[]` → `{spot,hint}`, allowed → full `{action,confirm,spot,hint}`); local path now also sanitized. Unset = back-compat (allows all) so harness demo keeps working; UI default `[]` is the block.
 - Package README `allowActions` row updated. Lint clean (dist removed per repo rule), `kit:build` clean.
+
+## Pass 19 (feat/basic-changes, 2026-11-26)
+Hybrid brain: local first, LLM only where it wins.
+
+- `server.ts` `createAskHandler` was LLM-first (every ask hit the model when configured). Now: resolve locally first; confident hit (`spot/go/action/guide`) returns at once with `guard` — fast, free, no key spend. Only on a local miss (empty) and non-blank query does it forward `{ query, candidates, page }` to `opts.llm`, sanitize + guard that too, and fall back to the local miss when the LLM misses/fails.
+- Local covers `where/how/do` navigation, guides, allowlisted actions. LLM covers only what keywords can't: `answer`, `filter` row search on `rows:true`, paraphrase/fuzzy. `guard` now applies to both paths (was local-only, so an LLM `go:/demo…` could bypass the prod demo block).
+- Package README brain row reworded to match. Verified: `kit:build` clean; stub-host check — local hit returns without touching LLM, nonsense query falls through to `{}` when host dead, guard overrides both paths.

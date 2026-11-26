@@ -30,10 +30,15 @@ function sanitizeResult(r: PointeryResult, context: PointeryContext, allowed?: s
 
 /**
  * Build a `POST(req)` handler for the consumer's `/api/ask` route.
- * Uses the bundled keyword resolver; when `opts.llm` is set, forwards
+ * Tries the bundled keyword resolver first; only when it misses (no
+ * spot/go/action/guide) and `opts.llm` is set, forwards
  * `{ query, candidates, page }` — the top-ranked slice of the map, never the
- * whole file — to the customer's own model endpoint first
- * (their key, their cost — nothing comes to us) and falls back locally.
+ * whole file — to the customer's own model endpoint
+ * (their key, their cost — nothing comes to us).
+ *
+ * Local wins `where/how/do` navigation, guides and allowlisted actions
+ * (fast, free). The LLM handles only what keywords can't: answers,
+ * `filter` row search on `rows:true` spots, paraphrase and fuzzy queries.
  *
  * ```ts
  * // app/api/ask/route.ts
@@ -48,7 +53,14 @@ export function createAskHandler(context: PointeryContext, opts: AskHandlerOptio
     const query = typeof body.query === "string" ? body.query : "";
     const page = typeof body.page === "string" ? body.page : undefined;
 
-    if (opts.llm?.url) {
+    const local = sanitizeResult(resolveQuery(query, context, page), context, opts.allowActions);
+    // Confident local hit: skip the LLM entirely (fast, free).
+    if (local.spot || local.go || local.action || local.guide) {
+      const override: PointeryResult | null = opts.guard?.(query, local) ?? null;
+      return Response.json(override ?? local);
+    }
+
+    if (opts.llm?.url && query.trim()) {
       try {
         const candidates = retrieveCandidates(query, context, {
           entries: opts.retrieve?.entries ?? 8,
@@ -64,13 +76,18 @@ export function createAskHandler(context: PointeryContext, opts: AskHandlerOptio
           },
           body: JSON.stringify({ query, candidates, page }),
         });
-        if (r.ok) return Response.json(sanitizeResult(await r.json(), context, opts.allowActions));
+        if (r.ok) {
+          const llm = sanitizeResult(await r.json(), context, opts.allowActions);
+          const override: PointeryResult | null = opts.guard?.(query, llm) ?? null;
+          const final = override ?? llm;
+          // LLM miss too: return the (empty) local result, guarded.
+          if (final.spot || final.go || final.action || final.guide || final.answer) return Response.json(final);
+        }
       } catch {
-        // fall through to local resolver
+        // fall through to local miss below
       }
     }
 
-    const local = sanitizeResult(resolveQuery(query, context, page), context, opts.allowActions);
     const override: PointeryResult | null = opts.guard?.(query, local) ?? null;
     return Response.json(override ?? local);
   };
