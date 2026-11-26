@@ -68,8 +68,10 @@ is set). Re-run whenever your UI changes.
 >
 > Then show me the wiring diff: mount `<Pointery/>` once in `layout.tsx`
 > (via a client wrapper that loads `pointery.config.json` and listens for
-> `pointery:config`), ensure `/api/ask` calls `createAskHandler(context)`
-> (or my LLM with the context), and confirm `/pointery` saves to disk, done.
+> `pointery:config`), gated off marketing pages (wrapper returns null on
+> `/`, or mount only in the `(app)` group layout), ensure `/api/ask` calls
+> `createAskHandler(context)` (or my LLM with the context), and confirm
+> `/pointery` saves to disk, done.
 
 **Rules for the agent:** no fake selectors, `confirm:true` on destructive,
 re-run on UI change. This file is versioned per stack (Next / Vue / HTML) —
