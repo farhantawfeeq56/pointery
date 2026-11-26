@@ -178,3 +178,11 @@ Package fix: buyers now gate the palette off marketing pages.
 Standing rule: package-first.
 
 - `AGENTS.md` "Rules for that code" now leads with: buyer-facing changes go in `packages/pointery`, never only in the harness (`app/` is the demo, nothing there ships). Harness updated to match, not vice versa; `app/`-only changes must be called out as demo-specific. (This rule itself lives in the harness repo's AGENTS.md, not the npm package — correctly, since it's a contributor rule.)
+
+## Pass 23 (feat/basic-changes, 2026-11-26)
+Settings merged: /admin/ask renders /pointery, both hidden in prod.
+
+- `app/admin/ask/page.tsx` is now a 5-line alias rendering `@/app/pointery/page` (the canonical settings UI and CLI starter source — untouched, so no `pointery:sync-page` needed). `/pointery` keeps its `pointery-settings-*` ids; the 5 stale `studio-*` entries were pruned from `pointery.context.json` (no flow/action referenced them).
+- New harness-only `layout.tsx` under both routes: `notFound()` when `NODE_ENV === "production"` (unconditional, no env-flag bypass — same rule as the admin PUT routes). Not synced to CLI; buyers' scaffolded page relies on the PUT 403 in prod.
+- Landing (`app/page.tsx`) + demo settings links to `/admin/ask` still resolve — same UI now.
+- Verified: `init --check` ok, `tsc` clean, `npm run lint` clean on changed files (remaining warnings are pre-existing `packages/pointery/dist` noise).
