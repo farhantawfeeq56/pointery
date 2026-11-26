@@ -2,7 +2,7 @@ import { buildGuide, resolveQuery, retrieveCandidates } from "./resolver.js";
 import type { AskHandlerOptions, PointeryContext, PointeryResult } from "./types.js";
 
 /** Drop LLM fields that point outside the shipped map (LLM text is untrusted). Guide steps are rebuilt from the flow — the model picks anchors, never wording. */
-function sanitizeResult(r: PointeryResult, context: PointeryContext): PointeryResult {
+function sanitizeResult(r: PointeryResult, context: PointeryContext, allowed?: string[]): PointeryResult {
   const out: PointeryResult = {};
   const ids = new Set((context.entries ?? []).map((e) => e.id));
   const byId = new Map((context.entries ?? []).map((e) => [e.id, e]));
@@ -10,7 +10,8 @@ function sanitizeResult(r: PointeryResult, context: PointeryContext): PointeryRe
   const actionNames = new Set((context.actions ?? []).map((a) => a.name));
   const flows = new Map((context.flows ?? []).map((f) => [f.id, f]));
   const confirmOf = (name: string) => (context.actions ?? []).find((a) => a.name === name)?.confirm;
-  if (r.action && actionNames.has(r.action)) {
+  // Blocked actions are dropped but spot/go/guide survive — the UI routes there instead.
+  if (r.action && actionNames.has(r.action) && (!allowed || allowed.includes(r.action))) {
     out.action = r.action;
     out.confirm = confirmOf(r.action);
   }
@@ -63,13 +64,13 @@ export function createAskHandler(context: PointeryContext, opts: AskHandlerOptio
           },
           body: JSON.stringify({ query, candidates, page }),
         });
-        if (r.ok) return Response.json(sanitizeResult(await r.json(), context));
+        if (r.ok) return Response.json(sanitizeResult(await r.json(), context, opts.allowActions));
       } catch {
         // fall through to local resolver
       }
     }
 
-    const local = resolveQuery(query, context, page);
+    const local = sanitizeResult(resolveQuery(query, context, page), context, opts.allowActions);
     const override: PointeryResult | null = opts.guard?.(query, local) ?? null;
     return Response.json(override ?? local);
   };

@@ -13,7 +13,7 @@ const DEFAULTS = {
   theme: { primary: "#6d28d9", radius: 14 },
   position: "top" as const,
   suggestions: getSuggestions(),
-  allowActions: ["mark-won", "invite-teammate", "export-pipeline"],
+  allowActions: [],
   labels: { placeholder: 'Ask "where is export?" or "how do I invite?"', empty: "No match — try “export”, “invite”, or “pipeline”.", confirmTitle: "Run this action?" },
   endpoint: "/api/ask",
 };
@@ -135,9 +135,10 @@ export default function Pointery(props: PointeryProps) {
       setRes(data);
       if (data.answer) say(data.answer);
       if (data.guide) { setGuide({ title: data.guide.title, steps: data.guide.steps, i: 0 }); setGuideIdx(0); }
+      // Blocked actions fall through to spot/go/guide below — never execute.
       if (data.action && !cfg.allowActions.includes(data.action)) {
-        say(`Action “${data.action}” is not allowlisted.`);
-        return;
+        say(`“${data.action}” needs approval — taking you there instead.`);
+        data.action = undefined;
       }
       if (data.action) {
         if (data.confirm === false) { setOpen(false); await runAction(data.action); }

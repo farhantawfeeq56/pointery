@@ -146,3 +146,10 @@ Facts-only v2 map: entries/flows/actions, wording generated. (`version: 2` — b
 
 ## Pass 17 (feat/basic-changes, 2026-11-26)
 Runtime row search (fixes #14): `PointeryResult.filter?` for instance queries. Server keeps it only on `rows:true` spots (trimmed, ≤80 chars); fallback never sets it. `pulse(spot, filter)` pulses the matching row (`tr/li/[role=row]`, else children), container on miss, toasts first hit on multi-match (cells joined with `·`). Prompt + starter document the contract; demo suggests "Where is the Acme deal?". Verified live vs stub LLM; eslint, kit tsc, `next build`, `init --check` clean.
+
+## Pass 18 (feat/basic-changes, 2026-11-26)
+Actions blocked by default, fall through to spot/go/guide.
+
+- `Pointery.tsx`: `DEFAULTS.allowActions` `["mark-won",…]` → `[]`; blocked action no longer returns early — toasts "needs approval — taking you there instead", strips `action`, continues to `go/spot/guide` handling. Also drops the CRM demo leak from kit defaults.
+- `server.ts` + `types.ts`: new `AskHandlerOptions.allowActions`; `sanitizeResult` drops non-listed actions but keeps `spot/go/guide/hint` (verified: `[]` → `{spot,hint}`, allowed → full `{action,confirm,spot,hint}`); local path now also sanitized. Unset = back-compat (allows all) so harness demo keeps working; UI default `[]` is the block.
+- Package README `allowActions` row updated. Lint clean (dist removed per repo rule), `kit:build` clean.

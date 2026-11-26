@@ -69,7 +69,7 @@ your app.
 | `theme` | `{ primary: "#6d28d9", radius: 14 }` | Applied as `--pointery-*` CSS vars |
 | `position` | `"top"` | `"top"` / `"center"` / `"bottom"` |
 | `suggestions` | built-in 5 | Buttons shown before typing |
-| `allowActions` | `["mark-won", …]` | Actions the UI will run |
+| `allowActions` | `[]` (blocked) | Actions the UI will run — anything else routes to spot/go/guide |
 | `labels` | english | `placeholder`, `empty`, `confirmTitle` |
 | `endpoint` | `"/api/ask"` | Where queries are POSTed |
 | `onAction` | log + toast | `(name) => void \| Promise<void>` |

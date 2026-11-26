@@ -82,6 +82,8 @@ export type PointeryLLMAdapter = {
 
 export type AskHandlerOptions = {
   llm?: PointeryLLMAdapter;
+  /** When set, other actions are dropped server-side, keeping spot/go/guide. UI defaults to [] (blocked). */
+  allowActions?: string[];
   /** Cap the candidates slice forwarded to the LLM (defaults 8/3/3). */
   retrieve?: { entries?: number; flows?: number; actions?: number };
   /** Return a result to short-circuit (e.g. block demo routes in prod), or null to continue. */
