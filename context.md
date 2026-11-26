@@ -160,3 +160,9 @@ Hybrid brain: local first, LLM only where it wins.
 - `server.ts` `createAskHandler` was LLM-first (every ask hit the model when configured). Now: resolve locally first; confident hit (`spot/go/action/guide`) returns at once with `guard` — fast, free, no key spend. Only on a local miss (empty) and non-blank query does it forward `{ query, candidates, page }` to `opts.llm`, sanitize + guard that too, and fall back to the local miss when the LLM misses/fails.
 - Local covers `where/how/do` navigation, guides, allowlisted actions. LLM covers only what keywords can't: `answer`, `filter` row search on `rows:true`, paraphrase/fuzzy. `guard` now applies to both paths (was local-only, so an LLM `go:/demo…` could bypass the prod demo block).
 - Package README brain row reworded to match. Verified: `kit:build` clean; stub-host check — local hit returns without touching LLM, nonsense query falls through to `{}` when host dead, guard overrides both paths.
+
+## Pass 20 (feat/basic-changes, 2026-11-26)
+Palette gated off the landing page.
+
+- `app/pointery-mount.tsx`: `usePathname` + `HIDDEN = ["/"]` — returns null on marketing pages, mounts `<Pointery/>` everywhere else. Single mount preserved (no per-page mounts). Harness-only; package untouched so no release triggered.
+- Verified: `npm run lint` clean.

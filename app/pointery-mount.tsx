@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Pointery } from "pointery";
 import type { PointeryProps } from "pointery";
+
+// Marketing pages have no app UI to point at — keep the palette inside the app.
+const HIDDEN = ["/"];
 
 // Server-component layout can't render the client <Pointery/> directly.
 // Disk is truth: load pointery.config.json via /api/admin/config so the
@@ -10,6 +14,7 @@ import type { PointeryProps } from "pointery";
 // defaults when the API is unreachable.
 export default function PointeryMount() {
   const [cfg, setCfg] = useState<PointeryProps>({});
+  const path = usePathname();
 
   // Live updates: /pointery settings page dispatches `pointery:config` on every edit
   // so the mounted palette follows disk without a reload.
@@ -41,5 +46,5 @@ export default function PointeryMount() {
       .catch(() => {});
   }, []);
 
-  return <Pointery {...cfg} />;
+  return HIDDEN.includes(path) ? null : <Pointery {...cfg} />;
 }
