@@ -173,3 +173,8 @@ Package fix: buyers now gate the palette off marketing pages.
 - `POINTERY_PROMPT.md` + `packages/pointery/bin/pointery.js` (STARTER_PROMPT, kept in sync): wiring-diff step now says mount via client wrapper "gated off marketing pages (wrapper returns null on `/`, or mount only in the `(app)` group layout)". Harness `app/pointery-mount.tsx` (Pass 20) is the reference implementation.
 - No component/API change — guidance only, so no new props or bundle impact. Note: touches `packages/pointery`, so merging this to main will trigger a release build; hold the PR until release is wanted.
 - Verified: `node --check` on CLI, `npm run lint` clean.
+
+## Pass 22 (feat/basic-changes, 2026-11-26)
+Standing rule: package-first.
+
+- `AGENTS.md` "Rules for that code" now leads with: buyer-facing changes go in `packages/pointery`, never only in the harness (`app/` is the demo, nothing there ships). Harness updated to match, not vice versa; `app/`-only changes must be called out as demo-specific. (This rule itself lives in the harness repo's AGENTS.md, not the npm package — correctly, since it's a contributor rule.)

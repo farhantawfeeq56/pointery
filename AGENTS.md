@@ -72,6 +72,7 @@ Two developers. GitHub Issues is the only to-do list. WhatsApp is for talking, G
 
 Rules for that code:
 
+- **Package-first: buyer-facing changes go in `packages/pointery`, never only in the harness.** `app/` is the demo — nothing there ships to buyers. Any behavior, copy, or wiring pattern a buyer should get belongs in the package (`src/`, `bin/`, or the embedded starters), with the harness updated to match — not the other way round. `app/`-only changes are for demo-specific needs (e.g. hiding our own landing-page palette) and must be called out as such.
 - The harness uses the workspace copy of `pointery`, not the registry one.
 - Subpath imports (`pointery/server`, `pointery/resolver`, `pointery/validate`) work without Next. The root import needs it.
 - Keep relative imports in the package `.js`-suffixed, so Node ESM resolves them.
