@@ -7,7 +7,7 @@ const STEPS = [
   { n: "03", t: "Bring your key", d: "resolver(query, context) in /api/ask. OpenAI, Anthropic, Gemini — you pay, nothing touches us." },
 ];
 
-const TRIES = ["Where is export?", "How do I invite a teammate?", "What is my pipeline worth?"];
+const TRIES = ["Where is export?", "How do I invite a teammate?", "Show me the pipeline table"];
 
 export default function Home() {
   const demo = isDemoEnabled();

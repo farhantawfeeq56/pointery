@@ -1,9 +1,10 @@
 # POINTERY_PROMPT.md — the map-maker (ships with `npx pointery init`, per stack)
 
 Paste this into your coding agent (Cursor / Claude / Copilot). It scans your
-app and fills `pointery.context.json` — the context file your LLM reads on
-every ask (`/api/ask` forwards `{ query, context }` to your own model, or
-the bundled keyword resolver when no LLM is set). Re-run whenever your UI changes.
+app and fills `pointery.context.json` — the ship-time index of stable UI anchors
+your LLM ranks on every ask (`/api/ask` forwards `{ query, candidates, page }`, the
+top-ranked slice, to your own model, or the bundled keyword resolver when no LLM
+is set). Re-run whenever your UI changes.
 
 ---
 
@@ -13,9 +14,11 @@ the bundled keyword resolver when no LLM is set). Re-run whenever your UI change
 > navigate / guide / action). The file `pointery.context.json` is the context
 > my LLM gets with every query — keep it accurate and small. Do this:
 >
-> 1. Scan `app/**` (routes, components). Find every user-facing control or
->    value a user might ask for: nav items, buttons, key numbers, tables,
->    search inputs.
+> 1. Scan `app/**` (routes, components). Find every user-facing control a user
+>    might ask for: nav items, buttons, tables, search inputs. Index stable
+>    anchors only — never per-record ids (no `deal-acme`), never live values
+>    (no `$8,000`, counts, totals). For lists, index the container
+>    (`pipeline-table`), not the rows; the client finds the row text at runtime.
 > 2. Add a stable `data-pointery="kebab-id"` to each. Only real selectors that
 >    exist in the rendered DOM — never invent ids. Keep ids stable across
 >    refactors.
@@ -26,12 +29,15 @@ the bundled keyword resolver when no LLM is set). Re-run whenever your UI change
 >    - `hint`: one line a user would understand ("Export — downloads CSV").
 >    - `keywords`: every phrasing a user might type ("export", "csv",
 >      "download report", "where is export").
+>    - `answers[]` holds static copy only ("Export downloads a CSV") — never
+>      live per-user data. If it needs a number or a name, it doesn't belong here.
 >    - `confirm: true` for anything destructive (delete, charge, send, close).
->    - `steps[].go` = route, `steps[].spot` = an id from step 2 on that route.
+>    - `steps[].go` = route, `steps[].spot` = an id from step 2 on that route
+>      (same page as the step's `go`).
 > 4. Keep it small: max ~40 targets, ~10 guides, only allowlisted actions.
 >    Delete stale keys for removed UI.
 > 5. Run `npx pointery init --check` and fix whatever it reports (guide step
->    pointing at a missing target).
+>    pointing at a missing target or wrong page, live `$` data baked into the map).
 > 6. Brain (my key, my bill): if I want the LLM instead of the keyword
 >    resolver, walk me through it — add `POINTERY_LLM_URL` (my model
 >    endpoint) and `POINTERY_LLM_KEY` to `.env.local`, restart dev, and
@@ -42,8 +48,8 @@ the bundled keyword resolver when no LLM is set). Re-run whenever your UI change
 >    (trigger), brand (primary color + radius with live preview), and
 >    behavior (position, suggestions, allowActions, palette copy). It loads
 >    `pointery.config.json` via GET, auto-saves edits via PUT (debounced)
->    plus a Save button (PUT is dev-only by default; production writes need
->    `POINTERY_ADMIN=1`), applies theme vars live, and dispatches a
+>    plus a Save button (PUT is dev-only and refuses in production — edit the
+>    file directly and redeploy), applies theme vars live, and dispatches a
 >    `pointery:config` CustomEvent with the new config so the mounted
 >    `<Pointery/>` (whose client wrapper listens for it) updates without
 >    reload. Personalize it on first run from the files you just wrote:

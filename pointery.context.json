@@ -1,19 +1,19 @@
 {
   "version": 1,
   "targets": [
-    { "key": "nav-dashboard", "page": "/demo", "hint": "Dashboard — pipeline value and today's tasks", "keywords": ["dashboard", "home", "overview", "pipeline value", "how much pipeline", "20k"] },
+    { "key": "nav-dashboard", "page": "/demo", "hint": "Dashboard — pipeline value and today's tasks", "keywords": ["dashboard", "home", "overview", "pipeline value", "how much pipeline"] },
     { "key": "nav-pipeline", "page": "/demo/pipeline", "hint": "Pipeline — all deals and stages", "keywords": ["pipeline", "deals", "stages", "opportunities", "where is pipeline"] },
     { "key": "nav-contacts", "page": "/demo/contacts", "hint": "Contacts — people and teammates", "keywords": ["contacts", "people", "teammates", "team"] },
     { "key": "nav-settings", "page": "/demo/settings", "hint": "Settings — workspace preferences", "keywords": ["settings", "preferences", "config", "workspace"] },
     { "key": "export-button", "page": "/demo/pipeline", "hint": "Export — downloads the pipeline as CSV", "keywords": ["export", "csv", "download", "where is export"] },
     { "key": "invite-button", "page": "/demo/contacts", "hint": "Invite teammate — sends an email invite", "keywords": ["invite", "teammate", "add user", "add member", "how do i invite"] },
     { "key": "add-deal-button", "page": "/demo/pipeline", "hint": "Add deal — creates a new opportunity", "keywords": ["add deal", "new deal", "create deal", "new opportunity"] },
-    { "key": "pipeline-value", "page": "/demo", "hint": "Pipeline value — total open pipeline is $20,400", "keywords": ["how much", "pipeline value", "total", "revenue", "what is pipeline"] },
-    { "key": "deal-acme", "page": "/demo/pipeline", "hint": "Acme Corp — $8,000 deal in Negotiation", "keywords": ["acme", "mark won", "close deal", "won"] },
+    { "key": "pipeline-value", "page": "/demo", "hint": "Pipeline value — total open pipeline card", "keywords": ["how much", "pipeline value", "total", "revenue", "what is pipeline", "pipeline worth"] },
+    { "key": "pipeline-table", "page": "/demo/pipeline", "hint": "Pipeline table — all deals, find a deal row here", "keywords": ["pipeline table", "deals table", "deals", "deal row", "find deal", "acme", "update deal", "close deal"] },
     { "key": "search-contacts", "page": "/demo/contacts", "hint": "Search contacts — filter people by name", "keywords": ["search", "find contact", "find someone", "filter"] },
     { "key": "studio-status", "page": "/admin/ask", "hint": "Studio status — ask health and context validity", "keywords": ["studio status", "health", "valid", "is ask working"] },
     { "key": "studio-appearance", "page": "/admin/ask", "hint": "Studio appearance — theme, trigger, suggestions", "keywords": ["appearance", "theme", "color", "trigger", "suggestions"] },
-    { "key": "studio-content", "page": "/admin/ask", "hint": "Studio content — targets, guides, actions from disk", "keywords": ["content", "targets", "guides", "context"] },
+    { "key": "studio-content", "page": "/admin/ask", "hint": "Studio content — targets, guides, answers from disk", "keywords": ["content", "targets", "guides", "context"] },
     { "key": "studio-save", "page": "/admin/ask", "hint": "Save to disk — writes pointery.config.json", "keywords": ["save", "save config", "write config", "persist"] },
     { "key": "studio-snippet", "page": "/admin/ask", "hint": "Snippet — copy the Pointery mount code", "keywords": ["snippet", "copy", "install", "mount code"] },
     { "key": "pointery-settings-shortcut", "page": "/pointery", "hint": "Shortcut — keyboard trigger for the palette", "keywords": ["shortcut", "keyboard", "hotkey", "trigger", "shift a", "cmd k"] },
@@ -43,20 +43,18 @@
     },
     {
       "id": "close-deal",
-      "title": "Close the Acme deal",
-      "keywords": ["close", "won", "win deal", "acme"],
+      "title": "Close a deal",
+      "keywords": ["close", "won", "win deal", "close deal"],
       "steps": [
         { "text": "Open the Pipeline", "go": "/demo/pipeline", "spot": "nav-pipeline" },
-        { "text": "Find the Acme Corp row", "go": "/demo/pipeline", "spot": "deal-acme" },
-        { "text": "Run “Mark Acme as Won” (confirm)", "go": "/demo/pipeline", "spot": "deal-acme" }
+        { "text": "Find the deal row in the table", "go": "/demo/pipeline", "spot": "pipeline-table" },
+        { "text": "Run “Mark as Won” (confirm)", "go": "/demo/pipeline", "spot": "pipeline-table" }
       ]
     }
   ],
-  "answers": [
-    { "keywords": ["how much", "pipeline value", "total", "revenue", "pipeline is", "pipeline worth"], "answer": "Open pipeline is $20,400 across 4 deals.", "spot": "pipeline-value", "go": "/demo", "hint": "Pipeline value" }
-  ],
+  "answers": [],
   "actions": [
-    { "name": "mark-won", "label": "Mark Acme as Won", "confirm": true, "keywords": ["mark won", "close acme", "win acme", "mark acme"] },
+    { "name": "mark-won", "label": "Mark deal as Won", "confirm": true, "keywords": ["mark won", "close deal", "win deal"] },
     { "name": "invite-teammate", "label": "Invite teammate", "confirm": true, "keywords": ["invite", "send invite"] },
     { "name": "export-pipeline", "label": "Export pipeline CSV", "confirm": false, "keywords": ["export", "download csv"] }
   ]

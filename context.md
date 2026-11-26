@@ -127,3 +127,13 @@ Security: unauthenticated admin PUT closed in production.
 
 ## Next (not done)
 Real LLM adapter wiring test, POINTERY_PROMPT per-stack versions, row editing of context tables in Studio.
+
+## Pass 15 (feat/basic-changes, 2026-11-26)
+Fixes 1–5: map holds stable UI anchors only, retriever sends candidates, admin writes dev-only.
+
+- **Fix 1 — no live data in the map:** `pointery.context.json` drops `deal-acme` (+`$8,000` hint), `$20,400` answer, `answers[]` → `[]`. New stable `pipeline-table` anchor (`/demo/pipeline`); `pipeline-value` hint/counts generalized; `close-deal` guide steps point at `nav-pipeline`/`pipeline-table`; `mark-won` is generic "Mark deal as Won". Demo `pipeline/page.tsx` adds `data-pointery="pipeline-table"`, drops the per-row `deal-acme` conditional (won-state now keys off `DEALS[0].id`, not a UI id). Suggestions (`resolver.getSuggestions`, `pointery.config.json`, landing `TRIES`) say "Show me the pipeline table", not "pipeline worth" / Acme.
+- **Fix 2 — resolver:** `retrieveCandidates()` ranks top-K (8/3/3) with same-page boost; `resolveQuery` takes `page`, "where…" goes target-first ("where is export?" now navigates instead of firing the action), target threshold `>=3` kills single-word noise, action anchoring scores targets instead of first-hint-contains-word. `Pointery.tsx` POSTs `{ query, page }`.
+- **Fix 4 — LLM gets a slice:** `server.ts` forwards `{ query, candidates, page }` and sanitizes LLM output (unknown spot/action/guide dropped, `confirm` re-echoed from the map). New `PointeryCandidates`/`RetrieveOptions` types, exported from the barrel.
+- **Fix 3 — coupling guardrails:** `validateContext()` (+ CLI `--check`) now also fails on live `$`-data in hints/answers, guide `go` ≠ target `page`, and dangling `answers[].spot`.
+- **Fix 5 — admin lockdown:** both admin PUTs + scaffolded `STARTER_ADMIN_CONFIG_ROUTE` refuse in production unconditionally (no `POINTERY_ADMIN` bypass). Prompt step 7, `AGENTS.md`, package README updated to match.
+- Verified: `tsc` clean, `eslint` clean (dist removed first), `next build` clean, `init --check` ok, fresh-`init` prompt identical to root, resolver spot-checks (export→target, acme→pipeline-table, live-data→1 error).

@@ -52,10 +52,12 @@ your app.
 1. **UI (this package):** `<Pointery/>` palette, toast, pulse on
    `data-pointery="..."` elements, guide walk, allowlisted actions.
 2. **Map (`pointery.context.json`, yours):** `{ targets, guides,
-   actions, answers }`. Built by your coding agent running our
+   actions, answers }` — a ship-time index of stable UI anchors (never
+   per-record ids, never live values). Built by your coding agent running our
    prompt (`POINTERY_PROMPT.md`), not by us.
 3. **Brain (your key):** pass `llm: { url, key }` to
-   `createAskHandler` to forward `{ query, context }` to your own
+   `createAskHandler` to forward `{ query, candidates, page }` — the
+   top-ranked slice of the map, never the whole file — to your own
    model endpoint. Otherwise the bundled keyword resolver answers
    locally. No calls to us, no data to us.
 

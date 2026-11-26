@@ -10,11 +10,11 @@ export default function PipelinePage() {
     const read = () => {
       try {
         const log = JSON.parse(localStorage.getItem("pointery-actions") ?? "[]") as { name: string }[];
-        if (log.some((e) => e.name === "mark-won")) setWon(["deal-acme"]);
+        if (log.some((e) => e.name === "mark-won")) setWon([DEALS[0].id]);
       } catch { /* empty */ }
     };
     read();
-    const on = (e: Event) => { if ((e as CustomEvent).detail === "mark-won") setWon(["deal-acme"]); };
+    const on = (e: Event) => { if ((e as CustomEvent).detail === "mark-won") setWon([DEALS[0].id]); };
     window.addEventListener("pointery:action", on);
     return () => window.removeEventListener("pointery:action", on);
   }, []);
@@ -42,7 +42,7 @@ export default function PipelinePage() {
           <button data-pointery="export-button" onClick={exportCsv} className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700">Export</button>
         </div>
       </div>
-      <div className="overflow-hidden rounded-2xl border bg-white">
+      <div data-pointery="pipeline-table" className="overflow-hidden rounded-2xl border bg-white">
         <table className="w-full text-sm">
           <thead className="bg-zinc-50 text-left text-xs uppercase tracking-wider text-zinc-400">
             <tr><th className="px-4 py-3">Deal</th><th className="px-4 py-3">Stage</th><th className="px-4 py-3 text-right">Value</th><th className="px-4 py-3 text-right">Status</th></tr>
@@ -51,7 +51,7 @@ export default function PipelinePage() {
             {rows.map((d) => {
               const isWon = won.includes(d.id);
               return (
-                <tr key={d.id} data-pointery={d.id === "deal-acme" ? "deal-acme" : undefined} className={isWon ? "bg-green-50" : undefined}>
+                <tr key={d.id} className={isWon ? "bg-green-50" : undefined}>
                   <td className="px-4 py-3 font-medium">{d.name}</td>
                   <td className="px-4 py-3 text-zinc-500">{isWon ? "Closed Won" : d.stage}</td>
                   <td className="px-4 py-3 text-right font-mono">{money(d.value)}</td>
@@ -66,7 +66,7 @@ export default function PipelinePage() {
           </tbody>
         </table>
       </div>
-      <p className="text-xs text-zinc-400">Try: Shift+A → “mark Acme as Won” (confirm) · “where is export?”</p>
+      <p className="text-xs text-zinc-400">Try: Shift+A → “mark deal as won” (confirm) · “where is export?”</p>
     </div>
   );
 }

@@ -97,7 +97,7 @@ export default function Pointery(props: PointeryProps) {
     if (!queryText) return;
     setLoading(true);
     try {
-      const r = await fetch(cfg.endpoint, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ query: queryText }) });
+      const r = await fetch(cfg.endpoint, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ query: queryText, page: window.location.pathname }) });
       const data = (await r.json()) as PointeryResult;
       setRes(data);
       if (data.answer) say(data.answer);

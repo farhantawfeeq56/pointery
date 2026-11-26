@@ -79,7 +79,7 @@ Rules for that code:
 - `POINTERY_PROMPT.md` is also embedded in the CLI as `STARTER_PROMPT`. There is no sync script for it, so change both.
 - `npx pointery init --check` runs `init` first, so it writes any missing starter files before checking.
 - The LLM is set with `POINTERY_LLM_URL` and `POINTERY_LLM_KEY` in `.env.local`. Without a URL, the bundled keyword resolver answers.
-- Any route that writes to disk, including ones `init` scaffolds into a user's app, must require authentication or be disabled in production. The admin `PUT` routes return 403 in production unless `POINTERY_ADMIN=1`, and have no login of their own.
+- Any route that writes to disk, including ones `init` scaffolds into a user's app, must require authentication or be disabled in production. The admin `PUT` routes refuse in production unconditionally (dev-only, no env-flag bypass) and have no login of their own.
 
 Known gaps between `README.md` and the code. Ask before resolving one:
 
@@ -179,3 +179,10 @@ There is no test framework yet. Before calling a change done, run `npm run lint`
 - `cacheComponents` also keeps recently visited routes mounted but hidden (React `<Activity>`), so component state survives navigation and effects are cleaned up and re-run. This matters for Pointery: after navigating, an element matching a `data-pointery` id may exist in a hidden route, and palette or guide state may persist. Target visible elements only.
 - `partialPrefetching: true`: links prefetch a reusable app shell per route. It requires `cacheComponents`.
 - Tailwind runs through the `@tailwindcss/turbopack` loader in `next.config.ts`. There is no PostCSS config or `tailwind.config.*`; theme tokens live in `app/globals.css` under `@theme`.
+
+<!-- pointery:start --> — do not remove; `npx pointery init --force` refreshes this block.
+## Pointery — keep pointery.context.json in sync
+- `pointery.context.json` is the LLM context for in-app ask-anything (`/api/ask` forwards `{ query, context }` to our own model). Keep it small and current: max ~40 targets, ~10 guides, allowlisted actions only.
+- Whenever you add, move, rename, or remove a user-facing control, value, or route: update its `data-pointery="kebab-id"` in code AND its entry in `pointery.context.json` (hint + keywords; `confirm: true` for destructive actions). Keep ids stable; never invent selectors — only ids present in the rendered DOM.
+- After any UI change, run `npx pointery init --check` (fails when a guide step points at a missing target) and fix what it reports.
+<!-- pointery:end -->
