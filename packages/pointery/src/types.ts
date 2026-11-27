@@ -94,7 +94,7 @@ export type PointeryProps = {
   onAction?: (name: string) => void | Promise<void>;
 };
 
-/** Customer's own LLM endpoint (OpenAI-compatible). Required at runtime — the handler 503s without it. We POST `{ model, messages }` (candidates as system context) — key and cost are theirs. `model` is passed through verbatim: copy the exact id from the provider dashboard (`gpt-4o-mini`, `anthropic/claude-3-5-haiku`, …) — it works with OpenAI, OpenRouter, Ollama, or any OpenAI-compatible URL. */
+/** Customer's own LLM endpoint. Required at runtime — the handler 503s without it. OpenAI-compatible is the default wire (`{ model, messages }`); native Anthropic Messages / Gemini `generateContent` URLs are auto-detected from the host — same shape, no extra config. `model` passes through verbatim: copy the exact id from the provider dashboard (`gpt-4o-mini`, `claude-3-5-haiku-latest`, `gemini-2-flash`, `anthropic/claude-3-5-haiku` via OpenRouter, …). Key and cost are theirs. */
 export type PointeryLLMAdapter = {
   url: string;
   key?: string;

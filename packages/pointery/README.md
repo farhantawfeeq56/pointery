@@ -59,10 +59,11 @@ your app.
 3. **Brain (your key, only when needed):** pass `llm: { url, key, model }` to
    `createAskHandler` — local keywords answer `where/how/do` first (fast,
    free); only on a local miss it forwards candidates — the
-   top-ranked slice of the map, never the whole file — as system context in an
-   OpenAI-compatible `{ model, messages }` call to your own endpoint. `model`
-   passes through verbatim, so OpenAI, OpenRouter, Ollama, etc. all work with
-   no per-provider code. Otherwise the bundled keyword resolver answers
+   top-ranked slice of the map, never the whole file — as system context in one
+   LLM call to your own endpoint. OpenAI-compatible is the default wire
+   (OpenAI, OpenRouter, Ollama, …); native Anthropic/Gemini URLs are
+   auto-detected from the host. `model` passes through verbatim — copy the
+   exact id from your provider dashboard. Otherwise the bundled keyword resolver answers
    locally. No calls to us, no data to us.
 
 ## Props

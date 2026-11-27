@@ -228,3 +228,12 @@ One brain setup step: URL + key + model together, single OpenAI-compatible wire.
 - Docs wording updated to the new wire (`AGENTS.md` pointery block + CLI `AGENTS_BLOCK`, `POINTERY_PARTS.md`); `context.md` history left untouched.
 - Verified: mocked 503 on missing model, OpenAI-shape + legacy-shape parses → 200; `node --check` bin, `kit:build`, `lint`, `build` clean.
 - Deliberately not done: native Anthropic/Gemini translators, live `/models` picker, CLI init wizard prompts.
+
+## Pass 29 (feat/basic-changes, 2026-11-27)
+Native Anthropic + Gemini translators, auto-detected from the URL host.
+
+- `packages/pointery/src/server.ts` — `providerFor(url)`: `anthropic.com` → Messages wire (`x-api-key` + `anthropic-version`, `max_tokens`, top-level `system`, `content[].text` parse); `googleapis.com` → generateContent wire (`x-goog-api-key`, `system_instruction` + `generationConfig`, `candidates[0].content.parts[].text` parse); everything else keeps the OpenAI-compatible wire. Same prompt + same `sanitizeResult` on all three; shared `parseJsonText` also strips ``` fences.
+- `src/types.ts` — adapter doc lists the three wires + example native model ids.
+- Buyer docs (package README brain row, `POINTERY_PROMPT.md` step 6 + CLI mirror): native `…/v1/messages` / `…:generateContent` URLs work with the same 3 env vars.
+- Verified: mocked Anthropic/Gemini/OpenAI requests carry the right headers + bodies and parse to 200s; `node --check` bin, `kit:build`, `lint`, `build` clean.
+- Deliberately not done: per-provider model defaults beyond OpenAI (copy the id from the dashboard), live `/models` picker.

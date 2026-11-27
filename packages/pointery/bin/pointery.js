@@ -471,7 +471,7 @@ keyless mode). Re-run whenever your UI changes.
 >    Delete stale ids for removed UI.
 > 5. Run \`npx pointery init --check\` and fix whatever it reports (guide step
 >    pointing at a missing target or wrong page, live \`$\` data baked into the map).
-> 6. Brain (my key, my bill, required — one step): walk me through it — add \`POINTERY_LLM_URL\` (any OpenAI-compatible chat-completions URL), \`POINTERY_LLM_KEY\`, AND \`POINTERY_LLM_MODEL\` (exact model id as the provider spells it) to \`.env.local\` together, restart dev, and
+> 6. Brain (my key, my bill, required — one step): walk me through it — add \`POINTERY_LLM_URL\` (my model endpoint: OpenAI-compatible chat-completions URL, or native Anthropic \`…/v1/messages\` / Gemini \`…:generateContent\` — auto-detected), \`POINTERY_LLM_KEY\`, AND \`POINTERY_LLM_MODEL\` (exact model id as the provider spells it) to \`.env.local\` together, restart dev, and
 >    verify with “where is export?”. Without all three, \`/api/ask\` fails closed (503). OpenAI defaults the model to \`gpt-4o-mini\` when unset; every other provider needs it. Never print or commit the key.
 > 7. Settings page (\`/pointery\`): \`init\` already dropped a starter
 >    (Next: \`app/pointery/page.tsx\` + \`app/api/admin/config/route.ts\`;

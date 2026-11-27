@@ -76,8 +76,9 @@ function sanitizeResult(r: PointeryResult, context: PointeryContext, allowed?: s
  * (curated `pins[]` before generic scoring, combo clauses before single)
  * to save cost — confident hits return at once — but misses need the model:
  * candidates (top-ranked slice, never the whole file) go as system context
- * in an OpenAI-compatible `{ model, messages }` call to the customer's own
- * endpoint (their key, their cost — nothing comes to us).
+ * in one LLM call to the customer's own endpoint (their key, their cost —
+ * nothing comes to us). OpenAI-compatible is the default wire; native
+ * Anthropic/Gemini endpoints are auto-detected from the URL host.
  *
  * Local wins `where/how/do` navigation, guides and allowlisted actions
  * (fast, free). The LLM handles only what keywords can't: answers,
@@ -104,6 +105,33 @@ function defaultModelFor(url: string): string {
     /* relative or empty url — no default */
   }
   return "";
+}
+
+type LLMProvider = "openai" | "anthropic" | "gemini";
+
+/** Native translators live here: Anthropic Messages + Gemini generateContent are
+ *  detected from the URL host — same `{ url, key, model }` shape, no extra config.
+ *  Everything else speaks the OpenAI-compatible wire (OpenAI, OpenRouter, Ollama…). */
+function providerFor(url: string): LLMProvider {
+  try {
+    const host = new URL(url).host;
+    if (host.includes("anthropic.com")) return "anthropic";
+    if (host.includes("googleapis.com")) return "gemini";
+  } catch {
+    /* relative or empty url — default wire */
+  }
+  return "openai";
+}
+
+// shortcut: models sometimes wrap JSON in ``` fences despite the format flag.
+function parseJsonText(text: unknown): unknown {
+  if (typeof text !== "string" || !text.trim()) return {};
+  const clean = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+  try {
+    return JSON.parse(clean);
+  } catch {
+    return {};
+  }
 }
 // Tiny LLM-response cache: normalized query + page + allowActions + model, 5 min TTL, max 200. Repeats cost 0 tokens.
 const llmCache = new Map<string, { at: number; result: PointeryResult }>();
@@ -160,41 +188,57 @@ export function createAskHandler(context: PointeryContext, opts: AskHandlerOptio
           actions: single ? (opts.retrieve?.actions ?? 2) : (opts.retrieve?.actions ?? 3),
           page,
         });
-        // One wire for every provider: OpenAI-compatible chat completions.
-        // `model` passes through verbatim — OpenAI, OpenRouter, Ollama, etc.
-        // all accept it, so hundreds of models work with no per-provider code.
+        // Same prompt on every wire: candidates as system context, JSON-only reply.
+        // OpenAI-compatible is the default; native Anthropic/Gemini bodies are
+        // built from the URL host, so hundreds of models work with no extra config.
+        const provider = providerFor(opts.llm.url);
+        const systemPrompt = `You route in-app help. Candidates (JSON): ${JSON.stringify(candidates)}. Reply with JSON only: { "spot"?, "go"?, "action"?, "filter"?, "answer"?, "hint"?, "guide"?: { "id" }, "plan"?: { "title", "steps": [{ "spot", "go"? }] } }. spot must be an entry id, go an entry page, action a candidate action name, guide.id a candidate flow id. filter only alongside a rows:true spot, max 80 chars.`;
+        const userPrompt = `${q}${page ? ` (current page: ${page})` : ""}`;
+        const headers: Record<string, string> = { "content-type": "application/json" };
+        if (provider === "anthropic") {
+          headers["x-api-key"] = opts.llm.key;
+          headers["anthropic-version"] = "2023-06-01";
+        } else if (provider === "gemini") {
+          headers["x-goog-api-key"] = opts.llm.key;
+        } else if (opts.llm.key) {
+          headers.authorization = `Bearer ${opts.llm.key}`;
+        }
+        // shortcut: Anthropic needs max_tokens; Bearer auth would 401 there, key header above.
+        const llmBody: unknown =
+          provider === "anthropic"
+            ? { model: llmModel, max_tokens: 300, temperature: 0, system: systemPrompt, messages: [{ role: "user", content: userPrompt }] }
+            : provider === "gemini"
+              ? { system_instruction: { parts: [{ text: systemPrompt }] }, contents: [{ role: "user", parts: [{ text: userPrompt }] }], generationConfig: { temperature: 0, maxOutputTokens: 300 } }
+              : {
+                model: llmModel,
+                temperature: 0,
+                max_tokens: 300,
+                response_format: { type: "json_object" },
+                messages: [
+                  { role: "system", content: systemPrompt },
+                  { role: "user", content: userPrompt },
+                ],
+              };
         const r = await fetch(opts.llm.url, {
           method: "POST",
-          headers: {
-            "content-type": "application/json",
-            ...(opts.llm.key ? { authorization: `Bearer ${opts.llm.key}` } : {}),
-          },
-          body: JSON.stringify({
-            model: llmModel,
-            temperature: 0,
-            max_tokens: 300,
-            response_format: { type: "json_object" },
-            messages: [
-              {
-                role: "system",
-                content: `You route in-app help. Candidates (JSON): ${JSON.stringify(candidates)}. Reply with JSON only: { "spot"?, "go"?, "action"?, "filter"?, "answer"?, "hint"?, "guide"?: { "id" }, "plan"?: { "title", "steps": [{ "spot", "go"? }] } }. spot must be an entry id, go an entry page, action a candidate action name, guide.id a candidate flow id. filter only alongside a rows:true spot, max 80 chars.`,
-              },
-              { role: "user", content: `${q}${page ? ` (current page: ${page})` : ""}` },
-            ],
-          }),
+          headers,
+          body: JSON.stringify(llmBody),
         });
         if (r.ok) {
           const data = await r.json();
-          // New wire: OpenAI `choices[0].message.content` (JSON string).
+          // Native shapes: Anthropic `content[].text`, Gemini `candidates[0].content.parts[].text`.
+          // Default wire: OpenAI `choices[0].message.content` (JSON string).
           // Old wire (custom `{ query, candidates }` endpoints): raw result JSON.
-          const content = (data as { choices?: { message?: { content?: unknown } }[] })?.choices?.[0]?.message?.content;
           let payload: unknown = data;
-          if (typeof content === "string" && content.trim()) {
-            try {
-              payload = JSON.parse(content);
-            } catch {
-              payload = {};
-            }
+          if (provider === "anthropic") {
+            const blocks = (data as { content?: { text?: unknown }[] })?.content;
+            payload = parseJsonText(Array.isArray(blocks) ? blocks.find((b) => typeof b?.text === "string")?.text : undefined);
+          } else if (provider === "gemini") {
+            const parts = (data as { candidates?: { content?: { parts?: { text?: unknown }[] } }[] })?.candidates?.[0]?.content?.parts;
+            payload = parseJsonText(Array.isArray(parts) ? parts.find((p) => typeof p?.text === "string")?.text : undefined);
+          } else {
+            const content = (data as { choices?: { message?: { content?: unknown } }[] })?.choices?.[0]?.message?.content;
+            if (typeof content === "string" && content.trim()) payload = parseJsonText(content);
           }
           const llm = sanitizeResult(payload as PointeryResult, context, opts.allowActions);
           const override: PointeryResult | null = opts.guard?.(query, llm) ?? null;
