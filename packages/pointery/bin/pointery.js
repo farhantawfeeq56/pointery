@@ -257,9 +257,12 @@ export default function PointerySettingsPage() {
         </span>
       </div>
       {llm && !llm.configured && (
-        <p className="text-xs text-red-700">
-          Brain setup — one step: add POINTERY_LLM_URL + POINTERY_LLM_KEY + POINTERY_LLM_MODEL to \`.env.local\` together (model = exact id from your provider), restart dev. The key stays in env; this page never handles it. Without all three, /api/ask fails closed (503).
-        </p>
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-xs text-red-800">
+          <p className="font-semibold">Brain setup — one step, one restart (key stays in env, this page never handles it).</p>
+          <p className="mt-1">Add all three to <code className="font-mono">.env.local</code> together — copy the exact model id from your provider dashboard:</p>
+          <pre className="mt-2 overflow-x-auto rounded-lg bg-zinc-950 p-3 font-mono text-[11px] leading-5 text-zinc-100">POINTERY_LLM_URL=https://api.openai.com/v1/chat/completions{"\\n"}POINTERY_LLM_KEY=sk-...{"\\n"}POINTERY_LLM_MODEL=gpt-4o-mini</pre>
+          <p className="mt-1 text-red-700">OpenRouter/Ollama work too — same 3 lines, different URL + model. Without all three, /api/ask fails closed (503).</p>
+        </div>
       )}
       {errors.length > 0 && (
         <ul className="list-disc pl-5 text-xs text-red-700">
@@ -421,8 +424,8 @@ const STARTER_PROMPT = `# POINTERY_PROMPT.md — the map-maker (ships with \`npx
 
 Paste this into your coding agent (Cursor / Claude / Copilot). It scans your
 app and fills \`pointery.context.json\` — the ship-time index of stable UI anchors
-your LLM ranks on every ask (\`/api/ask\` forwards \`{ query, candidates, page }\`, the
-top-ranked slice, to your own model — the LLM is required, there is no
+your LLM ranks on every ask (\`/api/ask\` sends the top-ranked slice as system
+context in an OpenAI-compatible \`{ model, messages }\` call to your own model — the LLM is required, there is no
 keyless mode). Re-run whenever your UI changes.
 
 ---
@@ -506,7 +509,7 @@ const AGENTS_START = "<!-- pointery:start -->";
 const AGENTS_END = "<!-- pointery:end -->";
 const AGENTS_BLOCK = `${AGENTS_START} — do not remove; \`npx pointery init --force\` refreshes this block.
 ## Pointery — keep pointery.context.json in sync
-- \`pointery.context.json\` is the index of stable UI anchors (\`/api/ask\` forwards \`{ query, candidates, page }\` to our own model). Keep it small and current: max ~40 entries, ~10 flows, allowlisted actions only.
+- \`pointery.context.json\` is the index of stable UI anchors (\`/api/ask\` sends the top-ranked slice as system context in an OpenAI-compatible \`{ model, messages }\` call to our own model). Keep it small and current: max ~40 entries, ~10 flows, allowlisted actions only.
 - Whenever you add, move, rename, or remove a user-facing control or route: update its \`data-pointery="kebab-id"\` in code AND its entry in \`pointery.context.json\` (label + purpose; \`confirm: true\` for destructive actions). Keep ids stable; never invent selectors — only ids present in the rendered DOM.
 - After any UI change, run \`npx pointery init --check\` (fails when a flow step points at a missing entry) and fix what it reports.
 ${AGENTS_END}`;

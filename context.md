@@ -217,3 +217,14 @@ Custom keyboard shortcut on /pointery: presets + recorder, generic trigger match
 - Synced installer copy via `npm run pointery:sync-page`; verified `kit:build`, `lint`, `build` clean. Committed locally (4 files).
 - Noted: `pointery.config.json` first suggestion keeps getting re-corrupted with helper text appended (bad textarea state from an open /pointery tab auto-saving?) — fixed the string twice, left radius/position alone, file uncommitted.
 - Deliberately not done: context-table changes (left for last, as asked).
+
+## Pass 28 (feat/basic-changes, 2026-11-27)
+One brain setup step: URL + key + model together, single OpenAI-compatible wire.
+
+- `packages/pointery/src/server.ts` — LLM forward is now OpenAI-compatible `{ model, messages }` (candidates slice as system context, strict JSON instruction); `model` passes through verbatim so OpenAI/OpenRouter/Ollama/any compatible URL works with no per-provider code. `gpt-4o-mini` default on api.openai.com, otherwise 503 names all three vars. Legacy custom-endpoint JSON responses still parse; cache key includes model.
+- `src/types.ts` — `PointeryLLMAdapter` gains `model?`; JSDoc + example updated.
+- Harness `app/api/ask/route.ts` passes `POINTERY_LLM_MODEL`; `app/api/admin/llm/route.ts` reports `{ configured, host, model }` (key never leaves server); `/pointery` pill shows `host / model` and prints the 3-line `.env.local` block when unconfigured.
+- `POINTERY_PROMPT.md` step 6 + wiring diff, package README brain row, CLI `SNIPPET`/`STARTER_PROMPT`: URL + key + model in one step. Installer settings page re-synced via `npm run pointery:sync-page` (canonical source: `app/pointery/page.tsx`).
+- Docs wording updated to the new wire (`AGENTS.md` pointery block + CLI `AGENTS_BLOCK`, `POINTERY_PARTS.md`); `context.md` history left untouched.
+- Verified: mocked 503 on missing model, OpenAI-shape + legacy-shape parses → 200; `node --check` bin, `kit:build`, `lint`, `build` clean.
+- Deliberately not done: native Anthropic/Gemini translators, live `/models` picker, CLI init wizard prompts.

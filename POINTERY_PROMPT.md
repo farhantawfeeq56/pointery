@@ -2,8 +2,8 @@
 
 Paste this into your coding agent (Cursor / Claude / Copilot). It scans your
 app and fills `pointery.context.json` — the ship-time index of stable UI anchors
-your LLM ranks on every ask (`/api/ask` forwards `{ query, candidates, page }`, the
-top-ranked slice, to your own model — the LLM is required, there is no
+your LLM ranks on every ask (`/api/ask` sends the top-ranked slice as system
+context in an OpenAI-compatible `{ model, messages }` call to your own model — the LLM is required, there is no
 keyless mode). Re-run whenever your UI changes.
 
 ---

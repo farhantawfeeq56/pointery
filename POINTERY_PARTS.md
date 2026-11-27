@@ -11,6 +11,11 @@ position, suggestions, allowActions, labels, endpoint (/api/ask), onAction`.
 Theme via `--pointery-primary/--radius`. Needs Next (`"use client"` + `useRouter`);
 import CSS separately via `pointery/styles.css`.
 
+To preview, visit the following pages:
+ - http://localhost:3000/demo/pipeline
+ - http://localhost:3000/pointery
+ - http://localhost:3000/admin/ask
+
 ### 2. `pulse(key, filter?)` — same file, standalone export
 Finds `[data-pointery="..."]`, row-searches `tr/li/[role=row]` on `rows:true` +
 `filter`, `scrollIntoView(center)` + 2.6s outline, fires `pointery:ambiguous`
@@ -27,6 +32,11 @@ on multi-hit.
 → `POST /api/ask`. Local-first, LLM-fallback on miss. `sanitizeResult` drops
 non-allowlisted actions, unknown spots/pages, non-`rows` filters, orphan
 answers/hints; rebuilds guide from flow id.
+
+ 1. Decide who answers — notebook (part 5) or phone-the-expert (LLM).
+ 2. Tell the expert the relevant context — it asks part 5 for the shortlist (top 8/3/3) and hands it as system
+    context in an OpenAI-compatible `{ model, messages }` call. The LLM never sees the whole map, only what part 6 gives it.
+ 3. Clean the reply for the next person (part 1, the UI).
 
 ### 7. Contract — `src/types.ts` + `src/validate.ts`
 `PointeryResult { spot, go, action, filter, confirm, answer, guide, hint }`,
