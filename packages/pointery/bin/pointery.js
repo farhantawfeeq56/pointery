@@ -106,6 +106,8 @@ const DEFAULTS: Config = {
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 
+const ENV_SNIPPET = "POINTERY_LLM_URL=https://api.openai.com/v1/chat/completions\\nPOINTERY_LLM_KEY=sk-...\\nPOINTERY_LLM_MODEL=gpt-4o-mini";
+
 export default function PointerySettingsPage() {
   const [cfg, setCfg] = useState<Config>(DEFAULTS);
   const [loaded, setLoaded] = useState(false);
@@ -116,6 +118,8 @@ export default function PointerySettingsPage() {
   const [errors, setErrors] = useState<string[]>([]);
   const [llm, setLlm] = useState<{ configured: boolean; host: string; model: string } | null>(null);
   const [preview, setPreview] = useState<"closed" | "open">("open");
+  const [callout, setCallout] = useState(1);
+  const [copied, setCopied] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const firstRun = useRef(true);
 
@@ -171,6 +175,25 @@ export default function PointerySettingsPage() {
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
   }, [recording]);
+
+  const copyEnv = useCallback(() => {
+    navigator.clipboard.writeText(ENV_SNIPPET);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1500);
+  }, []);
+
+  // vartest: keys 1-5 switch the brain-callout variant (testing scaffold, remove when locked in).
+  useEffect(() => {
+    const onNum = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      const n = Number(e.key);
+      if (n >= 1 && n <= 5) setCallout(n);
+    };
+    window.addEventListener("keydown", onNum);
+    return () => window.removeEventListener("keydown", onNum);
+  }, []);
 
   // Live: apply theme vars + notify the mounted <Pointery/> instantly.
   const broadcast = useCallback((next: Config) => {
@@ -277,12 +300,13 @@ export default function PointerySettingsPage() {
         }
         .pointery-settings { font-family: "Figtree", ui-sans-serif, system-ui, sans-serif; background: var(--color-background); color: var(--color-text-primary); }
         .pointery-settings input:not(.font-mono), .pointery-settings select, .pointery-settings textarea:not(.font-mono), .pointery-settings button:not(.font-mono) { font-family: inherit; }
-        .py-ok { background: var(--color-success-subtle); color: var(--color-primary-active); }
-        .py-warn { background: var(--color-warning); color: var(--color-warning-text); }
-        .py-err { background: var(--color-error); color: #fff; }
-        .py-idle { background: var(--color-background-secondary); color: var(--color-text-secondary); border: 1px solid var(--color-border); }
+        .py-ok, .py-warn, .py-err, .py-idle, .py-subtle { background: var(--color-background-secondary); color: var(--color-text-secondary); border: 1px solid var(--color-border); }
+        .py-ok::before, .py-warn::before, .py-err::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 999px; margin-right: 6px; vertical-align: 1px; }
+        .py-ok::before { background: var(--color-success); }
+        .py-warn::before { background: var(--color-warning); }
+        .py-err::before { background: var(--color-error); }
         .py-inset { background: var(--color-background-secondary); color: var(--color-text-secondary); border-color: var(--color-border); }
-        .py-subtle { background: var(--color-success-subtle); color: var(--color-text-primary); }
+        .py-code { background: var(--color-background-secondary); border: 1px solid var(--color-border); color: var(--color-text-primary); }
         .py-save { background: var(--color-action-primary); color: #fff; }
         .py-save:hover { background: var(--color-action-primary-hover); }
       \`}</style>
@@ -290,10 +314,9 @@ export default function PointerySettingsPage() {
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-10">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-brand)" }}>Pointery · Settings</p>
-          <h1 className="text-2xl font-semibold tracking-tight">Make it yours</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Pointery Settings</h1>
           <p className="text-sm text-zinc-500">
-            Shortcuts, brand, behavior — auto-saves to <code className="font-mono">pointery.config.json</code> and updates the palette live.
+            Auto saves to <code className="font-mono">pointery.config.json</code> and updates the palette live.
           </p>
         </div>
         <span
@@ -317,12 +340,64 @@ export default function PointerySettingsPage() {
         </span>
       </div>
       {llm && !llm.configured && (
-        <div className="border-l-2 border-red-400 pl-4 text-xs text-red-800">
-          <p className="font-semibold">Brain setup — one step, one restart (key stays in env, this page never handles it).</p>
-          <p className="mt-1">Add all three to <code className="font-mono">.env.local</code> together — copy the exact model id from your provider dashboard:</p>
-          <pre className="mt-2 overflow-x-auto rounded-lg border border-zinc-200 bg-white p-3 font-mono text-[11px] leading-5 text-zinc-800">POINTERY_LLM_URL=https://api.openai.com/v1/chat/completions{"\\n"}POINTERY_LLM_KEY=sk-...{"\\n"}POINTERY_LLM_MODEL=gpt-4o-mini</pre>
-          <p className="mt-1 text-red-700">OpenRouter/Ollama work too — same 3 lines, different URL + model. Without all three, /api/ask fails closed (503).</p>
-        </div>
+        <>
+          {callout === 1 && (
+            <div data-pointery="pointery-settings-brain" className="rounded-xl border bg-white p-4 text-xs" style={{ borderColor: "var(--color-border)" }}>
+              <p className="font-semibold" style={{ color: "var(--color-text-primary)" }}>Brain setup — one step, one restart</p>
+              <p className="mt-1 text-zinc-500">Add all three to <code className="font-mono">.env.local</code> together — copy the exact model id from your provider dashboard. This page never handles your key.</p>
+              <pre className="py-code mt-2 overflow-x-auto rounded-lg p-3 font-mono text-[11px] leading-5">{ENV_SNIPPET}</pre>
+              <button onClick={copyEnv} className="mt-2 rounded-full px-3 py-1 text-xs font-semibold text-white" style={{ background: "var(--color-surface-inverse)" }}>{copied ? "Copied ✓" : "Copy setup lines"}</button>
+            </div>
+          )}
+          {callout === 2 && (
+            <div data-pointery="pointery-settings-brain" className="overflow-hidden rounded-xl border bg-white text-xs" style={{ borderColor: "var(--color-border)" }}>
+              <div className="h-1" style={{ background: "var(--color-error)" }} />
+              <div className="p-4">
+                <p className="font-semibold" style={{ color: "var(--color-text-primary)" }}>LLM required — the brain isn&apos;t configured yet</p>
+                <p className="mt-1 text-zinc-500">/api/ask fails closed (503) until all three lines are in <code className="font-mono">.env.local</code>. OpenRouter/Ollama work too — same 3 lines, different URL + model.</p>
+                <details className="mt-2">
+                  <summary className="cursor-pointer font-medium" style={{ color: "var(--color-text-brand)" }}>Show setup lines</summary>
+                  <pre className="py-code mt-2 overflow-x-auto rounded-lg p-3 font-mono text-[11px] leading-5">{ENV_SNIPPET}</pre>
+                </details>
+              </div>
+            </div>
+          )}
+          {callout === 3 && (
+            <div data-pointery="pointery-settings-brain" className="rounded-full border px-4 py-2 text-xs" style={{ borderColor: "var(--color-border)", background: "var(--color-background-secondary)" }}>
+              <span className="inline-block h-2 w-2 rounded-full" style={{ background: "var(--color-error)" }} />{" "}
+              <strong>Brain not configured.</strong> <span className="text-zinc-500">Add 3 lines to <code className="font-mono">.env.local</code>, restart.</span>{" "}
+              <details className="inline">
+                <summary className="inline cursor-pointer font-medium" style={{ color: "var(--color-text-brand)" }}>Show</summary>
+                <pre className="py-code mt-2 overflow-x-auto rounded-lg p-3 font-mono text-[11px] leading-5">{ENV_SNIPPET}</pre>
+              </details>
+            </div>
+          )}
+          {callout === 4 && (
+            <div data-pointery="pointery-settings-brain" className="rounded-xl border bg-white p-4 text-xs" style={{ borderColor: "var(--color-border)" }}>
+              <p className="font-semibold" style={{ color: "var(--color-text-primary)" }}>Brain setup in 3 steps</p>
+              <ol className="mt-2 list-decimal space-y-2 pl-5 text-zinc-500">
+                <li>Paste these into <code className="font-mono">.env.local</code>{" "}<button onClick={copyEnv} className="rounded-full px-2 py-0.5 text-[11px] font-semibold text-white" style={{ background: "var(--color-surface-inverse)" }}>{copied ? "Copied ✓" : "Copy"}</button>
+                  <pre className="py-code mt-1 overflow-x-auto rounded-lg p-3 font-mono text-[11px] leading-5">{ENV_SNIPPET}</pre>
+                </li>
+                <li>Copy the exact model id from your provider dashboard.</li>
+                <li>Restart the dev server — the key stays in env, this page never sees it.</li>
+              </ol>
+            </div>
+          )}
+          {callout === 5 && (
+            <div data-pointery="pointery-settings-brain" className="text-xs">
+              <p className="font-semibold" style={{ color: "var(--color-error)" }}>Brain setup needed</p>
+              <p className="mt-1 text-zinc-500">Add all three to <code className="font-mono">.env.local</code> together, then restart. Without all three, /api/ask fails closed (503).</p>
+              <pre className="py-code mt-2 overflow-x-auto rounded-lg p-3 font-mono text-[11px] leading-5">{ENV_SNIPPET}</pre>
+            </div>
+          )}
+          <div className="fixed bottom-24 right-5 z-[80] flex items-center gap-1 rounded-full border border-zinc-200 bg-white p-1 shadow-lg" role="toolbar" aria-label="Callout variants">
+            <span className="px-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Callout · 1–5</span>
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button key={n} onClick={() => setCallout(n)} title={\`Variant \${n}\`} className={\`h-7 w-7 rounded-full text-xs font-bold \${callout === n ? "text-white" : "text-zinc-500 hover:bg-zinc-100"}\`} style={callout === n ? { background: "var(--color-surface-inverse)" } : undefined}>{n}</button>
+            ))}
+          </div>
+        </>
       )}
       {errors.length > 0 && (
         <ul className="list-disc pl-5 text-xs text-red-700">
