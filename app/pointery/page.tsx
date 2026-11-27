@@ -176,10 +176,10 @@ export default function PointerySettingsPage() {
         </span>
       </div>
       {llm && !llm.configured && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-xs text-red-800">
+        <div className="border-l-2 border-red-400 pl-4 text-xs text-red-800">
           <p className="font-semibold">Brain setup — one step, one restart (key stays in env, this page never handles it).</p>
           <p className="mt-1">Add all three to <code className="font-mono">.env.local</code> together — copy the exact model id from your provider dashboard:</p>
-          <pre className="mt-2 overflow-x-auto rounded-lg bg-zinc-950 p-3 font-mono text-[11px] leading-5 text-zinc-100">POINTERY_LLM_URL=https://api.openai.com/v1/chat/completions{"\n"}POINTERY_LLM_KEY=sk-...{"\n"}POINTERY_LLM_MODEL=gpt-4o-mini</pre>
+          <pre className="mt-2 overflow-x-auto rounded-lg border border-zinc-200 bg-white p-3 font-mono text-[11px] leading-5 text-zinc-800">POINTERY_LLM_URL=https://api.openai.com/v1/chat/completions{"\n"}POINTERY_LLM_KEY=sk-...{"\n"}POINTERY_LLM_MODEL=gpt-4o-mini</pre>
           <p className="mt-1 text-red-700">OpenRouter/Ollama work too — same 3 lines, different URL + model. Without all three, /api/ask fails closed (503).</p>
         </div>
       )}
@@ -191,8 +191,8 @@ export default function PointerySettingsPage() {
         </ul>
       )}
 
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_400px]">
-        <section data-pointery="pointery-settings-preview" className="rounded-2xl border bg-white p-5 self-start lg:order-2 lg:sticky lg:top-6">
+      <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-12">
+        <section data-pointery="pointery-settings-preview" className="self-start lg:order-2 lg:sticky lg:top-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-sm font-semibold">Preview</h2>
@@ -263,8 +263,8 @@ export default function PointerySettingsPage() {
           </div>
         </section>
 
-        <div className="min-w-0 divide-y divide-zinc-100 rounded-2xl border bg-white lg:order-1">
-          <section data-pointery="pointery-settings-shortcut" className="p-5 sm:p-6">
+        <div className="min-w-0 divide-y divide-zinc-200 lg:order-1">
+          <section data-pointery="pointery-settings-shortcut" className="py-8 first:pt-0">
             <h2 className="text-sm font-semibold">Keyboard shortcut</h2>
             <p className="mt-0.5 text-xs text-zinc-500">Recommended presets, or record your own. ⌘/Ctrl+K always works as a secondary.</p>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -294,7 +294,7 @@ export default function PointerySettingsPage() {
             <p className="mt-2 text-xs text-zinc-500">Try it now — press your shortcut anywhere on this page.</p>
           </section>
 
-          <section data-pointery="pointery-settings-brand" className="p-5 sm:p-6">
+          <section data-pointery="pointery-settings-brand" className="py-8">
             <h2 className="text-sm font-semibold">Brand</h2>
             <p className="mt-0.5 text-xs text-zinc-500">Primary color + corner radius. Preview updates live.</p>
             <div className="mt-3 grid gap-4 sm:grid-cols-2">
@@ -312,7 +312,7 @@ export default function PointerySettingsPage() {
             </div>
           </section>
 
-          <section data-pointery="pointery-settings-behavior" className="p-5 sm:p-6">
+          <section data-pointery="pointery-settings-behavior" className="py-8">
             <h2 className="text-sm font-semibold">Behavior</h2>
             <p className="mt-0.5 text-xs text-zinc-500">Position, suggestions, allowlisted actions, palette copy.</p>
             <label className="mt-3 block text-sm">
@@ -358,7 +358,7 @@ export default function PointerySettingsPage() {
             </div>
           </section>
 
-          <div className="flex items-center gap-3 p-5 sm:p-6">
+          <div className="flex items-center gap-3 py-8">
             <button onClick={saveNow} className="w-fit rounded-full bg-violet-700 px-6 py-2.5 text-sm font-semibold text-white hover:bg-violet-600">
               {saveState === "saved" ? "Saved ✓" : "Save now"}
             </button>
@@ -368,7 +368,7 @@ export default function PointerySettingsPage() {
       </div>
 
       {ctx && (
-        <div data-pointery="pointery-settings-context" className="rounded-2xl border bg-white p-5 text-sm">
+        <div data-pointery="pointery-settings-context" className="border-t border-zinc-200 pt-8 text-sm">
           <h2 className="text-sm font-semibold">Context <span className="font-normal text-zinc-500">(read-only — edit <code className="font-mono">pointery.context.json</code>)</span></h2>
           <div className="mt-3 overflow-x-auto">
             <table className="w-full text-xs">
@@ -389,11 +389,11 @@ export default function PointerySettingsPage() {
         </div>
       )}
 
-      <div data-pointery="pointery-settings-snippet" className="rounded-2xl bg-zinc-950 p-5 text-sm text-zinc-100">
-        <pre className="overflow-x-auto font-mono text-[13px] leading-6">{snippet}</pre>
+      <div data-pointery="pointery-settings-snippet" className="rounded-xl border border-zinc-200 bg-white p-5 text-sm text-zinc-800">
+        <pre className="overflow-x-auto font-mono text-[13px] leading-6 text-zinc-800">{snippet}</pre>
         <button
           onClick={() => { navigator.clipboard.writeText(snippet); }}
-          className="mt-3 rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-zinc-900"
+          className="mt-3 rounded-full bg-zinc-900 px-4 py-1.5 text-xs font-semibold text-white"
         >
           Copy snippet
         </button>
