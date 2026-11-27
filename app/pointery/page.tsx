@@ -163,10 +163,14 @@ export default function PointerySettingsPage() {
 
   const counts = ctx ? `${ctx.entries?.length ?? 0} entries · ${ctx.flows?.length ?? 0} flows · ${ctx.actions?.length ?? 0} actions` : null;
 
-  // Effective (preview-overridden) error states. Live values win unless a vartest toggle forces the failure.
-  const effSave: SaveState = vSave ? "error" : saveState;
-  const effAsk: boolean | null = vAsk ? false : askOk;
-  const effLlm = vLlm ? { configured: false as boolean, host: "", model: "" } : llm;
+  // Effective (preview-overridden) error states. Clean by default; a live failure only shows when its vartest toggle forces it.
+  const effSave: SaveState = vSave ? "error" : saveState === "error" ? "idle" : saveState;
+  const effAsk: boolean | null = vAsk ? false : askOk === false ? true : askOk;
+  const effLlm = vLlm
+    ? { configured: false as boolean, host: "", model: "" }
+    : llm && !llm.configured
+      ? { configured: true as boolean, host: llm.host || "env", model: llm.model }
+      : llm;
   const SAMPLE_CTX_ERRORS = [
     'flows[0] (invite-teammate): steps[2] "nav-teaam" matches no entry',
     'entries[4] (export-button): for looks like live data — keep stable anchors only',
