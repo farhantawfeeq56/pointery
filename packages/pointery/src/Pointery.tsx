@@ -54,6 +54,34 @@ export function pulse(key: string, filter?: string) {
   });
 }
 
+// trigger format: "+"-joined combo, e.g. "shift+a", "cmd+k", "ctrl+shift+p".
+// ctrl/cmd are treated as the same primary mod so presets work cross-platform.
+function parseTrigger(t: string) {
+  const parts = t.toLowerCase().split("+").map((s) => s.trim()).filter(Boolean);
+  const key = parts.pop() ?? "";
+  return {
+    key,
+    shift: parts.includes("shift"),
+    mod: parts.includes("ctrl") || parts.includes("cmd") || parts.includes("meta") || parts.includes("control") || parts.includes("command"),
+    alt: parts.includes("alt") || parts.includes("opt") || parts.includes("option"),
+  };
+}
+
+function triggerMatches(e: KeyboardEvent, trigger: string) {
+  const t = parseTrigger(trigger);
+  if (!t.key || e.key.toLowerCase() !== t.key) return false;
+  // single-char triggers (e.g. "?") need shift to type — don't require it off.
+  if (!(t.key.length === 1 && !t.mod && !t.alt)) {
+    if (e.shiftKey !== t.shift) return false;
+  }
+  if (e.altKey !== t.alt) return false;
+  if (e.ctrlKey || e.metaKey ? !t.mod : t.mod) return false;
+  return true;
+}
+
+const prettyTrigger = (t: string) =>
+  t.split("+").map((p) => (p === "cmd" ? "⌘" : p === "ctrl" ? "Ctrl" : p === "alt" ? "Alt" : p === "shift" ? "Shift" : p.length === 1 ? p.toUpperCase() : p)).join(" + ");
+
 export default function Pointery(props: PointeryProps) {
   const cfg = { ...DEFAULTS, ...props, theme: { ...DEFAULTS.theme, ...props.theme }, labels: { ...DEFAULTS.labels, ...props.labels } };
   const [open, setOpen] = useState(false);
@@ -91,13 +119,13 @@ export default function Pointery(props: PointeryProps) {
     return () => window.removeEventListener("pointery:ambiguous", onAmbiguous);
   }, [say]);
 
-  // trigger: cfg.trigger is primary (Shift+A), Cmd/Ctrl+K always works as secondary
+  // trigger: cfg.trigger is primary (any combo), Cmd/Ctrl+K always works as secondary
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === "INPUT" && open) return; // let them type
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); setOpen((v) => !v); return; }
-      if (cfg.trigger !== "cmd+k" && e.shiftKey && e.key.toLowerCase() === "a" && !e.metaKey && !e.ctrlKey) { e.preventDefault(); setOpen((v) => !v); }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k" && !e.shiftKey && !e.altKey) { e.preventDefault(); setOpen((v) => !v); return; }
+      if (triggerMatches(e, cfg.trigger)) { e.preventDefault(); setOpen((v) => !v); }
       if (e.key === "Escape") { setOpen(false); setGuide(null); setPendingAction(null); }
     };
     window.addEventListener("keydown", onKey);
@@ -163,7 +191,7 @@ export default function Pointery(props: PointeryProps) {
         onClick={() => setOpen(true)}
         aria-label="Ask Pointery"
         className="pointery-fab"
-        title="Ask Pointery (Shift+A)"
+        title={`Ask Pointery (${cfg.trigger})`}
       >?</button>
     );
   }
@@ -231,7 +259,7 @@ export default function Pointery(props: PointeryProps) {
                 </div>
               </div>
             )}
-            <p className="pointery-meta">Shift+A toggles · ⌘K works too · Esc closes</p>
+            <p className="pointery-meta">{prettyTrigger(cfg.trigger)} toggles · ⌘K works too · Esc closes</p>
           </div>
         </div>
       )}

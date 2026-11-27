@@ -27,6 +27,7 @@ export default function PointerySettingsPage() {
   const [cfg, setCfg] = useState<Config>(DEFAULTS);
   const [loaded, setLoaded] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [recording, setRecording] = useState(false);
   const [askOk, setAskOk] = useState<boolean | null>(null);
   const [ctx, setCtx] = useState<PointeryContext | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
@@ -63,6 +64,29 @@ export default function PointerySettingsPage() {
       .then((d) => d && setLlm(d))
       .catch(() => {});
   }, []);
+
+  const prettyShortcut = (t: string) =>
+    t.split("+").map((p) => (p === "cmd" ? "⌘" : p === "ctrl" ? "Ctrl" : p === "alt" ? "Alt" : p === "shift" ? "Shift" : p.length === 1 ? p.toUpperCase() : p)).join(" + ");
+
+  // Custom shortcut recorder: next full combo (not bare modifiers) becomes the trigger.
+  useEffect(() => {
+    if (!recording) return;
+    const onKey = (e: KeyboardEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.key === "Escape") { setRecording(false); return; }
+      if (["Control", "Shift", "Alt", "Meta"].includes(e.key)) return; // wait for the full combo
+      const parts: string[] = [];
+      if (e.ctrlKey || e.metaKey) parts.push(e.metaKey ? "cmd" : "ctrl");
+      if (e.altKey) parts.push("alt");
+      if (e.shiftKey) parts.push("shift");
+      parts.push(e.key.toLowerCase() === " " ? "space" : e.key.toLowerCase());
+      setCfg((c) => ({ ...c, trigger: parts.join("+") }));
+      setRecording(false);
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [recording]);
 
   // Live: apply theme vars + notify the mounted <Pointery/> instantly.
   const broadcast = useCallback((next: Config) => {
@@ -165,7 +189,7 @@ export default function PointerySettingsPage() {
 
       <section data-pointery="pointery-settings-shortcut" className="rounded-2xl border bg-white p-5">
         <h2 className="text-sm font-semibold">Keyboard shortcut</h2>
-        <p className="mt-0.5 text-xs text-zinc-500">Primary trigger. ⌘/Ctrl+K always works as a secondary.</p>
+        <p className="mt-0.5 text-xs text-zinc-500">Recommended presets, or record your own. ⌘/Ctrl+K always works as a secondary.</p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           {(["shift+a", "cmd+k"] as const).map((v) => (
             <button
@@ -174,11 +198,23 @@ export default function PointerySettingsPage() {
               className={`rounded-xl border px-4 py-3 text-left text-sm transition ${cfg.trigger === v ? "border-violet-600 bg-violet-50 ring-1 ring-violet-600" : "hover:border-zinc-400"}`}
             >
               <span className="font-mono font-semibold">{v === "shift+a" ? "Shift + A" : "⌘/Ctrl + K"}</span>
-              <span className="block text-xs text-zinc-500">{v === "shift+a" ? "Default — plus ⌘K" : "Minimal — ⌘K only"}</span>
+              <span className="block text-xs text-zinc-500">{v === "shift+a" ? "Recommended default" : "Recommended minimal"}</span>
             </button>
           ))}
         </div>
-        <p className="mt-2 text-xs text-zinc-500">Try it now — press <kbd className="rounded border bg-zinc-50 px-1.5 py-0.5 font-mono">?</kbd> or your shortcut anywhere on this page.</p>
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => setRecording((r) => !r)}
+            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${recording ? "bg-amber-500 text-white" : "bg-zinc-900 text-white hover:bg-zinc-700"}`}
+          >
+            {recording ? "Press keys… (Esc to cancel)" : "Record your own…"}
+          </button>
+          <span className="text-xs text-zinc-500">
+            Current: <kbd className="rounded border bg-zinc-50 px-1.5 py-0.5 font-mono font-semibold text-zinc-800">{prettyShortcut(cfg.trigger)}</kbd>
+            {cfg.trigger !== "shift+a" && cfg.trigger !== "cmd+k" && <span className="ml-1 rounded-full bg-violet-100 px-2 py-0.5 font-medium text-violet-800">custom</span>}
+          </span>
+        </div>
+        <p className="mt-2 text-xs text-zinc-500">Try it now — press your shortcut anywhere on this page.</p>
       </section>
 
       <section data-pointery="pointery-settings-brand" className="rounded-2xl border bg-white p-5">

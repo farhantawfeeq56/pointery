@@ -82,7 +82,7 @@ export type PointeryPosition = "top" | "center" | "bottom";
 export type PointeryLabels = { placeholder?: string; empty?: string; confirmTitle?: string };
 
 export type PointeryProps = {
-  trigger?: string; // e.g. "shift+a" (default), plus cmd+k always on
+  trigger?: string; // any "+"-joined combo, e.g. "shift+a" (default) or "ctrl+shift+p" — ctrl/cmd treated the same, plus cmd/ctrl+k always on
   theme?: PointeryTheme;
   position?: PointeryPosition;
   suggestions?: string[];
