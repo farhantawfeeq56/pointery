@@ -31,7 +31,7 @@ export default function PointerySettingsPage() {
   const [askOk, setAskOk] = useState<boolean | null>(null);
   const [ctx, setCtx] = useState<PointeryContext | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
-  const [llm, setLlm] = useState<{ configured: boolean; host: string } | null>(null);
+  const [llm, setLlm] = useState<{ configured: boolean; host: string; model: string } | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const firstRun = useRef(true);
 
@@ -167,7 +167,7 @@ export default function PointerySettingsPage() {
           /api/ask {askOk == null ? "…" : askOk ? "reachable ✓" : "unreachable"}
         </span>
         <span className={`rounded-full px-3 py-1 font-medium ${llm?.configured ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
-          {llm == null ? "brain …" : llm.configured ? `LLM → ${llm.host || "env"} ✓` : "LLM required — missing key"}
+          {llm == null ? "brain …" : llm.configured ? `LLM → ${llm.host || "env"}${llm.model ? ` / ${llm.model}` : ""} ✓` : "LLM required — missing key/url/model"}
         </span>
         {counts && <span className="rounded-full bg-violet-50 px-3 py-1 font-medium text-violet-900">{counts}</span>}
         <span className={`rounded-full px-3 py-1 font-medium ${errors.length === 0 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
@@ -175,9 +175,12 @@ export default function PointerySettingsPage() {
         </span>
       </div>
       {llm && !llm.configured && (
-        <p className="text-xs text-red-700">
-          LLM is required — /api/ask fails closed (503) without it. Paste this prompt&apos;s step 6 into your coding agent and it walks you through `.env.local` setup. The key stays in env; this page never handles it.
-        </p>
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-xs text-red-800">
+          <p className="font-semibold">Brain setup — one step, one restart (key stays in env, this page never handles it).</p>
+          <p className="mt-1">Add all three to <code className="font-mono">.env.local</code> together — copy the exact model id from your provider dashboard:</p>
+          <pre className="mt-2 overflow-x-auto rounded-lg bg-zinc-950 p-3 font-mono text-[11px] leading-5 text-zinc-100">POINTERY_LLM_URL=https://api.openai.com/v1/chat/completions{"\n"}POINTERY_LLM_KEY=sk-...{"\n"}POINTERY_LLM_MODEL=gpt-4o-mini</pre>
+          <p className="mt-1 text-red-700">OpenRouter/Ollama work too — same 3 lines, different URL + model. Without all three, /api/ask fails closed (503).</p>
+        </div>
       )}
       {errors.length > 0 && (
         <ul className="list-disc pl-5 text-xs text-red-700">

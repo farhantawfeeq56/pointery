@@ -113,7 +113,7 @@ export default function PointerySettingsPage() {
   const [askOk, setAskOk] = useState<boolean | null>(null);
   const [ctx, setCtx] = useState<PointeryContext | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
-  const [llm, setLlm] = useState<{ configured: boolean; host: string } | null>(null);
+  const [llm, setLlm] = useState<{ configured: boolean; host: string; model: string } | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const firstRun = useRef(true);
 
@@ -249,7 +249,7 @@ export default function PointerySettingsPage() {
           /api/ask {askOk == null ? "…" : askOk ? "reachable ✓" : "unreachable"}
         </span>
         <span className={\`rounded-full px-3 py-1 font-medium \${llm?.configured ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}\`}>
-          {llm == null ? "brain …" : llm.configured ? \`LLM → \${llm.host || "env"} ✓\` : "LLM required — missing key"}
+          {llm == null ? "brain …" : llm.configured ? \`LLM → \${llm.host || "env"}\${llm.model ? \` / \${llm.model}\` : ""} ✓\` : "LLM required — missing key/url/model"}
         </span>
         {counts && <span className="rounded-full bg-violet-50 px-3 py-1 font-medium text-violet-900">{counts}</span>}
         <span className={\`rounded-full px-3 py-1 font-medium \${errors.length === 0 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}\`}>
@@ -258,7 +258,7 @@ export default function PointerySettingsPage() {
       </div>
       {llm && !llm.configured && (
         <p className="text-xs text-red-700">
-          LLM is required — /api/ask fails closed (503) without it. Paste this prompt&apos;s step 6 into your coding agent and it walks you through \`.env.local\` setup. The key stays in env; this page never handles it.
+          Brain setup — one step: add POINTERY_LLM_URL + POINTERY_LLM_KEY + POINTERY_LLM_MODEL to \`.env.local\` together (model = exact id from your provider), restart dev. The key stays in env; this page never handles it. Without all three, /api/ask fails closed (503).
         </p>
       )}
       {errors.length > 0 && (
@@ -468,9 +468,8 @@ keyless mode). Re-run whenever your UI changes.
 >    Delete stale ids for removed UI.
 > 5. Run \`npx pointery init --check\` and fix whatever it reports (guide step
 >    pointing at a missing target or wrong page, live \`$\` data baked into the map).
-> 6. Brain (my key, my bill, required): walk me through it — add \`POINTERY_LLM_URL\` (my model
->    endpoint) and \`POINTERY_LLM_KEY\` to \`.env.local\`, restart dev, and
->    verify with “where is export?”. Without both, \`/api/ask\` fails closed (503). Never print or commit the key.
+> 6. Brain (my key, my bill, required — one step): walk me through it — add \`POINTERY_LLM_URL\` (any OpenAI-compatible chat-completions URL), \`POINTERY_LLM_KEY\`, AND \`POINTERY_LLM_MODEL\` (exact model id as the provider spells it) to \`.env.local\` together, restart dev, and
+>    verify with “where is export?”. Without all three, \`/api/ask\` fails closed (503). OpenAI defaults the model to \`gpt-4o-mini\` when unset; every other provider needs it. Never print or commit the key.
 > 7. Settings page (\`/pointery\`): \`init\` already dropped a starter
 >    (Next: \`app/pointery/page.tsx\` + \`app/api/admin/config/route.ts\`;
 >    other stacks: build the equivalent). SaaS-style controls for shortcut
@@ -493,7 +492,7 @@ keyless mode). Re-run whenever your UI changes.
 > (via a client wrapper that loads \`pointery.config.json\` and listens for
 > \`pointery:config\`), gated off marketing pages (wrapper returns null on
 > \`/\`, or mount only in the \`(app)\` group layout), ensure \`/api/ask\` calls
-> \`createAskHandler(context, { llm: { url, key } })\` (required — no keyless mode), and confirm
+> \`createAskHandler(context, { llm: { url, key, model } })\` (required — no keyless mode), and confirm
 > \`/pointery\` saves to disk, done.
 
 **Rules for the agent:** no fake selectors, \`confirm:true\` on destructive,
@@ -520,7 +519,7 @@ import "pointery/styles.css";
 // API route (app/api/ask/route.ts):
 // import { createAskHandler } from "pointery";
 // import context from "@/pointery.context.json";
-// export const POST = createAskHandler(context, { llm: { url: process.env.POINTERY_LLM_URL ?? "", key: process.env.POINTERY_LLM_KEY ?? "" } });`;
+// export const POST = createAskHandler(context, { llm: { url: process.env.POINTERY_LLM_URL ?? "", key: process.env.POINTERY_LLM_KEY ?? "", model: process.env.POINTERY_LLM_MODEL ?? "" } });`;
 
 function write(name, data) {
   const p = path.join(cwd, name);

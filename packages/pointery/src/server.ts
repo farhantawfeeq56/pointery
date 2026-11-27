@@ -70,13 +70,14 @@ function sanitizeResult(r: PointeryResult, context: PointeryContext, allowed?: s
 
 /**
  * Build a `POST(req)` handler for the consumer's `/api/ask` route.
- * The LLM is required: without `opts.llm` (`url` + `key`) every ask
+ * The LLM is required: without `opts.llm` (`url` + `key` + `model`) every ask
  * fails closed with a 503 + "LLM not configured" answer instead of
  * returning a guessed keyword result. Keyword scoring still runs first
  * (curated `pins[]` before generic scoring, combo clauses before single)
  * to save cost — confident hits return at once — but misses need the model:
- * `{ query, candidates, page }` (top-ranked slice, never the whole file)
- * goes to the customer's own endpoint (their key, their cost — nothing comes to us).
+ * candidates (top-ranked slice, never the whole file) go as system context
+ * in an OpenAI-compatible `{ model, messages }` call to the customer's own
+ * endpoint (their key, their cost — nothing comes to us).
  *
  * Local wins `where/how/do` navigation, guides and allowlisted actions
  * (fast, free). The LLM handles only what keywords can't: answers,
@@ -90,16 +91,26 @@ function sanitizeResult(r: PointeryResult, context: PointeryContext, allowed?: s
  * import { createAskHandler, type PointeryContext } from "pointery";
  * import context from "@/pointery.context.json";
  * export const POST = createAskHandler(context as PointeryContext, {
- *   llm: { url: process.env.POINTERY_LLM_URL ?? "", key: process.env.POINTERY_LLM_KEY ?? "" },
+ *   llm: { url: process.env.POINTERY_LLM_URL ?? "", key: process.env.POINTERY_LLM_KEY ?? "", model: process.env.POINTERY_LLM_MODEL ?? "" },
  * });
  * ```
  */
-// Tiny LLM-response cache: normalized query + page + allowActions, 5 min TTL, max 200. Repeats cost 0 tokens.
+// Smart default so OpenAI works with zero model config; every other provider
+// passes its model id through verbatim (copy it from the provider dashboard).
+function defaultModelFor(url: string): string {
+  try {
+    if (new URL(url).host.includes("openai.com")) return "gpt-4o-mini";
+  } catch {
+    /* relative or empty url — no default */
+  }
+  return "";
+}
+// Tiny LLM-response cache: normalized query + page + allowActions + model, 5 min TTL, max 200. Repeats cost 0 tokens.
 const llmCache = new Map<string, { at: number; result: PointeryResult }>();
 const LLM_CACHE_TTL = 5 * 60 * 1000;
 const LLM_CACHE_MAX = 200;
-const cacheKey = (q: string, page: string | undefined, allowed?: string[]) =>
-  `${q.trim().toLowerCase().slice(0, 200)}|${page ?? ""}|${(allowed ?? []).join(",")}`;
+const cacheKey = (q: string, page: string | undefined, allowed?: string[], model?: string) =>
+  `${q.trim().toLowerCase().slice(0, 200)}|${page ?? ""}|${(allowed ?? []).join(",")}|${model ?? ""}`;
 
 export function createAskHandler(context: PointeryContext, opts: AskHandlerOptions = {}) {
   return async function POST(req: Request): Promise<Response> {
@@ -110,9 +121,11 @@ export function createAskHandler(context: PointeryContext, opts: AskHandlerOptio
     const q = query.trim().slice(0, 200);
 
     // Compulsory brain: fail closed instead of guessing from keywords alone.
-    if (!opts.llm?.url || !opts.llm?.key) {
+    // URL + key + model are asked for together in `.env.local` (one step, one restart).
+    const llmModel = opts.llm?.model?.trim() || defaultModelFor(opts.llm?.url ?? "");
+    if (!opts.llm?.url || !opts.llm?.key || !llmModel) {
       return Response.json(
-        { answer: "LLM not configured. Set POINTERY_LLM_URL and POINTERY_LLM_KEY in .env.local and restart." },
+        { answer: "LLM not configured. Set POINTERY_LLM_URL, POINTERY_LLM_KEY and POINTERY_LLM_MODEL in .env.local and restart." },
         { status: 503 },
       );
     }
@@ -133,7 +146,7 @@ export function createAskHandler(context: PointeryContext, opts: AskHandlerOptio
     }
 
     if (opts.llm?.url && q) {
-      const key = cacheKey(q, page, opts.allowActions);
+      const key = cacheKey(q, page, opts.allowActions, llmModel);
       const hit = llmCache.get(key);
       if (hit && Date.now() - hit.at < LLM_CACHE_TTL) {
         const override: PointeryResult | null = opts.guard?.(query, hit.result) ?? null;
@@ -147,16 +160,43 @@ export function createAskHandler(context: PointeryContext, opts: AskHandlerOptio
           actions: single ? (opts.retrieve?.actions ?? 2) : (opts.retrieve?.actions ?? 3),
           page,
         });
+        // One wire for every provider: OpenAI-compatible chat completions.
+        // `model` passes through verbatim — OpenAI, OpenRouter, Ollama, etc.
+        // all accept it, so hundreds of models work with no per-provider code.
         const r = await fetch(opts.llm.url, {
           method: "POST",
           headers: {
             "content-type": "application/json",
             ...(opts.llm.key ? { authorization: `Bearer ${opts.llm.key}` } : {}),
           },
-          body: JSON.stringify({ query: q, candidates, page }),
+          body: JSON.stringify({
+            model: llmModel,
+            temperature: 0,
+            max_tokens: 300,
+            response_format: { type: "json_object" },
+            messages: [
+              {
+                role: "system",
+                content: `You route in-app help. Candidates (JSON): ${JSON.stringify(candidates)}. Reply with JSON only: { "spot"?, "go"?, "action"?, "filter"?, "answer"?, "hint"?, "guide"?: { "id" }, "plan"?: { "title", "steps": [{ "spot", "go"? }] } }. spot must be an entry id, go an entry page, action a candidate action name, guide.id a candidate flow id. filter only alongside a rows:true spot, max 80 chars.`,
+              },
+              { role: "user", content: `${q}${page ? ` (current page: ${page})` : ""}` },
+            ],
+          }),
         });
         if (r.ok) {
-          const llm = sanitizeResult(await r.json(), context, opts.allowActions);
+          const data = await r.json();
+          // New wire: OpenAI `choices[0].message.content` (JSON string).
+          // Old wire (custom `{ query, candidates }` endpoints): raw result JSON.
+          const content = (data as { choices?: { message?: { content?: unknown } }[] })?.choices?.[0]?.message?.content;
+          let payload: unknown = data;
+          if (typeof content === "string" && content.trim()) {
+            try {
+              payload = JSON.parse(content);
+            } catch {
+              payload = {};
+            }
+          }
+          const llm = sanitizeResult(payload as PointeryResult, context, opts.allowActions);
           const override: PointeryResult | null = opts.guard?.(query, llm) ?? null;
           const final = override ?? llm;
           // LLM miss too: return the (empty) local result, guarded.

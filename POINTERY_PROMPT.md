@@ -49,9 +49,8 @@ keyless mode). Re-run whenever your UI changes.
 >    Delete stale ids for removed UI.
 > 5. Run `npx pointery init --check` and fix whatever it reports (guide step
 >    pointing at a missing target or wrong page, live `$` data baked into the map).
-> 6. Brain (my key, my bill, required): walk me through it — add `POINTERY_LLM_URL` (my model
->    endpoint) and `POINTERY_LLM_KEY` to `.env.local`, restart dev, and
->    verify with “where is export?”. Without both, `/api/ask` fails closed (503). Never print or commit the key.
+> 6. Brain (my key, my bill, required — one step): walk me through it — add `POINTERY_LLM_URL` (any OpenAI-compatible chat-completions URL), `POINTERY_LLM_KEY`, AND `POINTERY_LLM_MODEL` (exact model id as the provider spells it: `gpt-4o-mini`, `anthropic/claude-3-5-haiku`, …) to `.env.local` together, restart dev, and
+>    verify with “where is export?”. Without all three, `/api/ask` fails closed (503). OpenAI defaults the model to `gpt-4o-mini` when unset; every other provider needs it. Never print or commit the key.
 > 7. Settings page (`/pointery`): `init` already dropped a starter
 >    (Next: `app/pointery/page.tsx` + `app/api/admin/config/route.ts`;
 >    other stacks: build the equivalent). SaaS-style controls for shortcut
@@ -74,7 +73,7 @@ keyless mode). Re-run whenever your UI changes.
 > (via a client wrapper that loads `pointery.config.json` and listens for
 > `pointery:config`), gated off marketing pages (wrapper returns null on
 > `/`, or mount only in the `(app)` group layout), ensure `/api/ask` calls
-> `createAskHandler(context, { llm: { url, key } })` (required — no keyless mode), and confirm
+> `createAskHandler(context, { llm: { url, key, model } })` (required — no keyless mode), and confirm
 > `/pointery` saves to disk, done.
 
 **Rules for the agent:** no fake selectors, `confirm:true` on destructive,

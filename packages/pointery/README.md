@@ -56,11 +56,13 @@ your app.
    per-record ids, never live values). Built by your coding agent running our
    prompt (`POINTERY_PROMPT.md`), not by us. Optional `pins[]` are
    curated exact-phrase fast-paths checked before generic scoring.
-3. **Brain (your key, only when needed):** pass `llm: { url, key }` to
+3. **Brain (your key, only when needed):** pass `llm: { url, key, model }` to
    `createAskHandler` — local keywords answer `where/how/do` first (fast,
-   free); only on a local miss it forwards `{ query, candidates, page }` — the
-   top-ranked slice of the map, never the whole file — to your own
-   model endpoint for answers, row `filter`, paraphrase. Otherwise the bundled keyword resolver answers
+   free); only on a local miss it forwards candidates — the
+   top-ranked slice of the map, never the whole file — as system context in an
+   OpenAI-compatible `{ model, messages }` call to your own endpoint. `model`
+   passes through verbatim, so OpenAI, OpenRouter, Ollama, etc. all work with
+   no per-provider code. Otherwise the bundled keyword resolver answers
    locally. No calls to us, no data to us.
 
 ## Props

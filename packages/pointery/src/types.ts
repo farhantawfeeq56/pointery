@@ -94,10 +94,12 @@ export type PointeryProps = {
   onAction?: (name: string) => void | Promise<void>;
 };
 
-/** Customer's own LLM endpoint. Required at runtime — the handler 503s without it. Pointery forwards { query, candidates, page } — key and cost are theirs. */
+/** Customer's own LLM endpoint (OpenAI-compatible). Required at runtime — the handler 503s without it. We POST `{ model, messages }` (candidates as system context) — key and cost are theirs. `model` is passed through verbatim: copy the exact id from the provider dashboard (`gpt-4o-mini`, `anthropic/claude-3-5-haiku`, …) — it works with OpenAI, OpenRouter, Ollama, or any OpenAI-compatible URL. */
 export type PointeryLLMAdapter = {
   url: string;
   key?: string;
+  /** Exact model id as the provider spells it. Defaults to `gpt-4o-mini` on api.openai.com, otherwise required. */
+  model?: string;
 };
 
 export type AskHandlerOptions = {
