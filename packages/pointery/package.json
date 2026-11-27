@@ -29,6 +29,7 @@
   "files": [
     "dist",
     "src/styles.css",
+    "fonts",
     "bin",
     "README.md",
     "LICENSE"
