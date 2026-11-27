@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "pointery/styles.css";
 import PointeryMount from "./pointery-mount";
+import AgentationMount from "./agentation-mount";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col bg-zinc-50 text-zinc-900">
         {children}
         <PointeryMount />
+        <AgentationMount />
       </body>
     </html>
   );
