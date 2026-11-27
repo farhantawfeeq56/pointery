@@ -107,6 +107,13 @@
       "type": "section"
     },
     {
+      "id": "pointery-settings-preview",
+      "page": "/pointery",
+      "label": "Preview",
+      "for": "Palette open and closed states in a sample page",
+      "type": "section"
+    },
+    {
       "id": "pointery-settings-save",
       "page": "/pointery",
       "label": "Save",

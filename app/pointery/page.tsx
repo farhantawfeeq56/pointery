@@ -32,6 +32,7 @@ export default function PointerySettingsPage() {
   const [ctx, setCtx] = useState<PointeryContext | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [llm, setLlm] = useState<{ configured: boolean; host: string; model: string } | null>(null);
+  const [preview, setPreview] = useState<"closed" | "open">("open");
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const firstRun = useRef(true);
 
@@ -189,6 +190,78 @@ export default function PointerySettingsPage() {
           ))}
         </ul>
       )}
+
+      <section data-pointery="pointery-settings-preview" className="rounded-2xl border bg-white p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-semibold">Preview</h2>
+            <p className="mt-0.5 text-xs text-zinc-500">How the palette looks in your app. Updates as you edit.</p>
+          </div>
+          <div className="flex rounded-full bg-zinc-100 p-1 text-xs font-semibold" role="tablist" aria-label="Preview state">
+            {(["closed", "open"] as const).map((s) => (
+              <button
+                key={s}
+                role="tab"
+                aria-selected={preview === s}
+                onClick={() => setPreview(s)}
+                className={`rounded-full px-4 py-1.5 capitalize transition ${preview === s ? "bg-zinc-900 text-white shadow" : "text-zinc-500 hover:text-zinc-800"}`}
+              >
+                {s === "closed" ? "Palette closed" : "Palette open"}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="mt-4 overflow-hidden rounded-xl border">
+          <div className="flex items-center gap-2 border-b bg-zinc-50 px-4 py-2.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
+            <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
+            <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
+            <span className="ml-2 flex-1 truncate rounded-md bg-white px-3 py-1 font-mono text-[11px] text-zinc-500">yourapp.com/pipeline</span>
+          </div>
+          <div className="relative">
+            <div className="grid min-h-[280px] grid-cols-[110px_1fr]">
+              <div className="border-r bg-white p-3">
+                <p className="flex items-center gap-1.5 text-xs font-bold"><span className="h-4 w-4 rounded" style={{ background: cfg.theme.primary }} />Acme</p>
+                <div className="mt-3 space-y-1 text-[11px]">
+                  <p className="rounded px-2 py-1 text-zinc-400">Dashboard</p>
+                  <p className="rounded px-2 py-1 font-semibold" style={{ background: "color-mix(in srgb, var(--c) 12%, transparent)", ["--c" as string]: cfg.theme.primary }}><span style={{ color: cfg.theme.primary }}>● </span>Pipeline</p>
+                  <p className="rounded px-2 py-1 text-zinc-400">Contacts</p>
+                  <p className="rounded px-2 py-1 text-zinc-400">Settings</p>
+                </div>
+              </div>
+              <div className="bg-zinc-50/60 p-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-bold">Pipeline</p>
+                  <div className="flex gap-1.5">
+                    <span className="rounded-full border bg-white px-2.5 py-1 text-[10px] font-medium text-zinc-500">Export</span>
+                    <span className="px-2.5 py-1 text-[10px] font-semibold text-white" style={{ background: cfg.theme.primary, borderRadius: cfg.theme.radius }}>+ Add deal</span>
+                  </div>
+                </div>
+                <div className="mt-3 space-y-1.5">
+                  {["Acme Corp · $8,000 · Negotiation", "Globex · $12,400 · Proposal"].map((r) => (
+                    <p key={r} className="rounded-lg border bg-white px-3 py-2 text-[11px] text-zinc-600">{r}</p>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <span className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center text-base font-bold text-white shadow-lg" style={{ background: cfg.theme.primary, borderRadius: 999 }} title="Ask Pointery">?</span>
+            {preview === "open" && (
+              <div className={`absolute inset-0 flex justify-center bg-black/25 px-4 ${cfg.position === "center" ? "items-center" : cfg.position === "bottom" ? "items-end pb-6" : "items-start pt-6"}`}>
+                <div className="w-full max-w-[360px] bg-white p-2 shadow-2xl" style={{ borderRadius: cfg.theme.radius }} onClick={(e) => e.stopPropagation()}>
+                  <p className="rounded-md border px-3 py-2 text-xs text-zinc-700" style={{ borderRadius: Math.max(4, cfg.theme.radius - 4) }}>{cfg.labels?.placeholder || 'Ask "where is export?"…'}</p>
+                  <div className="flex flex-wrap gap-1.5 px-1 pb-1 pt-2">
+                    {(cfg.suggestions.length ? cfg.suggestions.slice(0, 3) : ["No suggestions yet — add some above"]).map((s) => (
+                      <span key={s} className={`rounded-full border px-2.5 py-1 text-[10px] ${cfg.suggestions.length ? "bg-zinc-50 text-zinc-600" : "text-zinc-400"}`}>{s}</span>
+                    ))}
+                  </div>
+                  <p className="px-1 pt-1 text-[10px] text-zinc-400">{prettyShortcut(cfg.trigger)} toggles · ⌘K works too · Esc closes</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
 
       <section data-pointery="pointery-settings-shortcut" className="rounded-2xl border bg-white p-5">
         <h2 className="text-sm font-semibold">Keyboard shortcut</h2>
