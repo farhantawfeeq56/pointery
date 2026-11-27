@@ -266,3 +266,10 @@ Native Anthropic + Gemini translators, auto-detected from the URL host.
 
 - `app/pointery/page.tsx` — zero `rounded-2xl` cards left: controls are full-bleed sections split by `divide-zinc-200` hairlines, preview lost its card (mock keeps its own single hairline frame), context table sits under a top hairline, snippet + env sample are light bordered code blocks instead of dark boxes, LLM warning is a red left-rule with no fill. Borders remain only where functional (inputs, buttons, mock frame, code).
 - Re-synced via `npm run pointery:sync-page`; `init --check`, `tsc`, `lint`, `next build` clean.
+
+## Pass 34 (feat/basic-changes, 2026-11-27)
+/pointery error-state vartest toolbar (temporary, local only).
+
+- `app/pointery/page.tsx` — floating bottom-right toolbar with checkboxes (Save fail [1], Ask down [2], LLM missing [3]) + ctx 0/1/3 segmented [4] + reset [0]; keys ignored while typing. Forces the four failure states (save badge, ask pill, LLM pill + brain block, context pill + error list) with realistic sample `validateContext` messages.
+- Deliberately NOT re-synced into `STARTER_SETTINGS_PAGE` — remove the toolbar before the next `pointery:sync-page` so it never ships to buyers.
+- Verified: `tsc` clean. `pointery.config.json` left dirty (live testing).
