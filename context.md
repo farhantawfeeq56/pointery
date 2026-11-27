@@ -280,3 +280,10 @@ Vartest toolbar removed; ctx `+N more` collapse kept.
 - `app/pointery/page.tsx` — back to live values everywhere (save/ask/LLM/context); only kept change is the error list shows first 3 + `+N more` line.
 - Not yet re-synced into `STARTER_SETTINGS_PAGE` — run `npm run pointery:sync-page` when ready to ship the collapse to buyers.
 - Verified: `tsc` clean, no vartest references left. `pointery.config.json` still dirty (live testing).
+
+## Pass 36 (feat/basic-changes, 2026-11-27)
+/pointery error/preview division vartest (temporary, local only).
+
+- `app/pointery/page.tsx` — floating bottom-right 1-5 toolbar + 1-5 keys (ignored while typing): 1 baseline, 2 labeled hairline rule, 3 status card, 4 numbered sections w/ top border, 5 pills + Show/Hide issues fold. Single-copy wrapper, no content duplication.
+- Deliberately NOT re-synced into `STARTER_SETTINGS_PAGE` — remove toolbar before sync so it never ships.
+- Verified: `tsc` clean. `pointery.config.json` left dirty (live testing).
