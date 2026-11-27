@@ -245,3 +245,11 @@ Native Anthropic + Gemini translators, auto-detected from the URL host.
 - `pointery.context.json` + `STARTER_CONTEXT` — new `pointery-settings-preview` entry on `/pointery`; re-synced via `npm run pointery:sync-page`; `init --check` ok.
 - Verified: preview moved above per ask; `init --check` clean. Lint/build not re-run (eslint timed out last attempt).
 - Deliberately not done: toast/guide/confirm preview states, keyboard 1/2 switching.
+
+## Pass 31 (feat/basic-changes, 2026-11-27)
+/pointery two-column layout: controls left, preview right (sticky).
+
+- `app/pointery/page.tsx` — container widened to `max-w-6xl`; Shortcut/Brand/Behavior + save row wrapped in a left column, preview section on the right (`lg:grid-cols-[minmax(0,1fr)_400px]`, `lg:sticky lg:top-6`). Preview stays first in DOM so it shows up top on mobile. Removed the small duplicate "Live preview" box from Brand (the full panel covers it).
+- Re-synced via `npm run pointery:sync-page`; `init --check`, `tsc`, `lint`, `next build` all clean.
+- Noted again: a running dev server + open /pointery tab re-dirties `pointery.config.json` `position` via auto-save — reverted, not committed.
+- Deliberately not done: toast/guide/confirm preview states.
