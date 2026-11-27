@@ -253,3 +253,10 @@ Native Anthropic + Gemini translators, auto-detected from the URL host.
 - Re-synced via `npm run pointery:sync-page`; `init --check`, `tsc`, `lint`, `next build` all clean.
 - Noted again: a running dev server + open /pointery tab re-dirties `pointery.config.json` `position` via auto-save — reverted, not committed.
 - Deliberately not done: toast/guide/confirm preview states.
+
+## Pass 32 (feat/basic-changes, 2026-11-27)
+/pointery controls merged into one panel (page feedback: remove box-per-setting look).
+
+- `app/pointery/page.tsx` — left column is now a single `rounded-2xl border bg-white divide-y` panel; Shortcut/Brand/Behavior are plain padded sections separated by dividers, save row included. Preview, context table, and snippet blocks untouched (preview mock needs its frame; snippet is a code block).
+- Re-synced via `npm run pointery:sync-page`; `init --check`, `tsc`, `lint`, `next build` clean.
+- Not committed: `pointery.config.json` keeps changing in the working tree (looks like live testing of the controls) — left dirty deliberately.
