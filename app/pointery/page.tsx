@@ -198,11 +198,13 @@ export default function PointerySettingsPage() {
         .py-warn { background: var(--color-warning); color: var(--color-warning-text); }
         .py-err { background: var(--color-error); color: #fff; }
         .py-idle { background: var(--color-background-secondary); color: var(--color-text-secondary); border: 1px solid var(--color-border); }
+        .py-inset { background: var(--color-background-secondary); color: var(--color-text-secondary); border-color: var(--color-border); }
         .py-subtle { background: var(--color-success-subtle); color: var(--color-text-primary); }
         .py-save { background: var(--color-action-primary); color: #fff; }
         .py-save:hover { background: var(--color-action-primary-hover); }
       `}</style>
-    <div className="pointery-settings mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-10">
+    <div className="pointery-settings w-full flex-1">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-10">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-brand)" }}>Pointery · Settings</p>
@@ -254,7 +256,7 @@ export default function PointerySettingsPage() {
               <h2 className="text-sm font-semibold">Preview</h2>
               <p className="mt-0.5 text-xs text-zinc-500">How the palette looks in your app. Updates as you edit.</p>
             </div>
-            <div className="flex rounded-full bg-zinc-100 p-1 text-xs font-semibold" role="tablist" aria-label="Preview state">
+            <div className="py-inset flex rounded-full p-1 text-xs font-semibold" role="tablist" aria-label="Preview state">
               {(["closed", "open"] as const).map((s) => (
                 <button
                   key={s}
@@ -269,7 +271,7 @@ export default function PointerySettingsPage() {
             </div>
           </div>
           <div className="mt-4 overflow-hidden rounded-xl border">
-            <div className="flex items-center gap-2 border-b bg-zinc-50 px-4 py-2.5">
+            <div className="py-inset flex items-center gap-2 border-b px-4 py-2.5">
               <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
               <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
               <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
@@ -286,7 +288,7 @@ export default function PointerySettingsPage() {
                     <p className="rounded px-2 py-1 text-zinc-400">Settings</p>
                   </div>
                 </div>
-                <div className="bg-zinc-50/60 p-4">
+                <div className="py-inset p-4">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-bold">Pipeline</p>
                     <div className="flex gap-1.5">
@@ -308,7 +310,7 @@ export default function PointerySettingsPage() {
                     <p className="rounded-md border px-3 py-2 text-xs text-zinc-700" style={{ borderRadius: Math.max(4, cfg.theme.radius - 4) }}>{cfg.labels?.placeholder || 'Ask "where is export?"…'}</p>
                     <div className="flex flex-wrap gap-1.5 px-1 pb-1 pt-2">
                       {(cfg.suggestions.length ? cfg.suggestions.slice(0, 3) : ["No suggestions yet — add some above"]).map((s) => (
-                        <span key={s} className={`rounded-full border px-2.5 py-1 text-[10px] ${cfg.suggestions.length ? "bg-zinc-50 text-zinc-600" : "text-zinc-400"}`}>{s}</span>
+                        <span key={s} className={`rounded-full border px-2.5 py-1 text-[10px] ${cfg.suggestions.length ? "py-inset" : "text-zinc-400"}`}>{s}</span>
                       ))}
                     </div>
                     <p className="px-1 pt-1 text-[10px] text-zinc-400">{prettyShortcut(cfg.trigger)} toggles · ⌘K works too · Esc closes</p>
@@ -344,7 +346,7 @@ export default function PointerySettingsPage() {
                 {recording ? "Press keys… (Esc to cancel)" : "Record your own…"}
               </button>
               <span className="text-xs text-zinc-500">
-                Current: <kbd className="rounded border bg-zinc-50 px-1.5 py-0.5 font-mono font-semibold text-zinc-800">{prettyShortcut(cfg.trigger)}</kbd>
+                Current: <kbd className="py-inset rounded px-1.5 py-0.5 font-mono font-semibold">{prettyShortcut(cfg.trigger)}</kbd>
                 {cfg.trigger !== "shift+a" && cfg.trigger !== "cmd+k" && <span className="py-subtle ml-1 rounded-full px-2 py-0.5 font-medium">custom</span>}
               </span>
             </div>
@@ -455,6 +457,7 @@ export default function PointerySettingsPage() {
           Copy snippet
         </button>
       </div>
+    </div>
     </div>
     </>
   );
