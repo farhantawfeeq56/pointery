@@ -2,6 +2,10 @@ export type PointerySpot = { key: string; page: string; hint: string };
 export type PointeryGuideStep = { text: string; go: string; spot: string };
 export type PointeryGuide = { id: string; title: string; steps: PointeryGuideStep[] };
 
+/** Ad-hoc multi-intent walkthrough — templated steps, same UI as a guide. Max 4 steps. */
+export type PointeryPlanStep = { text: string; go: string; spot: string; filter?: string };
+export type PointeryPlan = { title: string; steps: PointeryPlanStep[] };
+
 /** One UI anchor: identity + purpose + place. No sentences, no live values. */
 export type PointeryEntry = {
   id: string;
@@ -69,6 +73,7 @@ export type PointeryResult = {
   confirm?: boolean;
   answer?: string;
   guide?: PointeryGuide;
+  plan?: PointeryPlan;
   hint?: string;
 };
 

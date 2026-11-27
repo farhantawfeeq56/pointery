@@ -1,4 +1,4 @@
-import type { PointeryContext, PointeryEntry, PointeryFlow, PointeryGuide, PointeryPin, PointeryResult } from "./types.js";
+import type { PointeryContext, PointeryEntry, PointeryFlow, PointeryGuide, PointeryPin, PointeryPlan, PointeryResult } from "./types.js";
 
 type Action = PointeryContext["actions"][number];
 
@@ -48,9 +48,21 @@ export type RetrieveOptions = {
   page?: string;
 };
 
+/** Split a combo query into clauses so each intent contributes candidates. Max 4. */
+export function splitClauses(query: string): string[] {
+  const parts = norm(query)
+    .split(/\b(?:and then|followed by|then|and|&|,|\+|;)+\b/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 2);
+  if (parts.length <= 1) return [norm(query)].filter(Boolean);
+  return parts.slice(0, 4);
+}
+
 /**
  * Rank the map for a query and return only the top candidates.
  * The LLM gets this slice — never the whole file — and writes the wording.
+ * Clause-aware: each "and/then" clause contributes, unioned, so combo
+ * queries don't drown the second intent.
  */
 export function retrieveCandidates(
   query: string,
@@ -60,26 +72,22 @@ export function retrieveCandidates(
   const q = norm(query);
   const { entries: nE = 8, flows: nF = 3, actions: nA = 3, page } = opts;
   if (!q) return { entries: [], flows: [], actions: [] } as Pick<PointeryContext, "entries" | "flows" | "actions">;
-
+  const clauses = splitClauses(query);
+  const multi = clauses.length > 1;
   // Candidates favor recall (>0) — the LLM reranks. Direct resolve below uses MIN_ENTRY_SCORE.
-  const rankEntries = (context.entries ?? [])
-    .map((e) => ({ e, s: entryScore(q, e, page) }))
-    .filter((r) => r.s > 0)
-    .sort((a, b) => b.s - a.s)
-    .slice(0, nE)
-    .map((r) => r.e);
-  const rankFlows = (context.flows ?? [])
-    .map((f) => ({ f, s: flowScore(q, f) }))
-    .filter((r) => r.s > 0)
-    .sort((a, b) => b.s - a.s)
-    .slice(0, nF)
-    .map((r) => r.f);
-  const rankActions = (context.actions ?? [])
-    .map((a) => ({ a, s: actionScore(q, a, context.entries ?? []) }))
-    .filter((r) => r.s > 0)
-    .sort((a, b) => b.s - a.s)
-    .slice(0, nA)
-    .map((r) => r.a);
+  const rankBy = <T>(items: T[], sc: (clause: string, item: T) => number, n: number) => {
+    const best = new Map<T, number>();
+    for (const c of clauses) {
+      for (const item of items) {
+        const s = sc(c, item);
+        if (s > 0) best.set(item, Math.max(best.get(item) ?? 0, s));
+      }
+    }
+    return [...best.entries()].sort((a, b) => b[1] - a[1]).slice(0, multi ? n + 4 : n).map(([item]) => item);
+  };
+  const rankEntries = rankBy(context.entries ?? [], (c, e) => entryScore(c, e as PointeryEntry, page), nE);
+  const rankFlows = rankBy(context.flows ?? [], (c, f) => flowScore(c, f as PointeryFlow), nF);
+  const rankActions = rankBy(context.actions ?? [], (c, a) => actionScore(c, a as Action, context.entries ?? []), nA);
   return { entries: rankEntries, flows: rankFlows, actions: rankActions };
 }
 
@@ -128,6 +136,45 @@ export function matchPin(query: string, context: PointeryContext): PointeryResul
   }
   if (best.go) return { go: best.go, hint: best.hint };
   return null;
+}
+
+/** Build ad-hoc plan steps from anchor ids. Wording is templated like guides — the map holds no sentences. */
+export function buildPlan(ids: string[], entries: PointeryEntry[], title = "Your steps", filters?: Record<string, string>): PointeryPlan {
+  const steps = ids
+    .map((id) => byId(entries, id))
+    .filter((e): e is PointeryEntry => Boolean(e))
+    .slice(0, 4)
+    .map((e) => ({
+      text: e.type === "button" ? `Click ${e.label}` : `Go to ${e.label}`,
+      go: e.page,
+      spot: e.id,
+      ...(filters?.[e.id] && e.rows ? { filter: filters[e.id].slice(0, 80) } : {}),
+    }));
+  return { title: title.slice(0, 80) || "Your steps", steps };
+}
+
+/** Resolve each "and/then" clause locally; return a plan when >=2 clauses hit. Free combo path, no LLM. */
+export function resolveCombo(query: string, context: PointeryContext, page?: string): PointeryResult | null {
+  const clauses = splitClauses(query);
+  if (clauses.length < 2) return null;
+  const seen = new Set<string>();
+  const ids: string[] = [];
+  const filters: Record<string, string> = {};
+  for (const c of clauses) {
+    const r = resolveQuery(c, context, page);
+    const id = r.spot ?? (r.guide?.steps[0]?.spot as string | undefined);
+    if (id && !seen.has(id)) { seen.add(id); ids.push(id); if (r.filter) filters[id] = r.filter; }
+    else if (r.guide) {
+      for (const s of r.guide.steps) {
+        if (!seen.has(s.spot)) { seen.add(s.spot); ids.push(s.spot); if (ids.length >= 4) break; }
+      }
+    }
+    if (ids.length >= 4) break;
+  }
+  if (ids.length < 2) return null;
+  const plan = buildPlan(ids, context.entries ?? [], "Your steps", filters);
+  const first = plan.steps[0];
+  return { plan, spot: first?.spot, go: first?.go, filter: first?.filter, hint: plan.title };
 }
 
 /** Build guide steps from a flow's anchor ids. Wording is templated — the map holds no sentences. */

@@ -6,7 +6,7 @@ import type { PointeryProps, PointeryResult } from "./types.js";
 import { getSuggestions } from "./resolver.js";
 
 type Toast = { id: number; text: string } | null;
-type GuideState = { title: string; steps: { text: string; go: string; spot: string }[]; i: number } | null;
+type GuideState = { title: string; steps: { text: string; go: string; spot: string; filter?: string }[]; i: number } | null;
 
 const DEFAULTS = {
   trigger: "shift+a",
@@ -134,7 +134,8 @@ export default function Pointery(props: PointeryProps) {
       const data = (await r.json()) as PointeryResult;
       setRes(data);
       if (data.answer) say(data.answer);
-      if (data.guide) { setGuide({ title: data.guide.title, steps: data.guide.steps, i: 0 }); setGuideIdx(0); }
+      if (data.plan) { setGuide({ title: data.plan.title, steps: data.plan.steps, i: 0 }); setGuideIdx(0); }
+      else if (data.guide) { setGuide({ title: data.guide.title, steps: data.guide.steps, i: 0 }); setGuideIdx(0); }
       // Blocked actions fall through to spot/go/guide below — never execute.
       if (data.action && !cfg.allowActions.includes(data.action)) {
         say(`“${data.action}” needs approval — taking you there instead.`);
@@ -145,7 +146,7 @@ export default function Pointery(props: PointeryProps) {
         else setPendingAction(data.action);
       }
       else if (data.go || data.spot) goSpot(data.go, data.spot, data.hint, data.filter);
-      else if (!data.answer && !data.guide) say(cfg.labels.empty!);
+      else if (!data.answer && !data.guide && !data.plan) say(cfg.labels.empty!);
     } catch {
       say(`Pointery is unreachable — is ${cfg.endpoint} mounted?`);
     } finally { setLoading(false); }
@@ -153,7 +154,7 @@ export default function Pointery(props: PointeryProps) {
 
   const startGuide = (g: NonNullable<GuideState>) => {
     const s = g.steps[guideIdx];
-    if (s) goSpot(s.go, s.spot, `${g.title} — step ${guideIdx + 1}/${g.steps.length}: ${s.text}`);
+    if (s) goSpot(s.go, s.spot, `${g.title} — step ${guideIdx + 1}/${g.steps.length}: ${s.text}`, s.filter);
   };
 
   if (!open && !guide && !toast && !pendingAction) {
@@ -180,9 +181,9 @@ export default function Pointery(props: PointeryProps) {
           <div className="pointery-guide-title">{guide.title} <span>· {guideIdx + 1}/{guide.steps.length}</span></div>
           <p className="pointery-guide-step">{guide.steps[guideIdx]?.text}</p>
           <div className="pointery-guide-row">
-            <button disabled={guideIdx === 0} onClick={() => { const n = guideIdx - 1; setGuideIdx(n); const s = guide.steps[n]; goSpot(s.go, s.spot); }}>Back</button>
+            <button disabled={guideIdx === 0} onClick={() => { const n = guideIdx - 1; setGuideIdx(n); const s = guide.steps[n]; goSpot(s.go, s.spot, undefined, s.filter); }}>Back</button>
             {guideIdx < guide.steps.length - 1
-              ? <button className="primary" onClick={() => { const n = guideIdx + 1; setGuideIdx(n); const s = guide.steps[n]; goSpot(s.go, s.spot, s.text); }}>Next</button>
+              ? <button className="primary" onClick={() => { const n = guideIdx + 1; setGuideIdx(n); const s = guide.steps[n]; goSpot(s.go, s.spot, s.text, s.filter); }}>Next</button>
               : <button className="primary" onClick={() => { setGuide(null); say("Guide complete."); }}>Done</button>}
             <button onClick={() => setGuide(null)} aria-label="Close guide">✕</button>
           </div>
@@ -219,12 +220,13 @@ export default function Pointery(props: PointeryProps) {
                 ))}
               </div>
             )}
-            {res && (res.go || res.spot || res.action || res.guide) && (
+            {res && (res.go || res.spot || res.action || res.guide || res.plan) && (
               <div className="pointery-result">
                 {res.hint && <p><strong>{res.hint}</strong></p>}
                 <div className="pointery-guide-row">
                   {(res.go || res.spot) && <button className="primary" onClick={() => { goSpot(res.go, res.spot, res.hint, res.filter); setOpen(false); }}>Take me there</button>}
-                  {res.guide && <button className="primary" onClick={() => { setGuideIdx(0); startGuide({ title: res.guide!.title, steps: res.guide!.steps, i: 0 }); setOpen(false); }}>Start guide</button>}
+                  {res.plan && <button className="primary" onClick={() => { setGuideIdx(0); startGuide({ title: res.plan!.title, steps: res.plan!.steps, i: 0 }); setOpen(false); }}>Start steps ({res.plan!.steps.length})</button>}
+                  {res.guide && !res.plan && <button className="primary" onClick={() => { setGuideIdx(0); startGuide({ title: res.guide!.title, steps: res.guide!.steps, i: 0 }); setOpen(false); }}>Start guide</button>}
                   {res.action && <button className="primary" onClick={async () => { const a = res.action!; if (res.confirm) { setOpen(false); setPendingAction(a); } else { setOpen(false); await runAction(a); } }}>Run action</button>}
                 </div>
               </div>
