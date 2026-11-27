@@ -207,3 +207,13 @@ LLM compulsory: fail closed without key instead of guessing from keywords.
 - `POINTERY_PROMPT.md` + embedded `STARTER_PROMPT` + `SNIPPET`: step 6 and wiring diff now say required (no keyless mode).
 - `scripts/sync-starter-page.mjs` — terminator search fixed to backtick-semicolon alone on its line; the old plain `` `; `` match hit the page's nested `snippet` template literal and left a duplicated tail in `bin/pointery.js` (repaired by deleting the orphan).
 - Verified: no-key and url-without-key → 503; configured exact query → 200 local hit without fetch; `kit:build`, `tsc`, `npm run lint`, `npm run build` clean; sync re-run is idempotent.
+
+## Pass 27 (feat/basic-changes, 2026-11-27)
+Custom keyboard shortcut on /pointery: presets + recorder, generic trigger match.
+
+- `packages/pointery/src/Pointery.tsx` — hardcoded shift+a check replaced with generic `parseTrigger`/`triggerMatches` ("+"-joined combo, ctrl/cmd treated as same primary mod cross-platform; single-char triggers like "?" ignore shift). Cmd/Ctrl+K stays hardwired as secondary. Fab title + palette hint now show the actual trigger via `prettyTrigger`.
+- `packages/pointery/src/types.ts` — `trigger` comment updated to custom-combo form.
+- `app/pointery/page.tsx` — shortcut section keeps Shift+A / ⌘-Ctrl+K as recommended presets, adds "Record your own…" (captures next full combo, Esc cancels, bare modifiers ignored) + current-shortcut kbd with a "custom" badge.
+- Synced installer copy via `npm run pointery:sync-page`; verified `kit:build`, `lint`, `build` clean. Committed locally (4 files).
+- Noted: `pointery.config.json` first suggestion keeps getting re-corrupted with helper text appended (bad textarea state from an open /pointery tab auto-saving?) — fixed the string twice, left radius/position alone, file uncommitted.
+- Deliberately not done: context-table changes (left for last, as asked).
