@@ -260,3 +260,9 @@ Native Anthropic + Gemini translators, auto-detected from the URL host.
 - `app/pointery/page.tsx` — left column is now a single `rounded-2xl border bg-white divide-y` panel; Shortcut/Brand/Behavior are plain padded sections separated by dividers, save row included. Preview, context table, and snippet blocks untouched (preview mock needs its frame; snippet is a code block).
 - Re-synced via `npm run pointery:sync-page`; `init --check`, `tsc`, `lint`, `next build` clean.
 - Not committed: `pointery.config.json` keeps changing in the working tree (looks like live testing of the controls) — left dirty deliberately.
+
+## Pass 33 (feat/basic-changes, 2026-11-27)
+/pointery fully flattened (page feedback: no boxes).
+
+- `app/pointery/page.tsx` — zero `rounded-2xl` cards left: controls are full-bleed sections split by `divide-zinc-200` hairlines, preview lost its card (mock keeps its own single hairline frame), context table sits under a top hairline, snippet + env sample are light bordered code blocks instead of dark boxes, LLM warning is a red left-rule with no fill. Borders remain only where functional (inputs, buttons, mock frame, code).
+- Re-synced via `npm run pointery:sync-page`; `init --check`, `tsc`, `lint`, `next build` clean.
