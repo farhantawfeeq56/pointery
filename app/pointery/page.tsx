@@ -263,8 +263,8 @@ export default function PointerySettingsPage() {
           </div>
         </section>
 
-        <div className="flex min-w-0 flex-col gap-6 lg:order-1">
-          <section data-pointery="pointery-settings-shortcut" className="rounded-2xl border bg-white p-5">
+        <div className="min-w-0 divide-y divide-zinc-100 rounded-2xl border bg-white lg:order-1">
+          <section data-pointery="pointery-settings-shortcut" className="p-5 sm:p-6">
             <h2 className="text-sm font-semibold">Keyboard shortcut</h2>
             <p className="mt-0.5 text-xs text-zinc-500">Recommended presets, or record your own. ⌘/Ctrl+K always works as a secondary.</p>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -294,7 +294,7 @@ export default function PointerySettingsPage() {
             <p className="mt-2 text-xs text-zinc-500">Try it now — press your shortcut anywhere on this page.</p>
           </section>
 
-          <section data-pointery="pointery-settings-brand" className="rounded-2xl border bg-white p-5">
+          <section data-pointery="pointery-settings-brand" className="p-5 sm:p-6">
             <h2 className="text-sm font-semibold">Brand</h2>
             <p className="mt-0.5 text-xs text-zinc-500">Primary color + corner radius. Preview updates live.</p>
             <div className="mt-3 grid gap-4 sm:grid-cols-2">
@@ -312,7 +312,7 @@ export default function PointerySettingsPage() {
             </div>
           </section>
 
-          <section data-pointery="pointery-settings-behavior" className="rounded-2xl border bg-white p-5">
+          <section data-pointery="pointery-settings-behavior" className="p-5 sm:p-6">
             <h2 className="text-sm font-semibold">Behavior</h2>
             <p className="mt-0.5 text-xs text-zinc-500">Position, suggestions, allowlisted actions, palette copy.</p>
             <label className="mt-3 block text-sm">
@@ -358,7 +358,7 @@ export default function PointerySettingsPage() {
             </div>
           </section>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 p-5 sm:p-6">
             <button onClick={saveNow} className="w-fit rounded-full bg-violet-700 px-6 py-2.5 text-sm font-semibold text-white hover:bg-violet-600">
               {saveState === "saved" ? "Saved ✓" : "Save now"}
             </button>
