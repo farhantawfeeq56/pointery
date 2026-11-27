@@ -81,6 +81,8 @@ function sanitizeResult(r: PointeryResult, context: PointeryContext, allowed?: s
  * (fast, free). The LLM handles only what keywords can't: answers,
  * `filter` row search on `rows:true` spots, paraphrase and fuzzy queries,
  * and `plan` walkthroughs for "A and B" combo queries.
+ * Token savers: queries capped at 200 chars, single-intent shortlist is
+ * 5/2/2 (combos keep 8/3/3), LLM hits cached 5 min (repeats cost 0).
  *
  * ```ts
  * // app/api/ask/route.ts
@@ -89,33 +91,49 @@ function sanitizeResult(r: PointeryResult, context: PointeryContext, allowed?: s
  * export const POST = createAskHandler(context as PointeryContext);
  * ```
  */
+// Tiny LLM-response cache: normalized query + page + allowActions, 5 min TTL, max 200. Repeats cost 0 tokens.
+const llmCache = new Map<string, { at: number; result: PointeryResult }>();
+const LLM_CACHE_TTL = 5 * 60 * 1000;
+const LLM_CACHE_MAX = 200;
+const cacheKey = (q: string, page: string | undefined, allowed?: string[]) =>
+  `${q.trim().toLowerCase().slice(0, 200)}|${page ?? ""}|${(allowed ?? []).join(",")}`;
+
 export function createAskHandler(context: PointeryContext, opts: AskHandlerOptions = {}) {
   return async function POST(req: Request): Promise<Response> {
     const body = await req.json().catch(() => ({} as Record<string, unknown>));
     const query = typeof body.query === "string" ? body.query : "";
     const page = typeof body.page === "string" ? body.page : undefined;
+    // Cap what we forward — long pastes cost tokens without helping retrieval.
+    const q = query.trim().slice(0, 200);
 
     // Free combo path: each "and/then" clause resolved locally into a plan.
-    const combo = sanitizeResult(resolveCombo(query, context, page) ?? {}, context, opts.allowActions);
+    const combo = sanitizeResult(resolveCombo(q, context, page) ?? {}, context, opts.allowActions);
     if (combo.plan) {
       const override: PointeryResult | null = opts.guard?.(query, combo) ?? null;
       return Response.json(override ?? combo);
     }
-    const local = sanitizeResult(resolveQuery(query, context, page), context, opts.allowActions);
+    const local = sanitizeResult(resolveQuery(q, context, page), context, opts.allowActions);
     // Confident local hit: skip the LLM entirely (fast, free) — unless the
     // query looks like a combo whose other half the single hit would hide.
-    const looksCombo = splitClauses(query).length > 1;
+    const looksCombo = splitClauses(q).length > 1;
     if ((local.spot || local.go || local.action || local.guide) && !looksCombo) {
       const override: PointeryResult | null = opts.guard?.(query, local) ?? null;
       return Response.json(override ?? local);
     }
 
-    if (opts.llm?.url && query.trim()) {
+    if (opts.llm?.url && q) {
+      const key = cacheKey(q, page, opts.allowActions);
+      const hit = llmCache.get(key);
+      if (hit && Date.now() - hit.at < LLM_CACHE_TTL) {
+        const override: PointeryResult | null = opts.guard?.(query, hit.result) ?? null;
+        return Response.json(override ?? hit.result);
+      }
       try {
-        const candidates = retrieveCandidates(query, context, {
-          entries: opts.retrieve?.entries ?? 8,
-          flows: opts.retrieve?.flows ?? 3,
-          actions: opts.retrieve?.actions ?? 3,
+        const single = !looksCombo;
+        const candidates = retrieveCandidates(q, context, {
+          entries: single ? (opts.retrieve?.entries ?? 5) : (opts.retrieve?.entries ?? 8),
+          flows: single ? (opts.retrieve?.flows ?? 2) : (opts.retrieve?.flows ?? 3),
+          actions: single ? (opts.retrieve?.actions ?? 2) : (opts.retrieve?.actions ?? 3),
           page,
         });
         const r = await fetch(opts.llm.url, {
@@ -124,14 +142,18 @@ export function createAskHandler(context: PointeryContext, opts: AskHandlerOptio
             "content-type": "application/json",
             ...(opts.llm.key ? { authorization: `Bearer ${opts.llm.key}` } : {}),
           },
-          body: JSON.stringify({ query, candidates, page }),
+          body: JSON.stringify({ query: q, candidates, page }),
         });
         if (r.ok) {
           const llm = sanitizeResult(await r.json(), context, opts.allowActions);
           const override: PointeryResult | null = opts.guard?.(query, llm) ?? null;
           const final = override ?? llm;
           // LLM miss too: return the (empty) local result, guarded.
-          if (final.spot || final.go || final.action || final.guide || final.plan || final.answer) return Response.json(final);
+          if (final.spot || final.go || final.action || final.guide || final.plan || final.answer) {
+            llmCache.set(key, { at: Date.now(), result: final });
+            if (llmCache.size > LLM_CACHE_MAX) llmCache.delete(llmCache.keys().next().value!);
+            return Response.json(final);
+          }
         }
       } catch {
         // fall through to local miss below
