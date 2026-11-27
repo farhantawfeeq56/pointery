@@ -306,6 +306,7 @@ export default function PointerySettingsPage() {
         </span>
       </div>
 
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">01 - System status</p>
       <div data-pointery="pointery-settings-status" className="flex flex-wrap gap-2 text-xs">
         <span className={\`rounded-full px-3 py-1 font-medium \${askOk ? "py-ok" : "py-idle"}\`}>
           /api/ask {askOk == null ? "…" : askOk ? "reachable ✓" : "unreachable"}
@@ -327,12 +328,15 @@ export default function PointerySettingsPage() {
       )}
       {errors.length > 0 && (
         <ul className="list-disc pl-5 text-xs text-red-700">
-          {errors.map((e) => (
+          {errors.slice(0, 3).map((e) => (
             <li key={e}>{e}</li>
           ))}
+          {errors.length > 3 && <li>+{errors.length - 3} more</li>}
         </ul>
       )}
-
+      <div className="border-t border-zinc-200 pt-6">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">02 - Customize and preview</p>
+      </div>
       <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-12">
         <section data-pointery="pointery-settings-preview" className="self-start lg:order-2 lg:sticky lg:top-6">
           <div className="flex flex-wrap items-center justify-between gap-3">

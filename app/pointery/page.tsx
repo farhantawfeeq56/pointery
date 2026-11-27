@@ -35,8 +35,6 @@ export default function PointerySettingsPage() {
   const [errors, setErrors] = useState<string[]>([]);
   const [llm, setLlm] = useState<{ configured: boolean; host: string; model: string } | null>(null);
   const [preview, setPreview] = useState<"closed" | "open">("open");
-  const [variant, setVariant] = useState(1); // vartest 1-5 temporary, do not sync
-  const [showIssues, setShowIssues] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const firstRun = useRef(true);
 
@@ -72,17 +70,6 @@ export default function PointerySettingsPage() {
 
   const prettyShortcut = (t: string) =>
     t.split("+").map((p) => (p === "cmd" ? "⌘" : p === "ctrl" ? "Ctrl" : p === "alt" ? "Alt" : p === "shift" ? "Shift" : p.length === 1 ? p.toUpperCase() : p)).join(" + ");
-
-  // vartest 1-5 keys temporary, do not sync
-  useEffect(() => {
-    const onVarKey = (e: KeyboardEvent) => {
-      const t = e.target as HTMLElement | null;
-      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
-      if (e.key >= "1" && e.key <= "5") { setVariant(Number(e.key)); }
-    };
-    window.addEventListener("keydown", onVarKey);
-    return () => window.removeEventListener("keydown", onVarKey);
-  }, []);
 
   // Custom shortcut recorder: next full combo (not bare modifiers) becomes the trigger.
   useEffect(() => {
@@ -236,10 +223,8 @@ export default function PointerySettingsPage() {
         </span>
       </div>
 
-      {variant === 4 && (<p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">01 - System status</p>)}
-      <div className={variant === 3 ? "rounded-xl border border-zinc-200 p-4" : ""} style={variant === 3 ? { background: "var(--color-background-secondary)" } : undefined}>
-        {variant === 3 && (<p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">System status</p>)}
-        <div data-pointery="pointery-settings-status" className="flex flex-wrap gap-2 text-xs">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">01 - System status</p>
+      <div data-pointery="pointery-settings-status" className="flex flex-wrap gap-2 text-xs">
         <span className={`rounded-full px-3 py-1 font-medium ${askOk ? "py-ok" : "py-idle"}`}>
           /api/ask {askOk == null ? "…" : askOk ? "reachable ✓" : "unreachable"}
         </span>
@@ -251,15 +236,14 @@ export default function PointerySettingsPage() {
           context {errors.length === 0 ? "valid ✓" : `${errors.length} error${errors.length > 1 ? "s" : ""}`}
         </span>
       </div>
-      {variant === 5 && ((llm && !llm.configured ? 1 : 0) + errors.length > 0) && (<button onClick={() => setShowIssues((s) => !s)} className="mt-2 rounded-full border border-zinc-200 px-3 py-1 text-xs font-semibold text-zinc-600">{showIssues ? "Hide issues" : "Show issues"}</button>)}
-      {(variant !== 5 || showIssues) && llm && !llm.configured && (
+      {llm && !llm.configured && (
           <div data-pointery="pointery-settings-brain" className="text-xs">
               <p className="font-semibold" style={{ color: "var(--color-error)" }}>Brain setup needed</p>
               <p className="mt-1 text-zinc-500">Add all three to <code className="font-mono">.env.local</code> together, then restart. Without all three, /api/ask fails closed (503).</p>
               <pre className="py-code mt-2 overflow-x-auto rounded-lg p-3 font-mono text-[11px] leading-5">{ENV_SNIPPET}</pre>
             </div>
       )}
-      {(variant !== 5 || showIssues) && errors.length > 0 && (
+      {errors.length > 0 && (
         <ul className="list-disc pl-5 text-xs text-red-700">
           {errors.slice(0, 3).map((e) => (
             <li key={e}>{e}</li>
@@ -267,10 +251,9 @@ export default function PointerySettingsPage() {
           {errors.length > 3 && <li>+{errors.length - 3} more</li>}
         </ul>
       )}
-
+      <div className="border-t border-zinc-200 pt-6">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">02 - Customize and preview</p>
       </div>
-      {variant === 2 && (<div className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-wider text-zinc-400"><span>Status above</span><span className="h-px flex-1 bg-zinc-200" /><span>Customize below</span></div>)}
-      {variant === 4 && (<div className="border-t border-zinc-200 pt-6"><p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">02 - Customize and preview</p></div>)}
       <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-12">
         <section data-pointery="pointery-settings-preview" className="self-start lg:order-2 lg:sticky lg:top-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -470,7 +453,6 @@ export default function PointerySettingsPage() {
         </div>
       )}
 
-      <div className="fixed bottom-4 right-4 z-50 flex items-center gap-1 rounded-full border border-zinc-200 bg-white p-1 shadow-lg" role="tablist" aria-label="Error/preview division variants">{[1, 2, 3, 4, 5].map((n) => (<button key={n} role="tab" aria-selected={variant === n} onClick={() => { setVariant(n); setShowIssues(false); }} title={"variant " + n} className={"h-8 w-8 rounded-full text-xs font-semibold transition " + (variant === n ? "bg-zinc-900 text-white" : "text-zinc-500 hover:bg-zinc-100")}>{n}</button>))}</div>
       <div data-pointery="pointery-settings-snippet" className="rounded-xl border border-zinc-200 bg-white p-5 text-sm text-zinc-800">
         <pre className="overflow-x-auto font-mono text-[13px] leading-6 text-zinc-800">{snippet}</pre>
         <button

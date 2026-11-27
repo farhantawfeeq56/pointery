@@ -287,3 +287,10 @@ Vartest toolbar removed; ctx `+N more` collapse kept.
 - `app/pointery/page.tsx` — floating bottom-right 1-5 toolbar + 1-5 keys (ignored while typing): 1 baseline, 2 labeled hairline rule, 3 status card, 4 numbered sections w/ top border, 5 pills + Show/Hide issues fold. Single-copy wrapper, no content duplication.
 - Deliberately NOT re-synced into `STARTER_SETTINGS_PAGE` — remove toolbar before sync so it never ships.
 - Verified: `tsc` clean. `pointery.config.json` left dirty (live testing).
+
+## Pass 37 (feat/basic-changes, 2026-11-27)
+Variant 4 applied: /pointery error/preview division permanent.
+
+- `app/pointery/page.tsx` — vartest toolbar + variant/showIssues state + key handler removed; section stays split with `01 — System status` eyebrow over pills/brain/errors and a hairline + `02 — Customize and preview` eyebrow before the grid.
+- Re-synced via `npm run pointery:sync-page`; `init --check` ok, `tsc` clean, lint shows only pre-existing `dist/` noise.
+- `pointery.config.json` left dirty (live testing).
