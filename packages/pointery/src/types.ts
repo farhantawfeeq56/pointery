@@ -94,7 +94,7 @@ export type PointeryProps = {
   onAction?: (name: string) => void | Promise<void>;
 };
 
-/** Customer's own LLM endpoint. Pointery forwards { query, candidates, page } — key and cost are theirs. */
+/** Customer's own LLM endpoint. Required at runtime — the handler 503s without it. Pointery forwards { query, candidates, page } — key and cost are theirs. */
 export type PointeryLLMAdapter = {
   url: string;
   key?: string;

@@ -70,12 +70,13 @@ function sanitizeResult(r: PointeryResult, context: PointeryContext, allowed?: s
 
 /**
  * Build a `POST(req)` handler for the consumer's `/api/ask` route.
- * Tries the bundled keyword resolver first (curated `pins[]` before generic
- * scoring, combo clauses before single); only when it misses
- * (no spot/go/action/guide/plan) and `opts.llm` is set, forwards
- * `{ query, candidates, page }` — the top-ranked slice of the map, never the
- * whole file — to the customer's own model endpoint
- * (their key, their cost — nothing comes to us).
+ * The LLM is required: without `opts.llm` (`url` + `key`) every ask
+ * fails closed with a 503 + "LLM not configured" answer instead of
+ * returning a guessed keyword result. Keyword scoring still runs first
+ * (curated `pins[]` before generic scoring, combo clauses before single)
+ * to save cost — confident hits return at once — but misses need the model:
+ * `{ query, candidates, page }` (top-ranked slice, never the whole file)
+ * goes to the customer's own endpoint (their key, their cost — nothing comes to us).
  *
  * Local wins `where/how/do` navigation, guides and allowlisted actions
  * (fast, free). The LLM handles only what keywords can't: answers,
@@ -88,7 +89,9 @@ function sanitizeResult(r: PointeryResult, context: PointeryContext, allowed?: s
  * // app/api/ask/route.ts
  * import { createAskHandler, type PointeryContext } from "pointery";
  * import context from "@/pointery.context.json";
- * export const POST = createAskHandler(context as PointeryContext);
+ * export const POST = createAskHandler(context as PointeryContext, {
+ *   llm: { url: process.env.POINTERY_LLM_URL ?? "", key: process.env.POINTERY_LLM_KEY ?? "" },
+ * });
  * ```
  */
 // Tiny LLM-response cache: normalized query + page + allowActions, 5 min TTL, max 200. Repeats cost 0 tokens.
@@ -105,6 +108,14 @@ export function createAskHandler(context: PointeryContext, opts: AskHandlerOptio
     const page = typeof body.page === "string" ? body.page : undefined;
     // Cap what we forward — long pastes cost tokens without helping retrieval.
     const q = query.trim().slice(0, 200);
+
+    // Compulsory brain: fail closed instead of guessing from keywords alone.
+    if (!opts.llm?.url || !opts.llm?.key) {
+      return Response.json(
+        { answer: "LLM not configured. Set POINTERY_LLM_URL and POINTERY_LLM_KEY in .env.local and restart." },
+        { status: 503 },
+      );
+    }
 
     // Free combo path: each "and/then" clause resolved locally into a plan.
     const combo = sanitizeResult(resolveCombo(q, context, page) ?? {}, context, opts.allowActions);

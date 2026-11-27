@@ -198,3 +198,12 @@ Pins: curated keyword fast-path (Tier 0), generic scoring unchanged.
 - Harness `pointery.context.json` — 2 demo pins (`where is export` → `export-button`, `how do I invite` → `invite-teammate` flow).
 - Verified: `kit:build` clean, `validate` clean, pin exact/alias/guide resolve, generic queries and misses unchanged, `createAskHandler` serves pins with no LLM, fresh `init` ok, `npm run lint` clean (dist removed first).
 - Deliberately not done: weak-hit LLM rerank (Tier 1) — pins-only was asked for; generic keeps its current bar. Next publish carries this (minor).
+
+## Pass 26 (feat/basic-changes, 2026-11-27)
+LLM compulsory: fail closed without key instead of guessing from keywords.
+
+- `packages/pointery/src/server.ts` — `createAskHandler` returns 503 + "LLM not configured…" when `opts.llm.url` or `key` is missing (matches `/api/admin/llm`'s `configured = url && key`); configured path unchanged (local-first, LLM on miss). JSDoc + example updated to the required `{ llm: { url, key } }` form.
+- Harness `app/api/ask/route.ts` always passes both env vars; `app/pointery/page.tsx` pill goes red ("LLM required — missing key") with a fail-closed hint.
+- `POINTERY_PROMPT.md` + embedded `STARTER_PROMPT` + `SNIPPET`: step 6 and wiring diff now say required (no keyless mode).
+- `scripts/sync-starter-page.mjs` — terminator search fixed to backtick-semicolon alone on its line; the old plain `` `; `` match hit the page's nested `snippet` template literal and left a duplicated tail in `bin/pointery.js` (repaired by deleting the orphan).
+- Verified: no-key and url-without-key → 503; configured exact query → 200 local hit without fetch; `kit:build`, `tsc`, `npm run lint`, `npm run build` clean; sync re-run is idempotent.

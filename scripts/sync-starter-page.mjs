@@ -18,8 +18,12 @@ const bin = fs.readFileSync(binFile, "utf8");
 const startMarker = "const STARTER_SETTINGS_PAGE = `";
 const start = bin.indexOf(startMarker);
 if (start === -1) throw new Error("STARTER_SETTINGS_PAGE not found in bin");
-const end = bin.indexOf("`;", start + startMarker.length);
-if (end === -1) throw new Error("STARTER_SETTINGS_PAGE terminator not found");
+// Terminator is backtick-semicolon alone on its line. (A plain "`;" search
+// would match the nested `snippet` template literal's closing "`;" inside
+// the page and corrupt the file with a duplicated tail.)
+const endMatch = bin.slice(start + startMarker.length).match(/\n`;\s*\n/);
+if (!endMatch || endMatch.index === undefined) throw new Error("STARTER_SETTINGS_PAGE terminator not found");
+const end = start + startMarker.length + endMatch.index + 1;
 const next = bin.slice(0, start + startMarker.length) + escaped + bin.slice(end);
 fs.writeFileSync(binFile, next);
 console.log(`synced ${pageFile} -> STARTER_SETTINGS_PAGE (${src.length} chars)`);

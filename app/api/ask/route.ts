@@ -5,13 +5,12 @@ import { isDemoEnabled } from "@/lib/demo";
 
 const context = rawContext as PointeryContext;
 
-// BYOK seam: POINTERY_LLM_URL forwards { query, candidates, page } (top-ranked
-// slice of the map, never the whole file) to the customer's own model endpoint
-// (their key, their cost). Nothing goes to Pointery.
+// BYOK seam (required): POINTERY_LLM_URL + POINTERY_LLM_KEY forward
+// { query, candidates, page } (top-ranked slice, never the whole file)
+// to the customer's own model endpoint (their key, their cost).
+// Nothing goes to Pointery. Missing env fails closed with a 503.
 export const POST = createAskHandler(context, {
-  llm: process.env.POINTERY_LLM_URL
-    ? { url: process.env.POINTERY_LLM_URL, key: process.env.POINTERY_LLM_KEY }
-    : undefined,
+  llm: { url: process.env.POINTERY_LLM_URL ?? "", key: process.env.POINTERY_LLM_KEY ?? "" },
   guard: (_query, local) =>
     // Never navigate into the demo CRM when it's disabled (production).
     !isDemoEnabled() && (local.go?.startsWith("/demo") || local.guide)

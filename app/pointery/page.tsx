@@ -142,8 +142,8 @@ export default function PointerySettingsPage() {
         <span className={`rounded-full px-3 py-1 font-medium ${askOk ? "bg-green-100 text-green-800" : "bg-zinc-100 text-zinc-500"}`}>
           /api/ask {askOk == null ? "…" : askOk ? "reachable ✓" : "unreachable"}
         </span>
-        <span className={`rounded-full px-3 py-1 font-medium ${llm?.configured ? "bg-green-100 text-green-800" : "bg-zinc-100 text-zinc-500"}`}>
-          {llm == null ? "brain …" : llm.configured ? `LLM → ${llm.host || "env"} ✓` : "keyword resolver (no key)"}
+        <span className={`rounded-full px-3 py-1 font-medium ${llm?.configured ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+          {llm == null ? "brain …" : llm.configured ? `LLM → ${llm.host || "env"} ✓` : "LLM required — missing key"}
         </span>
         {counts && <span className="rounded-full bg-violet-50 px-3 py-1 font-medium text-violet-900">{counts}</span>}
         <span className={`rounded-full px-3 py-1 font-medium ${errors.length === 0 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
@@ -151,8 +151,8 @@ export default function PointerySettingsPage() {
         </span>
       </div>
       {llm && !llm.configured && (
-        <p className="text-xs text-zinc-500">
-          No LLM key — paste this prompt&apos;s step 6 into your coding agent and it walks you through `.env.local` setup. The key stays in env; this page never handles it.
+        <p className="text-xs text-red-700">
+          LLM is required — /api/ask fails closed (503) without it. Paste this prompt&apos;s step 6 into your coding agent and it walks you through `.env.local` setup. The key stays in env; this page never handles it.
         </p>
       )}
       {errors.length > 0 && (
