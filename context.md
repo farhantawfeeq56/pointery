@@ -237,3 +237,11 @@ Native Anthropic + Gemini translators, auto-detected from the URL host.
 - Buyer docs (package README brain row, `POINTERY_PROMPT.md` step 6 + CLI mirror): native `…/v1/messages` / `…:generateContent` URLs work with the same 3 env vars.
 - Verified: mocked Anthropic/Gemini/OpenAI requests carry the right headers + bodies and parse to 200s; `node --check` bin, `kit:build`, `lint`, `build` clean.
 - Deliberately not done: per-provider model defaults beyond OpenAI (copy the id from the dashboard), live `/models` picker.
+
+## Pass 30 (feat/basic-changes, 2026-11-27)
+/pointery preview: mock browser with closed/open palette states, live-bound to config.
+
+- `app/pointery/page.tsx` — new Preview section (first section, above shortcut/brand/behavior): faux browser (sidebar + pipeline rows) with `?` fab; closed state hides the palette, open state shows it positioned per `cfg.position` with `theme.primary/radius`, `labels.placeholder`, top-3 `suggestions`, and the trigger hint. All values read `cfg` directly so edits render instantly.
+- `pointery.context.json` + `STARTER_CONTEXT` — new `pointery-settings-preview` entry on `/pointery`; re-synced via `npm run pointery:sync-page`; `init --check` ok.
+- Verified: preview moved above per ask; `init --check` clean. Lint/build not re-run (eslint timed out last attempt).
+- Deliberately not done: toast/guide/confirm preview states, keyboard 1/2 switching.
