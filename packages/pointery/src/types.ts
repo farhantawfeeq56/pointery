@@ -34,11 +34,26 @@ export type PointeryAction = {
   aliases?: string[];
 };
 
+/** Curated fast-path: exact-phrase wins that skip generic scoring and the LLM.
+ *  Strict match only (no word-overlap fallback) — nothing else is pinned. */
+export type PointeryPin = {
+  /** Canonical phrase, e.g. "where is export" — normalized before compare. */
+  match: string;
+  aliases?: string[];
+  spot?: string;
+  go?: string;
+  action?: string;
+  /** Flow id — steps are rebuilt from the flow, never stored here. */
+  guide?: string;
+  hint?: string;
+};
+
 export type PointeryContext = {
   version?: number;
   entries: PointeryEntry[];
   flows: PointeryFlow[];
   actions: PointeryAction[];
+  pins?: PointeryPin[];
 };
 
 /** Top-ranked slice of the map sent to the LLM — never the whole file. */

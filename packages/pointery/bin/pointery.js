@@ -412,7 +412,12 @@ is set). Re-run whenever your UI changes.
 >    no sentences, no live values:
 >    \`{ version: 2, entries: [{ id, page, label, for, type, aliases?, rows? }],
 >    flows: [{ id, title, steps: [entryId...], aliases? }],
->    actions: [{ name, label, confirm, at, aliases? }] }\`
+>    actions: [{ name, label, confirm, at, aliases? }],
+>    pins?: [{ match, aliases?, spot?, go?, action?, guide?, hint? }] }\`
+>    - \`pins[]\` = curated fast-path (optional): exact-phrase wins checked
+>      before generic scoring, served locally with no LLM. Strict match only
+>      (no word-overlap). Use for golden demo paths; the rest still
+>      resolves generically.
 >    - \`label\`: the element's own words ("Export"). \`for\`: stable purpose,
 >      one clause ("Downloads the pipeline as CSV") — never an instruction.
 >    - \`aliases\`: non-obvious synonyms only ("csv"). Matching derives from
@@ -549,6 +554,17 @@ if (cmd === "init") {
     );
     (ctx.actions || []).forEach((a, i) => {
       if (a.at && !ids.has(a.at)) problems.push(`actions[${i}] (${a.name || "?"}): at "${a.at}" matches no entry`);
+    });
+    const _pages = new Set((ctx.entries || []).map((t) => t.page));
+    const _flows = new Set((ctx.flows || []).map((g) => g.id));
+    const _acts = new Set((ctx.actions || []).map((a) => a.name));
+    (ctx.pins || []).forEach((p, i) => {
+      if (!p.match) problems.push(`pins[${i}]: missing match`);
+      if (!p.spot && !p.go && !p.action && !p.guide) problems.push(`pins[${i}] (${p.match || "?"}): needs one of spot/go/action/guide`);
+      if (p.spot && !ids.has(p.spot)) problems.push(`pins[${i}] (${p.match || "?"}): spot "${p.spot}" matches no entry`);
+      if (p.action && !_acts.has(p.action)) problems.push(`pins[${i}] (${p.match || "?"}): action "${p.action}" matches no action`);
+      if (p.guide && !_flows.has(p.guide)) problems.push(`pins[${i}] (${p.match || "?"}): guide "${p.guide}" matches no flow`);
+      if (p.go && ![..._pages].includes(p.go)) problems.push(`pins[${i}] (${p.match || "?"}): go "${p.go}" matches no entry page`);
     });
     console.log(problems.length ? "\ncheck failed:\n- " + problems.join("\n- ") : "\ncheck ok");
     process.exit(problems.length ? 1 : 0);

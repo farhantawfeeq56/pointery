@@ -187,3 +187,14 @@ Settings union: A∪B in /pointery, /admin/ask deleted.
 - `app/admin/` route deleted (it was only the page). Landing + demo-settings links now point at `/pointery` ("Settings" copy). README + AGENTS.md route mentions updated.
 - `pointery.context.json`: 5 `studio-*` entries replaced with `pointery-settings-status/context/snippet`. Same 3 added to `STARTER_CONTEXT` in `bin/pointery.js` (hand-kept in sync — no sync script for it).
 - Verified: `init --check` ok, `tsc` clean (after `next typegen` to drop stale `/admin/ask` route types), `npm run build` clean (`/pointery` prerenders as not-found in prod), lint unchanged (only pre-existing `dist/` noise).
+
+## Pass 25 (feat/basic-changes, 2026-11-26)
+Pins: curated keyword fast-path (Tier 0), generic scoring unchanged.
+
+- `packages/pointery/src/types.ts` — new `PointeryPin { match, aliases?, spot?, go?, action?, guide?, hint? }`; `PointeryContext.pins?` (optional, so existing maps stay valid).
+- `resolver.ts` — new `matchPin()`: strict exact-or-substring match (term `>=4` chars, no word-overlap fallback), best-longest-term wins; guide pins rebuild steps via `buildGuide()`, action pins echo `confirm` from the map. `resolveQuery()` checks pins before generic scoring; a pin hit returns instantly and skips the LLM in `server.ts` (same as any local hit). No pin match → generic path exactly as before (entry `>=3`, action/guide `>=12`).
+- `validate.ts` + CLI `--check` slim copy — pins validated (missing `match`, no target, dangling `spot/action/guide/go`); stale pin fails the check (verified).
+- `POINTERY_PROMPT.md` + embedded `STARTER_PROMPT` — shape line gains `pins?[]` + fast-path bullet; verified the prompt body matches the root (only pre-existing tail difference remains). Package README map row mentions `pins?`.
+- Harness `pointery.context.json` — 2 demo pins (`where is export` → `export-button`, `how do I invite` → `invite-teammate` flow).
+- Verified: `kit:build` clean, `validate` clean, pin exact/alias/guide resolve, generic queries and misses unchanged, `createAskHandler` serves pins with no LLM, fresh `init` ok, `npm run lint` clean (dist removed first).
+- Deliberately not done: weak-hit LLM rerank (Tier 1) — pins-only was asked for; generic keeps its current bar. Next publish carries this (minor).

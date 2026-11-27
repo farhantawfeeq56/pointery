@@ -29,7 +29,12 @@ is set). Re-run whenever your UI changes.
 >    no sentences, no live values:
 >    `{ version: 2, entries: [{ id, page, label, for, type, aliases?, rows? }],
 >    flows: [{ id, title, steps: [entryId...], aliases? }],
->    actions: [{ name, label, confirm, at, aliases? }] }`
+>    actions: [{ name, label, confirm, at, aliases? }],
+>    pins?: [{ match, aliases?, spot?, go?, action?, guide?, hint? }] }`
+>    - `pins[]` = curated fast-path (optional): exact-phrase wins checked
+>      before generic scoring, served locally with no LLM. Strict match only
+>      (no word-overlap). Use for golden demo paths; the rest still
+>      resolves generically.
 >    - `label`: the element's own words ("Export"). `for`: stable purpose,
 >      one clause ("Downloads the pipeline as CSV") — never an instruction.
 >    - `aliases`: non-obvious synonyms only ("csv"). Matching derives from

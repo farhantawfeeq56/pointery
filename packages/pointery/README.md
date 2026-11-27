@@ -52,9 +52,10 @@ your app.
 1. **UI (this package):** `<Pointery/>` palette, toast, pulse on
    `data-pointery="..."` elements, guide walk, allowlisted actions.
 2. **Map (`pointery.context.json`, yours):** `{ entries, flows,
-   actions }` — a ship-time index of stable UI anchors (never
+   actions, pins? }` — a ship-time index of stable UI anchors (never
    per-record ids, never live values). Built by your coding agent running our
-   prompt (`POINTERY_PROMPT.md`), not by us.
+   prompt (`POINTERY_PROMPT.md`), not by us. Optional `pins[]` are
+   curated exact-phrase fast-paths checked before generic scoring.
 3. **Brain (your key, only when needed):** pass `llm: { url, key }` to
    `createAskHandler` — local keywords answer `where/how/do` first (fast,
    free); only on a local miss it forwards `{ query, candidates, page }` — the

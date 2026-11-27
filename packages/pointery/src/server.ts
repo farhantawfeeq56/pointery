@@ -30,8 +30,9 @@ function sanitizeResult(r: PointeryResult, context: PointeryContext, allowed?: s
 
 /**
  * Build a `POST(req)` handler for the consumer's `/api/ask` route.
- * Tries the bundled keyword resolver first; only when it misses (no
- * spot/go/action/guide) and `opts.llm` is set, forwards
+ * Tries the bundled keyword resolver first (curated `pins[]` before generic
+ * scoring); only when it misses (no spot/go/action/guide) and `opts.llm`
+ * is set, forwards
  * `{ query, candidates, page }` — the top-ranked slice of the map, never the
  * whole file — to the customer's own model endpoint
  * (their key, their cost — nothing comes to us).

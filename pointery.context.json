@@ -1,32 +1,216 @@
 {
   "version": 2,
   "entries": [
-    { "id": "nav-dashboard", "page": "/demo", "label": "Dashboard", "for": "Pipeline value and today's tasks", "type": "nav" },
-    { "id": "nav-pipeline", "page": "/demo/pipeline", "label": "Pipeline", "for": "All deals and stages", "type": "nav" },
-    { "id": "nav-contacts", "page": "/demo/contacts", "label": "Contacts", "for": "People and teammates", "type": "nav" },
-    { "id": "nav-settings", "page": "/demo/settings", "label": "Settings", "for": "Workspace preferences", "type": "nav" },
-    { "id": "export-button", "page": "/demo/pipeline", "label": "Export", "for": "Downloads the pipeline as CSV", "type": "button", "aliases": ["csv"] },
-    { "id": "invite-button", "page": "/demo/contacts", "label": "Invite teammate", "for": "Sends an email invite", "type": "button" },
-    { "id": "add-deal-button", "page": "/demo/pipeline", "label": "Add deal", "for": "Creates a new opportunity", "type": "button" },
-    { "id": "pipeline-value", "page": "/demo", "label": "Open pipeline", "for": "Total open pipeline value", "type": "card" },
-    { "id": "pipeline-table", "page": "/demo/pipeline", "label": "Pipeline table", "for": "Deal rows in the pipeline", "type": "table", "rows": true, "aliases": ["deals"] },
-    { "id": "search-contacts", "page": "/demo/contacts", "label": "Search contacts", "for": "Filters people by name", "type": "field" },
-    { "id": "pointery-settings-status", "page": "/pointery", "label": "Status", "for": "Ask health, brain and context validity", "type": "section" },
-    { "id": "pointery-settings-shortcut", "page": "/pointery", "label": "Shortcut", "for": "Keyboard trigger for the palette", "type": "section" },
-    { "id": "pointery-settings-brand", "page": "/pointery", "label": "Brand", "for": "Primary color and corner radius", "type": "section" },
-    { "id": "pointery-settings-behavior", "page": "/pointery", "label": "Behavior", "for": "Position, suggestions and actions", "type": "section" },
-    { "id": "pointery-settings-save", "page": "/pointery", "label": "Save", "for": "Writes pointery.config.json to disk", "type": "button" },
-    { "id": "pointery-settings-context", "page": "/pointery", "label": "Context", "for": "Entries, flows and actions from disk", "type": "section" },
-    { "id": "pointery-settings-snippet", "page": "/pointery", "label": "Snippet", "for": "The Pointery mount code to copy", "type": "section" }
+    {
+      "id": "nav-dashboard",
+      "page": "/demo",
+      "label": "Dashboard",
+      "for": "Pipeline value and today's tasks",
+      "type": "nav"
+    },
+    {
+      "id": "nav-pipeline",
+      "page": "/demo/pipeline",
+      "label": "Pipeline",
+      "for": "All deals and stages",
+      "type": "nav"
+    },
+    {
+      "id": "nav-contacts",
+      "page": "/demo/contacts",
+      "label": "Contacts",
+      "for": "People and teammates",
+      "type": "nav"
+    },
+    {
+      "id": "nav-settings",
+      "page": "/demo/settings",
+      "label": "Settings",
+      "for": "Workspace preferences",
+      "type": "nav"
+    },
+    {
+      "id": "export-button",
+      "page": "/demo/pipeline",
+      "label": "Export",
+      "for": "Downloads the pipeline as CSV",
+      "type": "button",
+      "aliases": [
+        "csv"
+      ]
+    },
+    {
+      "id": "invite-button",
+      "page": "/demo/contacts",
+      "label": "Invite teammate",
+      "for": "Sends an email invite",
+      "type": "button"
+    },
+    {
+      "id": "add-deal-button",
+      "page": "/demo/pipeline",
+      "label": "Add deal",
+      "for": "Creates a new opportunity",
+      "type": "button"
+    },
+    {
+      "id": "pipeline-value",
+      "page": "/demo",
+      "label": "Open pipeline",
+      "for": "Total open pipeline value",
+      "type": "card"
+    },
+    {
+      "id": "pipeline-table",
+      "page": "/demo/pipeline",
+      "label": "Pipeline table",
+      "for": "Deal rows in the pipeline",
+      "type": "table",
+      "rows": true,
+      "aliases": [
+        "deals"
+      ]
+    },
+    {
+      "id": "search-contacts",
+      "page": "/demo/contacts",
+      "label": "Search contacts",
+      "for": "Filters people by name",
+      "type": "field"
+    },
+    {
+      "id": "pointery-settings-status",
+      "page": "/pointery",
+      "label": "Status",
+      "for": "Ask health, brain and context validity",
+      "type": "section"
+    },
+    {
+      "id": "pointery-settings-shortcut",
+      "page": "/pointery",
+      "label": "Shortcut",
+      "for": "Keyboard trigger for the palette",
+      "type": "section"
+    },
+    {
+      "id": "pointery-settings-brand",
+      "page": "/pointery",
+      "label": "Brand",
+      "for": "Primary color and corner radius",
+      "type": "section"
+    },
+    {
+      "id": "pointery-settings-behavior",
+      "page": "/pointery",
+      "label": "Behavior",
+      "for": "Position, suggestions and actions",
+      "type": "section"
+    },
+    {
+      "id": "pointery-settings-save",
+      "page": "/pointery",
+      "label": "Save",
+      "for": "Writes pointery.config.json to disk",
+      "type": "button"
+    },
+    {
+      "id": "pointery-settings-context",
+      "page": "/pointery",
+      "label": "Context",
+      "for": "Entries, flows and actions from disk",
+      "type": "section"
+    },
+    {
+      "id": "pointery-settings-snippet",
+      "page": "/pointery",
+      "label": "Snippet",
+      "for": "The Pointery mount code to copy",
+      "type": "section"
+    }
   ],
   "flows": [
-    { "id": "invite-teammate", "title": "Invite a teammate", "aliases": ["invite", "inviting"], "steps": ["nav-contacts", "invite-button"] },
-    { "id": "export-pipeline", "title": "Export your pipeline", "aliases": ["export", "csv"], "steps": ["nav-pipeline", "export-button"] },
-    { "id": "close-deal", "title": "Close a deal", "aliases": ["close", "closing", "won"], "steps": ["nav-pipeline", "pipeline-table"] }
+    {
+      "id": "invite-teammate",
+      "title": "Invite a teammate",
+      "aliases": [
+        "invite",
+        "inviting"
+      ],
+      "steps": [
+        "nav-contacts",
+        "invite-button"
+      ]
+    },
+    {
+      "id": "export-pipeline",
+      "title": "Export your pipeline",
+      "aliases": [
+        "export",
+        "csv"
+      ],
+      "steps": [
+        "nav-pipeline",
+        "export-button"
+      ]
+    },
+    {
+      "id": "close-deal",
+      "title": "Close a deal",
+      "aliases": [
+        "close",
+        "closing",
+        "won"
+      ],
+      "steps": [
+        "nav-pipeline",
+        "pipeline-table"
+      ]
+    }
   ],
   "actions": [
-    { "name": "mark-won", "label": "Mark deal as Won", "confirm": true, "at": "pipeline-table", "aliases": ["mark won", "close deal", "win deal"] },
-    { "name": "invite-teammate", "label": "Invite teammate", "confirm": true, "at": "invite-button" },
-    { "name": "export-pipeline", "label": "Export pipeline CSV", "confirm": false, "at": "export-button", "aliases": ["export"] }
+    {
+      "name": "mark-won",
+      "label": "Mark deal as Won",
+      "confirm": true,
+      "at": "pipeline-table",
+      "aliases": [
+        "mark won",
+        "close deal",
+        "win deal"
+      ]
+    },
+    {
+      "name": "invite-teammate",
+      "label": "Invite teammate",
+      "confirm": true,
+      "at": "invite-button"
+    },
+    {
+      "name": "export-pipeline",
+      "label": "Export pipeline CSV",
+      "confirm": false,
+      "at": "export-button",
+      "aliases": [
+        "export"
+      ]
+    }
+  ],
+  "pins": [
+    {
+      "match": "where is export",
+      "aliases": [
+        "export csv"
+      ],
+      "spot": "export-button",
+      "go": "/demo/pipeline",
+      "hint": "Export"
+    },
+    {
+      "match": "how do I invite",
+      "aliases": [
+        "invite a teammate"
+      ],
+      "guide": "invite-teammate"
+    }
   ]
 }

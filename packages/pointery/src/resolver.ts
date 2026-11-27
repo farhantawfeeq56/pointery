@@ -1,4 +1,4 @@
-import type { PointeryContext, PointeryEntry, PointeryFlow, PointeryGuide, PointeryResult } from "./types.js";
+import type { PointeryContext, PointeryEntry, PointeryFlow, PointeryGuide, PointeryPin, PointeryResult } from "./types.js";
 
 type Action = PointeryContext["actions"][number];
 
@@ -85,6 +85,51 @@ export function retrieveCandidates(
 
 const byId = (entries: PointeryEntry[], id: string) => entries.find((e) => e.id === id);
 
+/** Strict pin match: exact or substring only (term >= 4 chars). No word-overlap fallback. */
+export function matchPin(query: string, context: PointeryContext): PointeryResult | null {
+  const pins = context.pins ?? [];
+  if (!pins.length) return null;
+  const q = norm(query);
+  if (!q) return null;
+  const entries = context.entries ?? [];
+  const flows = new Map((context.flows ?? []).map((f) => [f.id, f]));
+  const actions = new Map((context.actions ?? []).map((a) => [a.name, a]));
+  let best: PointeryPin | null = null;
+  let bestScore = 0;
+  for (const p of pins) {
+    const terms = [p.match, ...(p.aliases ?? [])];
+    for (const t of terms) {
+      const key = norm(t ?? "");
+      if (!key || key.length < 4) continue;
+      if (q === key) {
+        const s = 100 + key.length;
+        if (s > bestScore) { bestScore = s; best = p; }
+      } else if (q.includes(key) || key.includes(q)) {
+        const s = 10 + key.length;
+        if (s > bestScore) { bestScore = s; best = p; }
+      }
+    }
+  }
+  if (!best) return null;
+  // Guide pins reference a flow id — rebuild steps from the flow.
+  if (best.guide && flows.has(best.guide)) {
+    const guide = buildGuide(flows.get(best.guide)!, entries);
+    const first = guide.steps[0];
+    return { guide, spot: best.spot ?? first?.spot, go: best.go ?? first?.go, hint: best.hint ?? guide.title };
+  }
+  if (best.action && actions.has(best.action)) {
+    const a = actions.get(best.action)!;
+    const anchor = (a.at ? byId(entries, a.at) : undefined)?.id ?? best.spot;
+    return { action: a.name, confirm: a.confirm, spot: best.spot ?? anchor, go: best.go, hint: best.hint ?? a.label ?? a.name };
+  }
+  if (best.spot) {
+    const entry = byId(entries, best.spot);
+    return { spot: best.spot, go: best.go ?? entry?.page, hint: best.hint ?? entry?.label };
+  }
+  if (best.go) return { go: best.go, hint: best.hint };
+  return null;
+}
+
 /** Build guide steps from a flow's anchor ids. Wording is templated — the map holds no sentences. */
 export function buildGuide(flow: PointeryFlow, entries: PointeryEntry[]): PointeryGuide {
   const steps = flow.steps
@@ -99,6 +144,9 @@ export function buildGuide(flow: PointeryFlow, entries: PointeryEntry[]): Pointe
 }
 
 export function resolveQuery(query: string, context: PointeryContext, page?: string): PointeryResult {
+  // Tier 0: curated pins win before generic scoring (and skip the LLM in server.ts).
+  const pinned = matchPin(query, context);
+  if (pinned) return pinned;
   const entries = context.entries ?? [];
   const flows = context.flows ?? [];
   const actions = context.actions ?? [];

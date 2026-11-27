@@ -27,12 +27,22 @@ export function validateContext(ctx: PointeryContext): string[] {
     if (e.for && looksLive(e.for)) errors.push(`entries[${i}] (${e.id || "?"}): for looks like live data — keep stable anchors only`);
   });
 
+  const pages = new Set(entries.map((e) => e.page));
   const actionNames = new Set<string>();
   actions.forEach((a, i) => {
     if (!a.name) errors.push(`actions[${i}]: missing name`);
     else if (actionNames.has(a.name)) errors.push(`actions[${i}]: duplicate name "${a.name}"`);
     else actionNames.add(a.name);
     if (a.at && !ids.has(a.at)) errors.push(`actions[${i}] (${a.name || "?"}): at "${a.at}" matches no entry`);
+  });
+
+  (ctx.pins ?? []).forEach((p, i) => {
+    if (!p.match) errors.push(`pins[${i}]: missing match`);
+    if (!p.spot && !p.go && !p.action && !p.guide) errors.push(`pins[${i}] (${p.match || "?"}): needs one of spot/go/action/guide`);
+    if (p.spot && !ids.has(p.spot)) errors.push(`pins[${i}] (${p.match || "?"}): spot "${p.spot}" matches no entry`);
+    if (p.action && !actionNames.has(p.action)) errors.push(`pins[${i}] (${p.match || "?"}): action "${p.action}" matches no action`);
+    if (p.guide && !flows.some((f) => f.id === p.guide)) errors.push(`pins[${i}] (${p.match || "?"}): guide "${p.guide}" matches no flow`);
+    if (p.go && ![...pages].includes(p.go)) errors.push(`pins[${i}] (${p.match || "?"}): go "${p.go}" matches no entry page`);
   });
 
   flows.forEach((f, i) => {
