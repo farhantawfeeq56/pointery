@@ -1,10 +1,10 @@
 {
-  "trigger": "shift+a",
+  "trigger": "s",
   "theme": {
     "primary": "#b090e4",
-    "radius": 6
+    "radius": 23
   },
-  "position": "top",
+  "position": "bottom",
   "suggestions": [
     "Where is export?",
     "How do I invite a teammate?",
