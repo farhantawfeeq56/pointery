@@ -229,7 +229,7 @@ export default function PointerySettingsPage() {
   if (!loaded) return <div className="mx-auto w-full max-w-4xl flex-1 px-6 py-10 text-sm text-zinc-500">Loading Pointery settings…</div>;
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-10">
+    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-10">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-violet-700">Pointery · Settings</p>
@@ -274,186 +274,180 @@ export default function PointerySettingsPage() {
         </ul>
       )}
 
-      <section data-pointery="pointery-settings-preview" className="rounded-2xl border bg-white p-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-sm font-semibold">Preview</h2>
-            <p className="mt-0.5 text-xs text-zinc-500">How the palette looks in your app. Updates as you edit.</p>
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_400px]">
+        <section data-pointery="pointery-settings-preview" className="rounded-2xl border bg-white p-5 self-start lg:order-2 lg:sticky lg:top-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-semibold">Preview</h2>
+              <p className="mt-0.5 text-xs text-zinc-500">How the palette looks in your app. Updates as you edit.</p>
+            </div>
+            <div className="flex rounded-full bg-zinc-100 p-1 text-xs font-semibold" role="tablist" aria-label="Preview state">
+              {(["closed", "open"] as const).map((s) => (
+                <button
+                  key={s}
+                  role="tab"
+                  aria-selected={preview === s}
+                  onClick={() => setPreview(s)}
+                  className={\`rounded-full px-4 py-1.5 capitalize transition \${preview === s ? "bg-zinc-900 text-white shadow" : "text-zinc-500 hover:text-zinc-800"}\`}
+                >
+                  {s === "closed" ? "Palette closed" : "Palette open"}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex rounded-full bg-zinc-100 p-1 text-xs font-semibold" role="tablist" aria-label="Preview state">
-            {(["closed", "open"] as const).map((s) => (
-              <button
-                key={s}
-                role="tab"
-                aria-selected={preview === s}
-                onClick={() => setPreview(s)}
-                className={\`rounded-full px-4 py-1.5 capitalize transition \${preview === s ? "bg-zinc-900 text-white shadow" : "text-zinc-500 hover:text-zinc-800"}\`}
-              >
-                {s === "closed" ? "Palette closed" : "Palette open"}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="mt-4 overflow-hidden rounded-xl border">
-          <div className="flex items-center gap-2 border-b bg-zinc-50 px-4 py-2.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
-            <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
-            <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
-            <span className="ml-2 flex-1 truncate rounded-md bg-white px-3 py-1 font-mono text-[11px] text-zinc-500">yourapp.com/pipeline</span>
-          </div>
-          <div className="relative">
-            <div className="grid min-h-[280px] grid-cols-[110px_1fr]">
-              <div className="border-r bg-white p-3">
-                <p className="flex items-center gap-1.5 text-xs font-bold"><span className="h-4 w-4 rounded" style={{ background: cfg.theme.primary }} />Acme</p>
-                <div className="mt-3 space-y-1 text-[11px]">
-                  <p className="rounded px-2 py-1 text-zinc-400">Dashboard</p>
-                  <p className="rounded px-2 py-1 font-semibold" style={{ background: "color-mix(in srgb, var(--c) 12%, transparent)", ["--c" as string]: cfg.theme.primary }}><span style={{ color: cfg.theme.primary }}>● </span>Pipeline</p>
-                  <p className="rounded px-2 py-1 text-zinc-400">Contacts</p>
-                  <p className="rounded px-2 py-1 text-zinc-400">Settings</p>
-                </div>
-              </div>
-              <div className="bg-zinc-50/60 p-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-bold">Pipeline</p>
-                  <div className="flex gap-1.5">
-                    <span className="rounded-full border bg-white px-2.5 py-1 text-[10px] font-medium text-zinc-500">Export</span>
-                    <span className="px-2.5 py-1 text-[10px] font-semibold text-white" style={{ background: cfg.theme.primary, borderRadius: cfg.theme.radius }}>+ Add deal</span>
+          <div className="mt-4 overflow-hidden rounded-xl border">
+            <div className="flex items-center gap-2 border-b bg-zinc-50 px-4 py-2.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
+              <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
+              <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
+              <span className="ml-2 flex-1 truncate rounded-md bg-white px-3 py-1 font-mono text-[11px] text-zinc-500">yourapp.com/pipeline</span>
+            </div>
+            <div className="relative">
+              <div className="grid min-h-[280px] grid-cols-[110px_1fr]">
+                <div className="border-r bg-white p-3">
+                  <p className="flex items-center gap-1.5 text-xs font-bold"><span className="h-4 w-4 rounded" style={{ background: cfg.theme.primary }} />Acme</p>
+                  <div className="mt-3 space-y-1 text-[11px]">
+                    <p className="rounded px-2 py-1 text-zinc-400">Dashboard</p>
+                    <p className="rounded px-2 py-1 font-semibold" style={{ background: "color-mix(in srgb, var(--c) 12%, transparent)", ["--c" as string]: cfg.theme.primary }}><span style={{ color: cfg.theme.primary }}>● </span>Pipeline</p>
+                    <p className="rounded px-2 py-1 text-zinc-400">Contacts</p>
+                    <p className="rounded px-2 py-1 text-zinc-400">Settings</p>
                   </div>
                 </div>
-                <div className="mt-3 space-y-1.5">
-                  {["Acme Corp · $8,000 · Negotiation", "Globex · $12,400 · Proposal"].map((r) => (
-                    <p key={r} className="rounded-lg border bg-white px-3 py-2 text-[11px] text-zinc-600">{r}</p>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <span className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center text-base font-bold text-white shadow-lg" style={{ background: cfg.theme.primary, borderRadius: 999 }} title="Ask Pointery">?</span>
-            {preview === "open" && (
-              <div className={\`absolute inset-0 flex justify-center bg-black/25 px-4 \${cfg.position === "center" ? "items-center" : cfg.position === "bottom" ? "items-end pb-6" : "items-start pt-6"}\`}>
-                <div className="w-full max-w-[360px] bg-white p-2 shadow-2xl" style={{ borderRadius: cfg.theme.radius }} onClick={(e) => e.stopPropagation()}>
-                  <p className="rounded-md border px-3 py-2 text-xs text-zinc-700" style={{ borderRadius: Math.max(4, cfg.theme.radius - 4) }}>{cfg.labels?.placeholder || 'Ask "where is export?"…'}</p>
-                  <div className="flex flex-wrap gap-1.5 px-1 pb-1 pt-2">
-                    {(cfg.suggestions.length ? cfg.suggestions.slice(0, 3) : ["No suggestions yet — add some above"]).map((s) => (
-                      <span key={s} className={\`rounded-full border px-2.5 py-1 text-[10px] \${cfg.suggestions.length ? "bg-zinc-50 text-zinc-600" : "text-zinc-400"}\`}>{s}</span>
+                <div className="bg-zinc-50/60 p-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-bold">Pipeline</p>
+                    <div className="flex gap-1.5">
+                      <span className="rounded-full border bg-white px-2.5 py-1 text-[10px] font-medium text-zinc-500">Export</span>
+                      <span className="px-2.5 py-1 text-[10px] font-semibold text-white" style={{ background: cfg.theme.primary, borderRadius: cfg.theme.radius }}>+ Add deal</span>
+                    </div>
+                  </div>
+                  <div className="mt-3 space-y-1.5">
+                    {["Acme Corp · $8,000 · Negotiation", "Globex · $12,400 · Proposal"].map((r) => (
+                      <p key={r} className="rounded-lg border bg-white px-3 py-2 text-[11px] text-zinc-600">{r}</p>
                     ))}
                   </div>
-                  <p className="px-1 pt-1 text-[10px] text-zinc-400">{prettyShortcut(cfg.trigger)} toggles · ⌘K works too · Esc closes</p>
                 </div>
               </div>
-            )}
+              <span className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center text-base font-bold text-white shadow-lg" style={{ background: cfg.theme.primary, borderRadius: 999 }} title="Ask Pointery">?</span>
+              {preview === "open" && (
+                <div className={\`absolute inset-0 flex justify-center bg-black/25 px-4 \${cfg.position === "center" ? "items-center" : cfg.position === "bottom" ? "items-end pb-6" : "items-start pt-6"}\`}>
+                  <div className="w-full max-w-[360px] bg-white p-2 shadow-2xl" style={{ borderRadius: cfg.theme.radius }} onClick={(e) => e.stopPropagation()}>
+                    <p className="rounded-md border px-3 py-2 text-xs text-zinc-700" style={{ borderRadius: Math.max(4, cfg.theme.radius - 4) }}>{cfg.labels?.placeholder || 'Ask "where is export?"…'}</p>
+                    <div className="flex flex-wrap gap-1.5 px-1 pb-1 pt-2">
+                      {(cfg.suggestions.length ? cfg.suggestions.slice(0, 3) : ["No suggestions yet — add some above"]).map((s) => (
+                        <span key={s} className={\`rounded-full border px-2.5 py-1 text-[10px] \${cfg.suggestions.length ? "bg-zinc-50 text-zinc-600" : "text-zinc-400"}\`}>{s}</span>
+                      ))}
+                    </div>
+                    <p className="px-1 pt-1 text-[10px] text-zinc-400">{prettyShortcut(cfg.trigger)} toggles · ⌘K works too · Esc closes</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
+        <div className="flex min-w-0 flex-col gap-6 lg:order-1">
+          <section data-pointery="pointery-settings-shortcut" className="rounded-2xl border bg-white p-5">
+            <h2 className="text-sm font-semibold">Keyboard shortcut</h2>
+            <p className="mt-0.5 text-xs text-zinc-500">Recommended presets, or record your own. ⌘/Ctrl+K always works as a secondary.</p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              {(["shift+a", "cmd+k"] as const).map((v) => (
+                <button
+                  key={v}
+                  onClick={() => setCfg({ ...cfg, trigger: v })}
+                  className={\`rounded-xl border px-4 py-3 text-left text-sm transition \${cfg.trigger === v ? "border-violet-600 bg-violet-50 ring-1 ring-violet-600" : "hover:border-zinc-400"}\`}
+                >
+                  <span className="font-mono font-semibold">{v === "shift+a" ? "Shift + A" : "⌘/Ctrl + K"}</span>
+                  <span className="block text-xs text-zinc-500">{v === "shift+a" ? "Recommended default" : "Recommended minimal"}</span>
+                </button>
+              ))}
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <button
+                onClick={() => setRecording((r) => !r)}
+                className={\`rounded-full px-4 py-2 text-sm font-semibold transition \${recording ? "bg-amber-500 text-white" : "bg-zinc-900 text-white hover:bg-zinc-700"}\`}
+              >
+                {recording ? "Press keys… (Esc to cancel)" : "Record your own…"}
+              </button>
+              <span className="text-xs text-zinc-500">
+                Current: <kbd className="rounded border bg-zinc-50 px-1.5 py-0.5 font-mono font-semibold text-zinc-800">{prettyShortcut(cfg.trigger)}</kbd>
+                {cfg.trigger !== "shift+a" && cfg.trigger !== "cmd+k" && <span className="ml-1 rounded-full bg-violet-100 px-2 py-0.5 font-medium text-violet-800">custom</span>}
+              </span>
+            </div>
+            <p className="mt-2 text-xs text-zinc-500">Try it now — press your shortcut anywhere on this page.</p>
+          </section>
 
-      <section data-pointery="pointery-settings-shortcut" className="rounded-2xl border bg-white p-5">
-        <h2 className="text-sm font-semibold">Keyboard shortcut</h2>
-        <p className="mt-0.5 text-xs text-zinc-500">Recommended presets, or record your own. ⌘/Ctrl+K always works as a secondary.</p>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          {(["shift+a", "cmd+k"] as const).map((v) => (
-            <button
-              key={v}
-              onClick={() => setCfg({ ...cfg, trigger: v })}
-              className={\`rounded-xl border px-4 py-3 text-left text-sm transition \${cfg.trigger === v ? "border-violet-600 bg-violet-50 ring-1 ring-violet-600" : "hover:border-zinc-400"}\`}
-            >
-              <span className="font-mono font-semibold">{v === "shift+a" ? "Shift + A" : "⌘/Ctrl + K"}</span>
-              <span className="block text-xs text-zinc-500">{v === "shift+a" ? "Recommended default" : "Recommended minimal"}</span>
+          <section data-pointery="pointery-settings-brand" className="rounded-2xl border bg-white p-5">
+            <h2 className="text-sm font-semibold">Brand</h2>
+            <p className="mt-0.5 text-xs text-zinc-500">Primary color + corner radius. Preview updates live.</p>
+            <div className="mt-3 grid gap-4 sm:grid-cols-2">
+              <label className="text-sm">
+                <span className="font-medium">Primary color</span>
+                <span className="mt-2 flex items-center gap-3">
+                  <input type="color" value={cfg.theme.primary} onChange={(e) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: e.target.value } })} className="h-10 w-14 cursor-pointer rounded" />
+                  <code className="font-mono text-xs">{cfg.theme.primary}</code>
+                </span>
+              </label>
+              <label className="text-sm">
+                <span className="font-medium">Corner radius — {cfg.theme.radius}px</span>
+                <input type="range" min={4} max={24} value={cfg.theme.radius} onChange={(e) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: Number(e.target.value) } })} className="mt-3 w-full" />
+              </label>
+            </div>
+          </section>
+
+          <section data-pointery="pointery-settings-behavior" className="rounded-2xl border bg-white p-5">
+            <h2 className="text-sm font-semibold">Behavior</h2>
+            <p className="mt-0.5 text-xs text-zinc-500">Position, suggestions, allowlisted actions, palette copy.</p>
+            <label className="mt-3 block text-sm">
+              <span className="font-medium">Palette position</span>
+              <select value={cfg.position} onChange={(e) => setCfg({ ...cfg, position: e.target.value as Config["position"] })} className="mt-2 w-full rounded-lg border px-3 py-2">
+                <option value="top">Top</option>
+                <option value="center">Center</option>
+                <option value="bottom">Bottom</option>
+              </select>
+            </label>
+            <label className="mt-3 block text-sm">
+              <span className="font-medium">Suggestions (one per line)</span>
+              <textarea
+                value={cfg.suggestions.join("\\n")}
+                onChange={(e) => setCfg({ ...cfg, suggestions: e.target.value.split("\\n").map((s) => s.trim()).filter(Boolean) })}
+                rows={3}
+                placeholder={"Where is export?\\nHow do I invite a teammate?"}
+                className="mt-2 w-full rounded-lg border px-3 py-2 font-mono text-xs"
+              />
+            </label>
+            <label className="mt-3 block text-sm">
+              <span className="font-medium">Allowed actions (comma-separated names from the context)</span>
+              <input
+                value={cfg.allowActions.join(", ")}
+                onChange={(e) => setCfg({ ...cfg, allowActions: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })}
+                placeholder="export-pipeline, invite-teammate"
+                className="mt-2 w-full rounded-lg border px-3 py-2 font-mono text-xs"
+              />
+            </label>
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              <label className="text-sm">
+                <span className="font-medium">Placeholder</span>
+                <input value={cfg.labels?.placeholder ?? ""} onChange={(e) => setCfg({ ...cfg, labels: { ...cfg.labels, placeholder: e.target.value } })} placeholder='Ask "where is export?"…' className="mt-2 w-full rounded-lg border px-3 py-2 text-xs" />
+              </label>
+              <label className="text-sm">
+                <span className="font-medium">Empty state</span>
+                <input value={cfg.labels?.empty ?? ""} onChange={(e) => setCfg({ ...cfg, labels: { ...cfg.labels, empty: e.target.value } })} placeholder="No match — try…" className="mt-2 w-full rounded-lg border px-3 py-2 text-xs" />
+              </label>
+              <label className="text-sm">
+                <span className="font-medium">Confirm title</span>
+                <input value={cfg.labels?.confirmTitle ?? ""} onChange={(e) => setCfg({ ...cfg, labels: { ...cfg.labels, confirmTitle: e.target.value } })} placeholder="Run this action?" className="mt-2 w-full rounded-lg border px-3 py-2 text-xs" />
+              </label>
+            </div>
+          </section>
+
+          <div className="flex items-center gap-3">
+            <button onClick={saveNow} className="w-fit rounded-full bg-violet-700 px-6 py-2.5 text-sm font-semibold text-white hover:bg-violet-600">
+              {saveState === "saved" ? "Saved ✓" : "Save now"}
             </button>
-          ))}
-        </div>
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <button
-            onClick={() => setRecording((r) => !r)}
-            className={\`rounded-full px-4 py-2 text-sm font-semibold transition \${recording ? "bg-amber-500 text-white" : "bg-zinc-900 text-white hover:bg-zinc-700"}\`}
-          >
-            {recording ? "Press keys… (Esc to cancel)" : "Record your own…"}
-          </button>
-          <span className="text-xs text-zinc-500">
-            Current: <kbd className="rounded border bg-zinc-50 px-1.5 py-0.5 font-mono font-semibold text-zinc-800">{prettyShortcut(cfg.trigger)}</kbd>
-            {cfg.trigger !== "shift+a" && cfg.trigger !== "cmd+k" && <span className="ml-1 rounded-full bg-violet-100 px-2 py-0.5 font-medium text-violet-800">custom</span>}
-          </span>
-        </div>
-        <p className="mt-2 text-xs text-zinc-500">Try it now — press your shortcut anywhere on this page.</p>
-      </section>
-
-      <section data-pointery="pointery-settings-brand" className="rounded-2xl border bg-white p-5">
-        <h2 className="text-sm font-semibold">Brand</h2>
-        <p className="mt-0.5 text-xs text-zinc-500">Primary color + corner radius. Preview updates live.</p>
-        <div className="mt-3 grid gap-4 sm:grid-cols-2">
-          <label className="text-sm">
-            <span className="font-medium">Primary color</span>
-            <span className="mt-2 flex items-center gap-3">
-              <input type="color" value={cfg.theme.primary} onChange={(e) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: e.target.value } })} className="h-10 w-14 cursor-pointer rounded" />
-              <code className="font-mono text-xs">{cfg.theme.primary}</code>
-            </span>
-          </label>
-          <label className="text-sm">
-            <span className="font-medium">Corner radius — {cfg.theme.radius}px</span>
-            <input type="range" min={4} max={24} value={cfg.theme.radius} onChange={(e) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: Number(e.target.value) } })} className="mt-3 w-full" />
-          </label>
-        </div>
-        <div className="mt-4 rounded-xl border bg-zinc-50 p-4">
-          <p className="text-xs font-medium uppercase tracking-wider text-zinc-400">Live preview</p>
-          <div className="mt-2 flex flex-wrap items-center gap-3">
-            <span className="rounded-full px-4 py-2 text-sm font-semibold text-white" style={{ background: cfg.theme.primary, borderRadius: cfg.theme.radius }}>
-              Ask Pointery
-            </span>
-            <span className="rounded-full border px-3 py-1 text-xs" style={{ borderRadius: cfg.theme.radius }}>Shift+A toggles · Esc closes</span>
+            <p className="text-xs text-zinc-500">Edits auto-save ~1s after you stop typing — no reload needed.</p>
           </div>
         </div>
-      </section>
-
-      <section data-pointery="pointery-settings-behavior" className="rounded-2xl border bg-white p-5">
-        <h2 className="text-sm font-semibold">Behavior</h2>
-        <p className="mt-0.5 text-xs text-zinc-500">Position, suggestions, allowlisted actions, palette copy.</p>
-        <label className="mt-3 block text-sm">
-          <span className="font-medium">Palette position</span>
-          <select value={cfg.position} onChange={(e) => setCfg({ ...cfg, position: e.target.value as Config["position"] })} className="mt-2 w-full rounded-lg border px-3 py-2">
-            <option value="top">Top</option>
-            <option value="center">Center</option>
-            <option value="bottom">Bottom</option>
-          </select>
-        </label>
-        <label className="mt-3 block text-sm">
-          <span className="font-medium">Suggestions (one per line)</span>
-          <textarea
-            value={cfg.suggestions.join("\\n")}
-            onChange={(e) => setCfg({ ...cfg, suggestions: e.target.value.split("\\n").map((s) => s.trim()).filter(Boolean) })}
-            rows={3}
-            placeholder={"Where is export?\\nHow do I invite a teammate?"}
-            className="mt-2 w-full rounded-lg border px-3 py-2 font-mono text-xs"
-          />
-        </label>
-        <label className="mt-3 block text-sm">
-          <span className="font-medium">Allowed actions (comma-separated names from the context)</span>
-          <input
-            value={cfg.allowActions.join(", ")}
-            onChange={(e) => setCfg({ ...cfg, allowActions: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })}
-            placeholder="export-pipeline, invite-teammate"
-            className="mt-2 w-full rounded-lg border px-3 py-2 font-mono text-xs"
-          />
-        </label>
-        <div className="mt-3 grid gap-3 sm:grid-cols-3">
-          <label className="text-sm">
-            <span className="font-medium">Placeholder</span>
-            <input value={cfg.labels?.placeholder ?? ""} onChange={(e) => setCfg({ ...cfg, labels: { ...cfg.labels, placeholder: e.target.value } })} placeholder='Ask "where is export?"…' className="mt-2 w-full rounded-lg border px-3 py-2 text-xs" />
-          </label>
-          <label className="text-sm">
-            <span className="font-medium">Empty state</span>
-            <input value={cfg.labels?.empty ?? ""} onChange={(e) => setCfg({ ...cfg, labels: { ...cfg.labels, empty: e.target.value } })} placeholder="No match — try…" className="mt-2 w-full rounded-lg border px-3 py-2 text-xs" />
-          </label>
-          <label className="text-sm">
-            <span className="font-medium">Confirm title</span>
-            <input value={cfg.labels?.confirmTitle ?? ""} onChange={(e) => setCfg({ ...cfg, labels: { ...cfg.labels, confirmTitle: e.target.value } })} placeholder="Run this action?" className="mt-2 w-full rounded-lg border px-3 py-2 text-xs" />
-          </label>
-        </div>
-      </section>
-
-      <div className="flex items-center gap-3">
-        <button onClick={saveNow} className="w-fit rounded-full bg-violet-700 px-6 py-2.5 text-sm font-semibold text-white hover:bg-violet-600">
-          {saveState === "saved" ? "Saved ✓" : "Save now"}
-        </button>
-        <p className="text-xs text-zinc-500">Edits auto-save ~1s after you stop typing — no reload needed.</p>
       </div>
 
       {ctx && (
