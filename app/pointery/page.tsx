@@ -39,7 +39,7 @@ export default function PointerySettingsPage() {
   const [vSave, setVSave] = useState(false);
   const [vAsk, setVAsk] = useState(false);
   const [vLlm, setVLlm] = useState(false);
-  const [vCtx, setVCtx] = useState<0 | 1 | 3>(0);
+  const [vCtx, setVCtx] = useState<0 | 1 | 5>(0);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const firstRun = useRef(true);
 
@@ -105,7 +105,7 @@ export default function PointerySettingsPage() {
       else if (e.key === "1") setVSave((v) => !v);
       else if (e.key === "2") setVAsk((v) => !v);
       else if (e.key === "3") setVLlm((v) => !v);
-      else if (e.key === "4") setVCtx((c) => (c === 0 ? 1 : c === 1 ? 3 : 0));
+      else if (e.key === "4") setVCtx((c) => (c === 0 ? 1 : c === 1 ? 5 : 0));
     };
     window.addEventListener("keydown", onV);
     return () => window.removeEventListener("keydown", onV);
@@ -175,6 +175,8 @@ export default function PointerySettingsPage() {
     'flows[0] (invite-teammate): steps[2] "nav-teaam" matches no entry',
     'entries[4] (export-button): for looks like live data — keep stable anchors only',
     'actions[1] (invite-teammate): at "nav-teaam" matches no entry',
+    'pins[0] (where is export): spot "export-buton" matches no entry',
+    'flows[2] (close-deal): no steps',
   ];
   const effErrors: string[] = vCtx === 0 ? [] : vCtx === 1 ? SAMPLE_CTX_ERRORS.slice(0, 1) : SAMPLE_CTX_ERRORS;
 
@@ -279,9 +281,10 @@ export default function PointerySettingsPage() {
       )}
       {effErrors.length > 0 && (
         <ul className="list-disc pl-5 text-xs text-red-700">
-          {effErrors.map((e) => (
+          {effErrors.slice(0, 3).map((e) => (
             <li key={e}>{e}</li>
           ))}
+          {effErrors.length > 3 && <li>+{effErrors.length - 3} more</li>}
         </ul>
       )}
 
@@ -509,7 +512,7 @@ export default function PointerySettingsPage() {
           </label>
           <span className="flex items-center gap-1" role="group" aria-label="Context errors">
             <span className="text-zinc-400">ctx</span>
-            {([0, 1, 3] as const).map((n) => (
+            {([0, 1, 5] as const).map((n) => (
               <button
                 key={n}
                 onClick={() => setVCtx(n)}
