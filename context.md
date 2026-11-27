@@ -273,3 +273,10 @@ Native Anthropic + Gemini translators, auto-detected from the URL host.
 - `app/pointery/page.tsx` — floating bottom-right toolbar with checkboxes (Save fail [1], Ask down [2], LLM missing [3]) + ctx 0/1/3 segmented [4] + reset [0]; keys ignored while typing. Forces the four failure states (save badge, ask pill, LLM pill + brain block, context pill + error list) with realistic sample `validateContext` messages.
 - Deliberately NOT re-synced into `STARTER_SETTINGS_PAGE` — remove the toolbar before the next `pointery:sync-page` so it never ships to buyers.
 - Verified: `tsc` clean. `pointery.config.json` left dirty (live testing).
+
+## Pass 35 (feat/basic-changes, 2026-11-27)
+Vartest toolbar removed; ctx `+N more` collapse kept.
+
+- `app/pointery/page.tsx` — back to live values everywhere (save/ask/LLM/context); only kept change is the error list shows first 3 + `+N more` line.
+- Not yet re-synced into `STARTER_SETTINGS_PAGE` — run `npm run pointery:sync-page` when ready to ship the collapse to buyers.
+- Verified: `tsc` clean, no vartest references left. `pointery.config.json` still dirty (live testing).

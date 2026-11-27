@@ -35,11 +35,6 @@ export default function PointerySettingsPage() {
   const [errors, setErrors] = useState<string[]>([]);
   const [llm, setLlm] = useState<{ configured: boolean; host: string; model: string } | null>(null);
   const [preview, setPreview] = useState<"closed" | "open">("open");
-  // shortcut: temporary error-state preview aid (vartest) — remove before `npm run pointery:sync-page`, so it never ships in STARTER_SETTINGS_PAGE.
-  const [vSave, setVSave] = useState(false);
-  const [vAsk, setVAsk] = useState(false);
-  const [vLlm, setVLlm] = useState(false);
-  const [vCtx, setVCtx] = useState<0 | 1 | 5>(0);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const firstRun = useRef(true);
 
@@ -96,21 +91,6 @@ export default function PointerySettingsPage() {
     return () => window.removeEventListener("keydown", onKey, true);
   }, [recording]);
 
-  // Vartest keys: 1/2/3 toggle save/ask/llm, 4 cycles context 0→1→3→0, 0 resets. Ignored while typing.
-  useEffect(() => {
-    const onV = (e: KeyboardEvent) => {
-      const t = e.target as HTMLElement | null;
-      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT")) return;
-      if (e.key === "0") { setVSave(false); setVAsk(false); setVLlm(false); setVCtx(0); }
-      else if (e.key === "1") setVSave((v) => !v);
-      else if (e.key === "2") setVAsk((v) => !v);
-      else if (e.key === "3") setVLlm((v) => !v);
-      else if (e.key === "4") setVCtx((c) => (c === 0 ? 1 : c === 1 ? 5 : 0));
-    };
-    window.addEventListener("keydown", onV);
-    return () => window.removeEventListener("keydown", onV);
-  }, []);
-
   // Live: apply theme vars + notify the mounted <Pointery/> instantly.
   const broadcast = useCallback((next: Config) => {
     document.documentElement.style.setProperty("--pointery-primary", next.theme.primary);
@@ -162,23 +142,6 @@ export default function PointerySettingsPage() {
   if (process.env.NODE_ENV === "production") notFound();
 
   const counts = ctx ? `${ctx.entries?.length ?? 0} entries · ${ctx.flows?.length ?? 0} flows · ${ctx.actions?.length ?? 0} actions` : null;
-
-  // Effective (preview-overridden) error states. Clean by default; a live failure only shows when its vartest toggle forces it.
-  const effSave: SaveState = vSave ? "error" : saveState === "error" ? "idle" : saveState;
-  const effAsk: boolean | null = vAsk ? false : askOk === false ? true : askOk;
-  const effLlm = vLlm
-    ? { configured: false as boolean, host: "", model: "" }
-    : llm && !llm.configured
-      ? { configured: true as boolean, host: llm.host || "env", model: llm.model }
-      : llm;
-  const SAMPLE_CTX_ERRORS = [
-    'flows[0] (invite-teammate): steps[2] "nav-teaam" matches no entry',
-    'entries[4] (export-button): for looks like live data — keep stable anchors only',
-    'actions[1] (invite-teammate): at "nav-teaam" matches no entry',
-    'pins[0] (where is export): spot "export-buton" matches no entry',
-    'flows[2] (close-deal): no steps',
-  ];
-  const effErrors: string[] = vCtx === 0 ? [] : vCtx === 1 ? SAMPLE_CTX_ERRORS.slice(0, 1) : SAMPLE_CTX_ERRORS;
 
   const snippet = `<Pointery\n  trigger="${cfg.trigger}"\n  theme={{ primary: "${cfg.theme.primary}", radius: ${cfg.theme.radius} }}\n  position="${cfg.position}"\n/>`;
 
@@ -254,37 +217,37 @@ export default function PointerySettingsPage() {
         </div>
         <span
           data-pointery="pointery-settings-save"
-          className={`rounded-full px-3 py-1 text-xs font-medium ${effSave === "saved" ? "py-ok" : effSave === "saving" ? "py-warn" : effSave === "error" ? "py-err" : "py-idle"}`}
+          className={`rounded-full px-3 py-1 text-xs font-medium ${saveState === "saved" ? "py-ok" : saveState === "saving" ? "py-warn" : saveState === "error" ? "py-err" : "py-idle"}`}
         >
-          {effSave === "saved" ? "Saved ✓" : effSave === "saving" ? "Saving…" : effSave === "error" ? "Save failed" : "Auto-save on"}
+          {saveState === "saved" ? "Saved ✓" : saveState === "saving" ? "Saving…" : saveState === "error" ? "Save failed" : "Auto-save on"}
         </span>
       </div>
 
       <div data-pointery="pointery-settings-status" className="flex flex-wrap gap-2 text-xs">
-        <span className={`rounded-full px-3 py-1 font-medium ${effAsk ? "py-ok" : "py-idle"}`}>
-          /api/ask {effAsk == null ? "…" : effAsk ? "reachable ✓" : "unreachable"}
+        <span className={`rounded-full px-3 py-1 font-medium ${askOk ? "py-ok" : "py-idle"}`}>
+          /api/ask {askOk == null ? "…" : askOk ? "reachable ✓" : "unreachable"}
         </span>
-        <span className={`rounded-full px-3 py-1 font-medium ${effLlm?.configured ? "py-ok" : "py-err"}`}>
-          {effLlm == null ? "brain …" : effLlm.configured ? `LLM → ${effLlm.host || "env"}${effLlm.model ? ` / ${effLlm.model}` : ""} ✓` : "LLM required — missing key/url/model"}
+        <span className={`rounded-full px-3 py-1 font-medium ${llm?.configured ? "py-ok" : "py-err"}`}>
+          {llm == null ? "brain …" : llm.configured ? `LLM → ${llm.host || "env"}${llm.model ? ` / ${llm.model}` : ""} ✓` : "LLM required — missing key/url/model"}
         </span>
         {counts && <span className="py-subtle rounded-full px-3 py-1 font-medium">{counts}</span>}
-        <span className={`rounded-full px-3 py-1 font-medium ${effErrors.length === 0 ? "py-ok" : "py-err"}`}>
-          context {effErrors.length === 0 ? "valid ✓" : `${effErrors.length} error${effErrors.length > 1 ? "s" : ""}`}
+        <span className={`rounded-full px-3 py-1 font-medium ${errors.length === 0 ? "py-ok" : "py-err"}`}>
+          context {errors.length === 0 ? "valid ✓" : `${errors.length} error${errors.length > 1 ? "s" : ""}`}
         </span>
       </div>
-      {effLlm && !effLlm.configured && (
+      {llm && !llm.configured && (
           <div data-pointery="pointery-settings-brain" className="text-xs">
               <p className="font-semibold" style={{ color: "var(--color-error)" }}>Brain setup needed</p>
               <p className="mt-1 text-zinc-500">Add all three to <code className="font-mono">.env.local</code> together, then restart. Without all three, /api/ask fails closed (503).</p>
               <pre className="py-code mt-2 overflow-x-auto rounded-lg p-3 font-mono text-[11px] leading-5">{ENV_SNIPPET}</pre>
             </div>
       )}
-      {effErrors.length > 0 && (
+      {errors.length > 0 && (
         <ul className="list-disc pl-5 text-xs text-red-700">
-          {effErrors.slice(0, 3).map((e) => (
+          {errors.slice(0, 3).map((e) => (
             <li key={e}>{e}</li>
           ))}
-          {effErrors.length > 3 && <li>+{effErrors.length - 3} more</li>}
+          {errors.length > 3 && <li>+{errors.length - 3} more</li>}
         </ul>
       )}
 
@@ -495,36 +458,6 @@ export default function PointerySettingsPage() {
         >
           Copy snippet
         </button>
-      </div>
-
-      {/* vartest toolbar: temporary, dev-only preview of error states. Remove before sync. */}
-      <div className="fixed bottom-4 right-4 z-50 rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-white shadow-xl">
-        <p className="px-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-400">errors preview · keys 0–4</p>
-        <div className="mt-2 flex flex-wrap items-center gap-3 text-xs">
-          <label className="flex cursor-pointer items-center gap-1.5">
-            <input type="checkbox" checked={vSave} onChange={() => setVSave((v) => !v)} className="h-3.5 w-3.5 accent-red-500" /> Save fail <span className="text-zinc-500">[1]</span>
-          </label>
-          <label className="flex cursor-pointer items-center gap-1.5">
-            <input type="checkbox" checked={vAsk} onChange={() => setVAsk((v) => !v)} className="h-3.5 w-3.5 accent-red-500" /> Ask down <span className="text-zinc-500">[2]</span>
-          </label>
-          <label className="flex cursor-pointer items-center gap-1.5">
-            <input type="checkbox" checked={vLlm} onChange={() => setVLlm((v) => !v)} className="h-3.5 w-3.5 accent-red-500" /> LLM missing <span className="text-zinc-500">[3]</span>
-          </label>
-          <span className="flex items-center gap-1" role="group" aria-label="Context errors">
-            <span className="text-zinc-400">ctx</span>
-            {([0, 1, 5] as const).map((n) => (
-              <button
-                key={n}
-                onClick={() => setVCtx(n)}
-                className={`rounded-full px-2.5 py-0.5 font-semibold ${vCtx === n ? "bg-white text-zinc-900" : "text-zinc-400 hover:text-white"}`}
-              >
-                {n}
-              </button>
-            ))}
-            <span className="text-zinc-500">[4]</span>
-          </span>
-          <button onClick={() => { setVSave(false); setVAsk(false); setVLlm(false); setVCtx(0); }} className="rounded-full bg-zinc-700 px-2.5 py-0.5 font-semibold hover:bg-zinc-600">reset [0]</button>
-        </div>
       </div>
     </div>
     </div>
