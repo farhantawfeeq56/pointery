@@ -15,7 +15,7 @@ type Config = {
 
 const DEFAULTS: Config = {
   trigger: "shift+a",
-  theme: { primary: "#6d28d9", radius: 14 },
+  theme: { primary: "#00A878", radius: 14 },
   position: "top",
   suggestions: [],
   allowActions: [],
@@ -146,10 +146,66 @@ export default function PointerySettingsPage() {
   if (!loaded) return <div className="mx-auto w-full max-w-4xl flex-1 px-6 py-10 text-sm text-zinc-500">Loading Pointery settings…</div>;
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-10">
+    <>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      {/* eslint-disable-next-line @next/next/no-page-custom-font -- Figtree is intentionally scoped to /pointery; this ships inside the init starter page */}
+      <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
+      <style>{`
+        :root {
+          --color-primary: #00A878;
+          --color-primary-hover: #008F65;
+          --color-primary-active: #007653;
+          --color-primary-subtle: #D8F1A0;
+          --color-accent: #FE5E41;
+          --color-accent-hover: #E94D32;
+          --color-background: #FFFFFF;
+          --color-background-secondary: #F8FAF5;
+          --color-surface: #FFFFFF;
+          --color-surface-secondary: #D8F1A0;
+          --color-surface-tertiary: #F3C178;
+          --color-surface-inverse: #0B0500;
+          --color-text-primary: #0B0500;
+          --color-text-secondary: #716D67;
+          --color-text-tertiary: #9B9892;
+          --color-text-inverse: #FFFFFF;
+          --color-text-brand: #00A878;
+          --color-text-accent: #FE5E41;
+          --color-border: #E8EAE5;
+          --color-border-strong: #C9CEC4;
+          --color-border-brand: #00A878;
+          --color-border-focus: #00A878;
+          --color-action-primary: #00A878;
+          --color-action-primary-hover: #008F65;
+          --color-action-secondary: #D8F1A0;
+          --color-action-accent: #FE5E41;
+          --color-action-disabled: #E8EAE5;
+          --color-success: #00A878;
+          --color-success-subtle: #D8F1A0;
+          --color-warning: #F3C178;
+          --color-warning-text: #0B0500;
+          --color-error: #FE5E41;
+          --color-error-subtle: #FFF0EC;
+          --color-info: #00A878;
+          --color-info-subtle: #E8F7F1;
+          --shadow-sm: 0 1px 2px rgba(11, 5, 0, 0.05);
+          --shadow-md: 0 4px 12px rgba(11, 5, 0, 0.08);
+          --shadow-lg: 0 12px 32px rgba(11, 5, 0, 0.12);
+        }
+        .pointery-settings { font-family: "Figtree", ui-sans-serif, system-ui, sans-serif; background: var(--color-background); color: var(--color-text-primary); }
+        .pointery-settings input:not(.font-mono), .pointery-settings select, .pointery-settings textarea:not(.font-mono), .pointery-settings button:not(.font-mono) { font-family: inherit; }
+        .py-ok { background: var(--color-success-subtle); color: var(--color-primary-active); }
+        .py-warn { background: var(--color-warning); color: var(--color-warning-text); }
+        .py-err { background: var(--color-error); color: #fff; }
+        .py-idle { background: var(--color-background-secondary); color: var(--color-text-secondary); border: 1px solid var(--color-border); }
+        .py-subtle { background: var(--color-success-subtle); color: var(--color-text-primary); }
+        .py-save { background: var(--color-action-primary); color: #fff; }
+        .py-save:hover { background: var(--color-action-primary-hover); }
+      `}</style>
+    <div className="pointery-settings mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-10">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-violet-700">Pointery · Settings</p>
+          <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-brand)" }}>Pointery · Settings</p>
           <h1 className="text-2xl font-semibold tracking-tight">Make it yours</h1>
           <p className="text-sm text-zinc-500">
             Shortcuts, brand, behavior — auto-saves to <code className="font-mono">pointery.config.json</code> and updates the palette live.
@@ -157,21 +213,21 @@ export default function PointerySettingsPage() {
         </div>
         <span
           data-pointery="pointery-settings-save"
-          className={`rounded-full px-3 py-1 text-xs font-medium ${saveState === "saved" ? "bg-green-100 text-green-800" : saveState === "saving" ? "bg-amber-100 text-amber-800" : saveState === "error" ? "bg-red-100 text-red-800" : "bg-zinc-100 text-zinc-500"}`}
+          className={`rounded-full px-3 py-1 text-xs font-medium ${saveState === "saved" ? "py-ok" : saveState === "saving" ? "py-warn" : saveState === "error" ? "py-err" : "py-idle"}`}
         >
           {saveState === "saved" ? "Saved ✓" : saveState === "saving" ? "Saving…" : saveState === "error" ? "Save failed" : "Auto-save on"}
         </span>
       </div>
 
       <div data-pointery="pointery-settings-status" className="flex flex-wrap gap-2 text-xs">
-        <span className={`rounded-full px-3 py-1 font-medium ${askOk ? "bg-green-100 text-green-800" : "bg-zinc-100 text-zinc-500"}`}>
+        <span className={`rounded-full px-3 py-1 font-medium ${askOk ? "py-ok" : "py-idle"}`}>
           /api/ask {askOk == null ? "…" : askOk ? "reachable ✓" : "unreachable"}
         </span>
-        <span className={`rounded-full px-3 py-1 font-medium ${llm?.configured ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+        <span className={`rounded-full px-3 py-1 font-medium ${llm?.configured ? "py-ok" : "py-err"}`}>
           {llm == null ? "brain …" : llm.configured ? `LLM → ${llm.host || "env"}${llm.model ? ` / ${llm.model}` : ""} ✓` : "LLM required — missing key/url/model"}
         </span>
-        {counts && <span className="rounded-full bg-violet-50 px-3 py-1 font-medium text-violet-900">{counts}</span>}
-        <span className={`rounded-full px-3 py-1 font-medium ${errors.length === 0 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+        {counts && <span className="py-subtle rounded-full px-3 py-1 font-medium">{counts}</span>}
+        <span className={`rounded-full px-3 py-1 font-medium ${errors.length === 0 ? "py-ok" : "py-err"}`}>
           context {errors.length === 0 ? "valid ✓" : `${errors.length} error${errors.length > 1 ? "s" : ""}`}
         </span>
       </div>
@@ -272,7 +328,8 @@ export default function PointerySettingsPage() {
                 <button
                   key={v}
                   onClick={() => setCfg({ ...cfg, trigger: v })}
-                  className={`rounded-xl border px-4 py-3 text-left text-sm transition ${cfg.trigger === v ? "border-violet-600 bg-violet-50 ring-1 ring-violet-600" : "hover:border-zinc-400"}`}
+                  className={`rounded-xl border px-4 py-3 text-left text-sm transition ${cfg.trigger === v ? "" : "hover:border-zinc-400"}`}
+                  style={cfg.trigger === v ? { borderColor: "var(--color-border-brand)", background: "var(--color-primary-subtle)" } : undefined}
                 >
                   <span className="font-mono font-semibold">{v === "shift+a" ? "Shift + A" : "⌘/Ctrl + K"}</span>
                   <span className="block text-xs text-zinc-500">{v === "shift+a" ? "Recommended default" : "Recommended minimal"}</span>
@@ -288,7 +345,7 @@ export default function PointerySettingsPage() {
               </button>
               <span className="text-xs text-zinc-500">
                 Current: <kbd className="rounded border bg-zinc-50 px-1.5 py-0.5 font-mono font-semibold text-zinc-800">{prettyShortcut(cfg.trigger)}</kbd>
-                {cfg.trigger !== "shift+a" && cfg.trigger !== "cmd+k" && <span className="ml-1 rounded-full bg-violet-100 px-2 py-0.5 font-medium text-violet-800">custom</span>}
+                {cfg.trigger !== "shift+a" && cfg.trigger !== "cmd+k" && <span className="py-subtle ml-1 rounded-full px-2 py-0.5 font-medium">custom</span>}
               </span>
             </div>
             <p className="mt-2 text-xs text-zinc-500">Try it now — press your shortcut anywhere on this page.</p>
@@ -359,7 +416,7 @@ export default function PointerySettingsPage() {
           </section>
 
           <div className="flex items-center gap-3 py-8">
-            <button onClick={saveNow} className="w-fit rounded-full bg-violet-700 px-6 py-2.5 text-sm font-semibold text-white hover:bg-violet-600">
+            <button onClick={saveNow} className="py-save w-fit rounded-full px-6 py-2.5 text-sm font-semibold">
               {saveState === "saved" ? "Saved ✓" : "Save now"}
             </button>
             <p className="text-xs text-zinc-500">Edits auto-save ~1s after you stop typing — no reload needed.</p>
@@ -377,7 +434,7 @@ export default function PointerySettingsPage() {
               </thead>
               <tbody className="divide-y font-mono">
                 {(ctx.entries ?? []).map((t) => (
-                  <tr key={t.id}><td className="py-1 pr-3">{t.id}</td><td className="py-1 pr-3">{t.page}</td><td className="py-1 font-sans">{t.label}{t.for ? ` — ${t.for}` : ""}</td></tr>
+                  <tr key={t.id}><td className="py-1 pr-3">{t.id}</td><td className="py-1 pr-3">{t.page}</td><td className="py-1">{t.label}{t.for ? ` — ${t.for}` : ""}</td></tr>
                 ))}
               </tbody>
             </table>
@@ -399,5 +456,6 @@ export default function PointerySettingsPage() {
         </button>
       </div>
     </div>
+    </>
   );
 }

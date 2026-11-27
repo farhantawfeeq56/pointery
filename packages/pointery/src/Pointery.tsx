@@ -10,7 +10,7 @@ type GuideState = { title: string; steps: { text: string; go: string; spot: stri
 
 const DEFAULTS = {
   trigger: "shift+a",
-  theme: { primary: "#6d28d9", radius: 14 },
+  theme: { primary: "#00A878", radius: 14 },
   position: "top" as const,
   suggestions: getSuggestions(),
   allowActions: [],
