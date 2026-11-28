@@ -539,3 +539,10 @@ No-stranding + support-referable error codes. Every failure now shows a plain us
 - `README.md` - "Error codes - support lookup" table.
 - Temp hook 15 copy synced to the new 503 text.
 - Verified: `lint` + `kit:build` + `tsc` clean; live 503 payload curled on :3000.
+
+## Pass 75 (feat/basic-changes, 2026-11-28)
+Extended temp hooks 1-19 so every changed behavior is previewable (delete before merge).
+
+- Hooks 16/17/18 return the new `{ error, answer }` payloads verbatim (LLM_UNAUTHORIZED / LLM_RATE_LIMITED / LLM_UPSTREAM_ERROR).
+- Hook 19 sleeps 35s so the client-side 30s abort fires ASK_TIMEOUT first; the late reply is ignored.
+- Verified: `lint` clean; 16-18 + 19 curled live on :3000 (19 returned at ~35s as designed).

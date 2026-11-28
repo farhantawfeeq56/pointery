@@ -12,11 +12,11 @@ const brain = (rawConfig as { brain?: { retrieve?: { entries?: number; flows?: n
 // to the customer's own model endpoint (their key, their cost).
 // Nothing goes to Pointery. Missing env fails closed with a 503.
 // Tuning (retrieve/limits/cache/temperature) lives in pointery.config.json `brain`.
-// TEMP-EMPTY-DEMO (delete before merge): type 1-15 in the palette to preview
-// each package empty state. Raw bypass of the real handler (incl. server sanitize).
+// TEMP-EMPTY-DEMO (delete before merge): type 1-19 in the palette to preview
+// each package empty/error state. Raw bypass of the real handler (incl. server sanitize).
 async function tempEmptyDemo(q: string): Promise<Response | null> {
   if (process.env.NODE_ENV === "production") return null;
-  if (!/^(1[0-5]|[1-9])$/.test(q)) return null;
+  if (!/^(1[0-9]|[1-9])$/.test(q)) return null;
   switch (q) {
     case "3":
       // Non-JSON body: client r.json() throws -> unreachable toast.
@@ -43,6 +43,16 @@ async function tempEmptyDemo(q: string): Promise<Response | null> {
       return Response.json({ answer: "Empty-slice demo: a blank query sends { entries: [], flows: [], actions: [] } to the LLM - no UI of its own.", spot: "nav-dashboard", go: "/demo" });
     case "15":
       return Response.json({ error: "LLM_NOT_CONFIGURED", answer: "Something's wrong on our end - setup isn't finished. Report error code LLM_NOT_CONFIGURED to the site owner." }, { status: 503 });
+    case "16":
+      return Response.json({ error: "LLM_UNAUTHORIZED", answer: "Something's wrong on our end - the helper was refused. Report error code LLM_UNAUTHORIZED to the site owner." });
+    case "17":
+      return Response.json({ error: "LLM_RATE_LIMITED", answer: "The helper is busy - try again in a bit. Error code: LLM_RATE_LIMITED." });
+    case "18":
+      return Response.json({ error: "LLM_UPSTREAM_ERROR", answer: "Something's wrong on our end - the helper failed. Report error code LLM_UPSTREAM_ERROR to the site owner." });
+    case "19":
+      // Slow upstream: client gives up at timing.askMs (30s) with ASK_TIMEOUT; this late reply is ignored.
+      await new Promise((r) => setTimeout(r, 35000));
+      return Response.json({ spot: "nav-pipeline", go: "/demo/pipeline", hint: "Pipeline" });
     default:
       // 1, 2, 10, 14 -> {} collapses to the empty toast.
       return Response.json({});
