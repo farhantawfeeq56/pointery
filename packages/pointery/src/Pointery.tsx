@@ -86,6 +86,7 @@ export default function Pointery(props: PointeryProps) {
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
   const [res, setRes] = useState<PointeryResult | null>(null);
+  const [resSeq, setResSeq] = useState(0); // bumps per answer so the result state re-animates
   const [toast, setToast] = useState<Toast>(null);
   const [guide, setGuide] = useState<GuideState>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
@@ -177,7 +178,7 @@ export default function Pointery(props: PointeryProps) {
     try {
       const r = await fetch(cfg.endpoint, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ query: queryText, page: window.location.pathname }) });
       const data = (await r.json()) as PointeryResult;
-      setRes(data);
+      setRes(data); setResSeq((s) => s + 1);
       if (data.answer) say(data.answer);
       if (data.plan) { setGuide({ title: data.plan.title, steps: data.plan.steps, i: 0 }); setGuideIdx(0); }
       else if (data.guide) { setGuide({ title: data.guide.title, steps: data.guide.steps, i: 0 }); setGuideIdx(0); }
@@ -215,11 +216,14 @@ export default function Pointery(props: PointeryProps) {
 
   const pos = cfg.position === "center" ? "pointery-pos-center" : cfg.position === "bottom" ? "pointery-pos-bottom" : "pointery-pos-top";
   const anim = !cfg.animation || cfg.animation === "none" ? "" : `pointery-anim-${cfg.animation}`;
+  // Keyed wrapper remounts (replaying the enter animation) on every state swap.
+  const hasRes = Boolean(res && (res.go || res.spot || res.action || res.guide || res.plan));
+  const viewKey = loading ? "loading" : hasRes ? `result-${resSeq}` : !q ? "suggest" : "empty";
 
   return (
     <>
       {toast && (
-        <div className="pointery-toast" role="status">{toast.text}</div>
+        <div key={toast.id} className={["pointery-toast", anim].filter(Boolean).join(" ")} role="status">{toast.text}</div>
       )}
 
       {guide && (
@@ -258,6 +262,7 @@ export default function Pointery(props: PointeryProps) {
                 aria-label="Ask Pointery"
               />
             </form>
+            <div key={viewKey} className="pointery-view">
             {loading && <p className="pointery-meta">Thinking…</p>}
             {!q && (
               <div className="pointery-suggest">
@@ -266,7 +271,7 @@ export default function Pointery(props: PointeryProps) {
                 ))}
               </div>
             )}
-            {res && (res.go || res.spot || res.action || res.guide || res.plan) && (
+            {!loading && res && (res.go || res.spot || res.action || res.guide || res.plan) && (
               <div className="pointery-result">
                 {res.hint && <p><strong>{res.hint}</strong></p>}
                 <div className="pointery-guide-row">
@@ -277,6 +282,7 @@ export default function Pointery(props: PointeryProps) {
                 </div>
               </div>
             )}
+            </div>
           </div>
         </div>
       )}

@@ -128,9 +128,25 @@
 .pointery-anim-slide.pointery-leaving { animation: pointery-slide-out 160ms ease-in both; }
 .pointery-anim-scale.pointery-leaving { animation: pointery-scale-out 150ms ease-in both; }
 .pointery-overlay.pointery-leaving { animation: pointery-fade-out 160ms ease-in both; }
+
+/* content-state transitions — the keyed .pointery-view remounts on every
+   suggest/loading/result swap, replaying the enter animation. Chips cascade. */
+@keyframes pointery-view-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.pointery-anim-fade .pointery-view { animation: pointery-fade 160ms ease-out both; }
+.pointery-anim-slide .pointery-view, .pointery-anim-scale .pointery-view { animation: pointery-view-in 180ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+.pointery-anim-fade .pointery-suggest button { animation: pointery-fade 160ms ease-out both; }
+.pointery-anim-slide .pointery-suggest button, .pointery-anim-scale .pointery-suggest button { animation: pointery-view-in 180ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+.pointery-palette[class*="pointery-anim-"] .pointery-suggest button:nth-child(2) { animation-delay: 35ms; }
+.pointery-palette[class*="pointery-anim-"] .pointery-suggest button:nth-child(3) { animation-delay: 70ms; }
+.pointery-palette[class*="pointery-anim-"] .pointery-suggest button:nth-child(4) { animation-delay: 105ms; }
+.pointery-palette[class*="pointery-anim-"] .pointery-suggest button:nth-child(n+5) { animation-delay: 140ms; }
+/* toast carries the same anim class — rise from its bottom anchor (fade needs no override) */
+@keyframes pointery-toast-in { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+.pointery-anim-slide.pointery-toast, .pointery-anim-scale.pointery-toast { animation: pointery-toast-in 200ms cubic-bezier(0.23, 1, 0.32, 1) both; }
 @media (prefers-reduced-motion: reduce) {
   .pointery-anim-fade, .pointery-anim-slide, .pointery-anim-scale,
-  .pointery-overlay.pointery-leaving { animation-duration: 0ms; }
+  .pointery-overlay.pointery-leaving,
+  .pointery-view, .pointery-toast, .pointery-suggest button { animation-duration: 0ms; }
 }
 
 /* toast / guide / confirm / fab */

@@ -444,3 +444,10 @@ Palette close: Esc always works, trigger toggles, exit animation, footer copy re
 - `packages/pointery/src/Pointery.tsx` — Esc now closes even while typing in the palette input (old guard swallowed it); `cfg.trigger` toggles closed from anywhere including the input. All palette closes route through a `close()` helper that plays a 160ms exit animation before unmount (`leaving` state); instant when `animation: "none"` or reduced-motion. Removed the "… toggles · Esc closes" footer line and dead `prettyTrigger`.
 - `packages/pointery/src/styles.css` — exit keyframes mirroring each entrance (`fade`/`slide`/`scale`, slide reuses the position-aware `--pointery-slide-from`) + overlay fade-out; reduced-motion covers the leaving classes.
 - `kit:build` + lint + full `build` clean.
+
+## Pass 63 (feat/basic-changes, 2026-11-28)
+Palette content states animate: suggestions, loading, result, toast.
+
+- `packages/pointery/src/Pointery.tsx` — palette body wrapped in a keyed `.pointery-view` (`loading` / `result-<n>` / `suggest` / `empty`) so every state swap remounts and replays the enter animation; stale results hide while loading. New answers bump `resSeq` so result→result re-animates. Toast keyed by message id and carries the palette's anim class, so answers/errors/hints arriving as toasts animate too.
+- `packages/pointery/src/styles.css` — `pointery-view-in` rise for slide/scale modes, fade for fade mode; suggestion chips cascade with staggered delays; toast rises from its bottom anchor. All gated on the `animation` config (`none` = no motion) and zeroed under reduced-motion.
+- `kit:build` + lint + full `build` clean.
