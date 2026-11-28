@@ -318,9 +318,13 @@ keyless mode). Re-run whenever your UI changes.
 > Then show me the wiring diff: mount \`<Pointery/>\` once in \`layout.tsx\`
 > (via a client wrapper that loads \`pointery.config.json\` and listens for
 > \`pointery:config\`), gated off marketing pages (wrapper returns null on
-> \`/\`, or mount only in the \`(app)\` group layout), ensure \`/api/ask\` calls
-> \`createAskHandler(context, { llm: { url, key, model } })\` (required — no keyless mode), and confirm
-> \`/pointery\` saves to disk, done.
+> \`/\`, or mount only in the \`(app)\` group layout). Sync the palette to my
+> brand at init: lift my primary color and corner radius from my theme /
+> tokens into \`pointery.config.json\` and the \`<Pointery/>\` props (trigger,
+> theme, position, suggestions), so it looks native on day one — everything
+> stays user-configurable afterwards via props or the config file. Ensure
+> \`/api/ask\` calls \`createAskHandler(context, { llm: { url, key, model } })\`
+> (required — no keyless mode), and confirm \`/pointery\` shows status ok, done.
 
 **Rules for the agent:** no fake selectors, \`confirm:true\` on destructive,
 re-run on UI change. This file is versioned per stack (Next / Vue / HTML) —
