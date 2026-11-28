@@ -2,7 +2,7 @@
   "$schema": "./node_modules/pointery/schema.json",
   "trigger": "ctrl+k",
   "theme": {
-    "primary": "#00A878",
+    "primary": "#235789",
     "radius": 14
   },
   "position": "bottom",

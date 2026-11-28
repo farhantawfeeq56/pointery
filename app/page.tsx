@@ -84,9 +84,9 @@ export default function Home() {
       <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
       <style>{`
         :root {
-          --color-primary: #ED1C24;
-          --color-primary-hover: #C9141B;
-          --color-secondary: #235789;
+          --color-primary: #235789;
+          --color-primary-hover: #1E4A74;
+          --color-secondary: #ED1C24;
           --color-accent: #F1D302;
           --color-background: #FDFFFC;
           --color-background-secondary: #F2F2EF;

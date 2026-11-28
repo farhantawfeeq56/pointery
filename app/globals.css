@@ -2,9 +2,9 @@
 
 :root {
   /* Brand — Pointery harness (our brand, not buyer kit theme) */
-  --color-primary: #ED1C24;
-  --color-primary-hover: #C9141B;
-  --color-secondary: #235789;
+  --color-primary: #235789;
+  --color-primary-hover: #1E4A74;
+  --color-secondary: #ED1C24;
   --color-accent: #F1D302;
 
   /* Backgrounds */
