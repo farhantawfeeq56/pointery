@@ -561,3 +561,9 @@ Past-tense completions, plain-words hook 13, zero dashes.
 - Temp hook 13 answer rewritten for non-technical users with the buyer detail parenthesized: user sentence first, "(Support: empty candidate slice...)" second. Audited every other default/server string - all already plain.
 - Removed every em/en dash in product files ("3-5" in `POINTERY_PROMPT.md` + embedded CLI copy, "1-5" in `context.md`).
 - Verified: `lint` + `kit:build` + `tsc` clean; hook 13 curled live.
+
+## Pass 78 (feat/basic-changes, 2026-11-28)
+Removed the temp 1-19 hooks (route wrapper + impossible-anchor/signpost payloads) and restored `allowActions` to all three demo actions.
+
+- `app/api/ask/route.ts` - back to a bare `createAskHandler` export; `pointery.config.json` - full allowActions.
+- Verified: `lint` + `npm run build` clean; live check shows numeric queries now hit the real handler (503 LLM_NOT_CONFIGURED in this env, no LLM vars).
