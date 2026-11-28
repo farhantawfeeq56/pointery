@@ -236,15 +236,22 @@ export default function Pointery(props: PointeryProps) {
         announced = true;
       }
       // Blocked actions fall through to spot/go below - never execute.
+      // Full action sentence: the row record reads inside the label ("Mark deal Acme as Won"), then the anchor ("on Pipeline table").
+      const subjectOf = () => {
+        const label = data.actionLabel ?? data.hint ?? data.action ?? "";
+        const record = (data.filter ?? "").trim();
+        const named = record
+          ? (/\bdeal\b/i.test(label) ? label.replace(/\bdeal\b/i, (m) => `${m} ${record}`) : `${label} (${record})`)
+          : label;
+        return named + (data.actionTarget ? ` on ${data.actionTarget}` : "");
+      };
       if (data.action && !cfg.allowActions.includes(data.action)) {
-        const subject = (data.actionLabel ?? data.action) + (data.actionTarget ? ` on ${data.actionTarget}` : "");
-        say(fmt(cfg.labels.blocked!, { action: subject }));
+        say(fmt(cfg.labels.blocked!, { action: subjectOf() }));
         announced = true;
         data.action = undefined;
       }
       if (data.action) {
-        const label = data.actionLabel ?? data.hint ?? data.action;
-        const subject = label + (data.actionTarget ? ` on ${data.actionTarget}` : "");
+        const subject = subjectOf();
         if (data.confirm === false) await runAction(data.action, subject);
         else {
           // Confirm dialog speaks for itself - drop the pending toast.

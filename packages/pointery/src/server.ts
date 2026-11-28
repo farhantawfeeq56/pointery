@@ -45,12 +45,11 @@ function sanitizeResult(r: PointeryResult, context: PointeryContext, allowed?: s
   const knownAction = (context.actions ?? []).find((a) => a.name === r.action);
   if (r.action && actionNames.has(r.action)) {
     out.actionLabel = knownAction?.label ?? r.action;
-    // Target: explicit spot wins, else the action's `at` anchor; plus the row filter (rows:true only, like `filter`).
+    // Target: explicit spot wins, else the action's `at` anchor. The row filter stays in `filter` (rows:true only) - the UI names it inside the action sentence.
     const anchor =
       (r.spot && ids.has(r.spot) ? byId.get(r.spot) : undefined) ??
       (knownAction?.at ? byId.get(knownAction.at) : undefined);
-    const targetFilter = anchor?.rows && typeof r.filter === "string" ? r.filter.trim().slice(0, 80) : "";
-    if (anchor) out.actionTarget = anchor.label + (targetFilter ? ` matching ${targetFilter}` : "");
+    if (anchor) out.actionTarget = anchor.label;
     if (!allowed || allowed.includes(r.action)) {
       out.action = r.action;
       out.confirm = confirmOf(r.action);

@@ -48,6 +48,7 @@ const TEST_HOOKS: Record<string, unknown> = {
     confirm: true,
     spot: "pipeline-table",
     go: "/demo/pipeline",
+    filter: "Acme",
     hint: "Mark deal as Won",
     actionLabel: "Mark deal as Won",
     actionTarget: "Pipeline table",
