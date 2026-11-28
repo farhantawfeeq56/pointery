@@ -54,8 +54,11 @@ async function tempEmptyDemo(q: string): Promise<Response | null> {
       // Slow upstream: client gives up at timing.askMs (30s) with ASK_TIMEOUT; this late reply is ignored.
       await new Promise((r) => setTimeout(r, 35000));
       return Response.json({ spot: "nav-pipeline", go: "/demo/pipeline", hint: "Pipeline" });
+    case "10":
+      // Signpost: the real blank-submit path needs a truly empty box.
+      return Response.json({ answer: "Hook 10 needs a truly empty box: clear the input, hit Enter, and watch for the guidance toast." });
     default:
-      // 1, 2, 10, 14 -> {} collapses to the empty toast.
+      // 1, 2, 14 -> {} collapses to the empty toast.
       return Response.json({});
   }
 }
