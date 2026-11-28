@@ -312,3 +312,9 @@ Arranged /pointery customize zone: uniform rhythm + paired fields.
 
 - `app/pointery/page.tsx` — dropped orphan `mt-3` on each group's first row (leftover heading gaps); Palette position + Allowed actions now sit side-by-side (`sm:grid-cols-2`), Suggestions full-width below, label inputs keep their 3-col row.
 - Re-synced via `npm run pointery:sync-page`; `init --check` ok, `tsc` clean.
+
+## Pass 41 (feat/basic-changes, 2026-11-28)
+Shortcut section rework per page feedback: live card + pencil + chips.
+
+- `app/pointery/page.tsx` — preset cards + Record button + Current line replaced by: current-shortcut card (label + mono value) with pencil icon button to start/stop recording; Shift+A and Cmd/Ctrl+K moved below as "Suggestions:" chips (active chip filled); custom badge kept. Recorder shows live progress (`Shift + …`) incl. bare-modifier presses, Esc cancels, hint line switches to "Press keys… (Esc to cancel)" while recording.
+- Re-synced via `npm run pointery:sync-page`; `init --check` ok, `tsc` clean.

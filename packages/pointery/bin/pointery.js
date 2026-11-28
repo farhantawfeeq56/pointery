@@ -113,6 +113,7 @@ export default function PointerySettingsPage() {
   const [loaded, setLoaded] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [recording, setRecording] = useState(false);
+  const [recordingPreview, setRecordingPreview] = useState<string | null>(null);
   const [askOk, setAskOk] = useState<boolean | null>(null);
   const [ctx, setCtx] = useState<PointeryContext | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
@@ -154,21 +155,26 @@ export default function PointerySettingsPage() {
   const prettyShortcut = (t: string) =>
     t.split("+").map((p) => (p === "cmd" ? "⌘" : p === "ctrl" ? "Ctrl" : p === "alt" ? "Alt" : p === "shift" ? "Shift" : p.length === 1 ? p.toUpperCase() : p)).join(" + ");
 
-  // Custom shortcut recorder: next full combo (not bare modifiers) becomes the trigger.
+  // Custom shortcut recorder: display updates live; next full combo (not bare modifiers) becomes the trigger.
   useEffect(() => {
     if (!recording) return;
+    setRecordingPreview(null);
     const onKey = (e: KeyboardEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      if (e.key === "Escape") { setRecording(false); return; }
-      if (["Control", "Shift", "Alt", "Meta"].includes(e.key)) return; // wait for the full combo
+      if (e.key === "Escape") { setRecording(false); setRecordingPreview(null); return; }
       const parts: string[] = [];
       if (e.ctrlKey || e.metaKey) parts.push(e.metaKey ? "cmd" : "ctrl");
       if (e.altKey) parts.push("alt");
       if (e.shiftKey) parts.push("shift");
+      if (["Control", "Shift", "Alt", "Meta"].includes(e.key)) {
+        setRecordingPreview(parts.length ? parts.join("+") + "+…" : "…");
+        return; // wait for the full combo
+      }
       parts.push(e.key.toLowerCase() === " " ? "space" : e.key.toLowerCase());
       setCfg((c) => ({ ...c, trigger: parts.join("+") }));
       setRecording(false);
+      setRecordingPreview(null);
     };
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
@@ -407,32 +413,34 @@ export default function PointerySettingsPage() {
 
         <div className="min-w-0 lg:order-1">
           <section data-pointery="pointery-settings-shortcut" className="py-8 first:pt-0">
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-zinc-200 px-4 py-3">
+              <div className="min-w-0">
+                <p className="text-xs text-zinc-500">{recording ? "Recording — press keys…" : "Current shortcut"}</p>
+                <p className="truncate font-mono text-sm font-semibold">{recording ? prettyShortcut(recordingPreview ?? "…") : prettyShortcut(cfg.trigger)}</p>
+              </div>
+              <button
+                onClick={() => { setRecording((r) => !r); setRecordingPreview(null); }}
+                aria-label={recording ? "Stop recording" : "Record new shortcut"}
+                title={recording ? "Stop (Esc)" : "Record new shortcut"}
+                className={recording ? "rounded-full bg-amber-500 p-2 text-white" : "rounded-full border border-zinc-200 p-2 text-zinc-600 hover:border-zinc-400"}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /></svg>
+              </button>
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+              <span className="text-zinc-500">Suggestions:</span>
               {(["shift+a", "cmd+k"] as const).map((v) => (
                 <button
                   key={v}
                   onClick={() => setCfg({ ...cfg, trigger: v })}
-                  className={\`rounded-xl border px-4 py-3 text-left text-sm transition \${cfg.trigger === v ? "" : "hover:border-zinc-400"}\`}
-                  style={cfg.trigger === v ? { borderColor: "var(--color-border-brand)", background: "var(--color-primary-subtle)" } : undefined}
+                  className={cfg.trigger === v && !recording ? "rounded-full border border-zinc-900 bg-zinc-900 px-3 py-1 font-mono font-semibold text-white" : "rounded-full border border-zinc-200 px-3 py-1 font-mono text-zinc-600 hover:border-zinc-400"}
                 >
-                  <span className="font-mono font-semibold">{v === "shift+a" ? "Shift + A" : "⌘/Ctrl + K"}</span>
-                  <span className="block text-xs text-zinc-500">{v === "shift+a" ? "Recommended default" : "Recommended minimal"}</span>
+                  {v === "shift+a" ? "Shift + A" : "⌘/Ctrl + K"}
                 </button>
               ))}
+              {cfg.trigger !== "shift+a" && cfg.trigger !== "cmd+k" && <span className="py-subtle rounded-full px-2 py-0.5 font-medium">custom</span>}
             </div>
-            <div className="mt-3 flex flex-wrap items-center gap-3">
-              <button
-                onClick={() => setRecording((r) => !r)}
-                className={\`rounded-full px-4 py-2 text-sm font-semibold transition \${recording ? "bg-amber-500 text-white" : "bg-zinc-900 text-white hover:bg-zinc-700"}\`}
-              >
-                {recording ? "Press keys… (Esc to cancel)" : "Record your own…"}
-              </button>
-              <span className="text-xs text-zinc-500">
-                Current: <kbd className="py-inset rounded px-1.5 py-0.5 font-mono font-semibold">{prettyShortcut(cfg.trigger)}</kbd>
-                {cfg.trigger !== "shift+a" && cfg.trigger !== "cmd+k" && <span className="py-subtle ml-1 rounded-full px-2 py-0.5 font-medium">custom</span>}
-              </span>
-            </div>
-            <p className="mt-2 text-xs text-zinc-500">Try it now — press your shortcut anywhere on this page.</p>
+            <p className="mt-2 text-xs text-zinc-500">{recording ? "Press keys… (Esc to cancel)" : "Try it now — press your shortcut anywhere on this page."}</p>
           </section>
 
           <section data-pointery="pointery-settings-brand" className="py-8">
