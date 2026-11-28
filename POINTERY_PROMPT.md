@@ -47,8 +47,10 @@ keyless mode). Re-run whenever your UI changes.
 >      the server drops it otherwise, and the keyword fallback never sets it.
 > 4. Keep it small: max ~40 entries, ~10 flows, only allowlisted actions.
 >    Delete stale ids for removed UI.
-> 5. Run `npx pointery init --check` and fix whatever it reports (guide step
->    pointing at a missing target or wrong page, live `$` data baked into the map,
+> 5. Run `npx pointery init --check` and fix whatever it reports (two-way:
+>    code anchors with no map entry AND map entries with no rendered anchor,
+>    plus guide steps pointing at missing targets, live `$` data, bloated maps
+>    (max ~40 entries, ~10 flows), instruction-style `for` text,
 >    or config errors - unknown keys, bad enums). `pointery.schema.json` is truth
 >    for `pointery.config.json`: position is top|center|bottom, animation is
 >    fade|slide|scale|none. Run `npx pointery config --validate` after any config edit.

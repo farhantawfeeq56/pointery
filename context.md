@@ -567,3 +567,13 @@ Removed the temp 1-19 hooks (route wrapper + impossible-anchor/signpost payloads
 
 - `app/api/ask/route.ts` - back to a bare `createAskHandler` export; `pointery.config.json` - full allowActions.
 - Verified: `lint` + `npm run build` clean; live check shows numeric queries now hit the real handler (503 LLM_NOT_CONFIGURED in this env, no LLM vars).
+
+## Pass 79 (feat/basic-changes, 2026-11-28)
+Two-way map check: code anchors without entries AND entries without anchors.
+
+- `packages/pointery/bin/pointery.js` (`init --check`) - walks `app/**` for static `data-pointery="..."` literals plus `key: "..."` literals (covers `data-pointery={n.key}` tables), diffs both ways against `pointery.context.json`. Also mirrors new `validate.ts` rules in its slim copy: size caps (>40 entries, >10 flows), `for` hygiene (questions/phrasings, >140 chars), `?` in aliases. Step 5 + `AGENTS_BLOCK` reworded to two-way (kept in sync with root `POINTERY_PROMPT.md` + root `AGENTS.md` block, no sync script).
+- `packages/pointery/src/validate.ts` - same rules via `validateContext()` so the `/pointery` status page and admin PUT enforce them too. Verb-start excluded from the instruction test on purpose ("Ask health" is a legit purpose).
+- `pointery.context.json` + `STARTER_CONTEXT` - added missing `pointery-settings-brain` entry (the page rendered that anchor with no map entry; the new check caught it here first).
+- `packages/pointery/src/Pointery.tsx` - `pulse()` logs a dev-only `console.warn` naming the dead anchor (users still get the missing toast via `pointery:missing`).
+- `.github/workflows/ci.yml` - new `node packages/pointery/bin/pointery.js init --check` step after install, so map drift fails the PR.
+- Verified: `init --check` ok on harness, fails both directions in a scratch dir (ghost entry + unmapped anchor), `lint` + `kit:build` + `npm run build` clean.

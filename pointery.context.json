@@ -86,6 +86,13 @@
       "type": "section"
     },
     {
+      "id": "pointery-settings-brain",
+      "page": "/pointery",
+      "label": "Brain",
+      "for": "Model endpoint and key setup",
+      "type": "section"
+    },
+    {
       "id": "pointery-settings-context",
       "page": "/pointery",
       "label": "Context",

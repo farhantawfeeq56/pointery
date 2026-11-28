@@ -15,11 +15,13 @@ const STARTER_CONTEXT = {
   entries: [
     { id: "export-button", page: "/dashboard", label: "Export", for: "Downloads the report as CSV", type: "button", aliases: ["csv"] },
     { id: "pointery-settings-status", page: "/pointery", label: "Status", for: "Ask health, brain and context validity", type: "section" },
+    { id: "pointery-settings-brain", page: "/pointery", label: "Brain", for: "Model endpoint and key setup", type: "section" },
     { id: "pointery-settings-context", page: "/pointery", label: "Context", for: "Entries, flows and actions from disk", type: "section" },
   ],
   flows: [
     { id: "export-report", title: "Export your report", aliases: ["export"], steps: ["export-button"] },
   ],
+  // NOTE: keep in sync with POINTERY_PROMPT.md step 5 + AGENTS_BLOCK below (no sync script).
   actions: [
     { name: "export-report", label: "Export report CSV", confirm: false, at: "export-button" },
   ],
@@ -346,8 +348,10 @@ keyless mode). Re-run whenever your UI changes.
 >      the server drops it otherwise, and the keyword fallback never sets it.
 > 4. Keep it small: max ~40 entries, ~10 flows, only allowlisted actions.
 >    Delete stale ids for removed UI.
-> 5. Run \`npx pointery init --check\` and fix whatever it reports (guide step
->    pointing at a missing target or wrong page, live \`$\` data baked into the map,
+> 5. Run \`npx pointery init --check\` and fix whatever it reports (two-way:
+>    code anchors with no map entry AND map entries with no rendered anchor,
+>    plus guide steps pointing at missing targets, live \`$\` data, bloated maps
+>    (max ~40 entries, ~10 flows), instruction-style \`for\` text,
 >    or config errors (unknown keys, bad enums). \`pointery.schema.json\` is truth
 >    for \`pointery.config.json\`: position is top|center|bottom, animation is
 >    fade|slide|scale|none. Run \`npx pointery config --validate\` after any config edit.
@@ -398,7 +402,7 @@ const AGENTS_BLOCK = `${AGENTS_START} - do not remove; \`npx pointery init --for
 ## Pointery - keep pointery.context.json in sync
 - \`pointery.context.json\` is the index of stable UI anchors (\`/api/ask\` sends the top-ranked slice as system context in an OpenAI-compatible \`{ model, messages }\` call to our own model). Keep it small and current: max ~40 entries, ~10 flows, allowlisted actions only.
 - Whenever you add, move, rename, or remove a user-facing control or route: update its \`data-pointery="kebab-id"\` in code AND its entry in \`pointery.context.json\` (label + purpose; \`confirm: true\` for destructive actions). Keep ids stable; never invent selectors - only ids present in the rendered DOM.
-- After any UI change, run \`npx pointery init --check\` (fails when a flow step points at a missing entry) and fix what it reports.
+- After any UI change, run \`npx pointery init --check\` (two-way: fails on code anchors missing from the map AND map entries missing from rendered code, plus stale steps) and fix what it reports.
 - \`pointery.schema.json\` is truth for \`pointery.config.json\` (position: top|center|bottom, animation: fade|slide|scale|none). After any config edit, run \`npx pointery config --validate\`.
 ${AGENTS_END}`;
 
@@ -498,6 +502,36 @@ if (cmd === "init") {
       if (p.guide && !_flows.has(p.guide)) problems.push(`pins[${i}] (${p.match || "?"}): guide "${p.guide}" matches no flow`);
       if (p.go && ![..._pages].includes(p.go)) problems.push(`pins[${i}] (${p.match || "?"}): go "${p.go}" matches no entry page`);
     });
+    if ((ctx.entries || []).length > 40) problems.push(`too many entries (${ctx.entries.length}) - keep max ~40`);
+    if ((ctx.flows || []).length > 10) problems.push(`too many flows (${ctx.flows.length}) - keep max ~10`);
+    const looksInstruction = (s) => s.includes("?") || /where is|what is|how (do|to|do i)/i.test(s);
+    (ctx.entries || []).forEach((t, i) => {
+      if (t.for && t.for.length > 140) problems.push(`entries[${i}] (${t.id}): for is ${t.for.length} chars - keep one short clause`);
+      if (t.for && looksInstruction(t.for)) problems.push(`entries[${i}] (${t.id}): for looks like an instruction/question - keep a purpose clause`);
+      for (const a of t.aliases ?? []) if (a.includes("?")) problems.push(`entries[${i}] (${t.id}): alias "${a}" looks like a phrasing - aliases are synonyms only`);
+    });
+    // Two-way drift: code ids without map entries (unaskable UI) + map entries
+    // with no rendered anchor (dead targets). Heuristic: static data-pointery
+    // literals plus key: "..." literals (covers data-pointery={n.key} tables).
+    try {
+      const appDir = path.join(cwd, "app");
+      const codeIds = new Set();
+      const walk = (d) => {
+        for (const f of fs.readdirSync(d, { withFileTypes: true })) {
+          const p = path.join(d, f.name);
+          if (f.isDirectory()) { if (f.name !== "node_modules" && f.name !== ".next") walk(p); continue; }
+          if (!/\.[jt]sx?$/.test(f.name)) continue;
+          const src = fs.readFileSync(p, "utf8");
+          for (const m of src.matchAll(/data-pointery\s*=\s*["']([^"']+)["']/g)) codeIds.add(m[1]);
+          for (const m of src.matchAll(/key\s*:\s*["']([a-z0-9][a-z0-9-]*)["']/g)) codeIds.add(m[1]);
+        }
+      };
+      if (fs.existsSync(appDir)) {
+        walk(appDir);
+        for (const id of codeIds) if (!ids.has(id)) problems.push(`code: data-pointery="${id}" has no entry in pointery.context.json`);
+        for (const id of ids) if (!codeIds.has(id)) problems.push(`entries: "${id}" has no data-pointery in app/** - stale or conditional anchor`);
+      }
+    } catch { /* unreadable tree - static checks above still apply */ }
     for (const e of validateConfigJson(readConfig(cwd))) problems.push("config: " + e);
     console.log(problems.length ? "\ncheck failed:\n- " + problems.join("\n- ") : "\ncheck ok");
     process.exit(problems.length ? 1 : 0);

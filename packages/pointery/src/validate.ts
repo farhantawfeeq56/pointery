@@ -12,6 +12,12 @@ export function validateContext(ctx: PointeryContext): string[] {
   const entries = ctx.entries ?? [];
   const flows = ctx.flows ?? [];
   const actions = ctx.actions ?? [];
+  // Size caps from the map-maker prompt: the map is a ship-time index, not docs.
+  if (entries.length > 40) errors.push(`too many entries (${entries.length}) - keep max ~40`);
+  if (flows.length > 10) errors.push(`too many flows (${flows.length}) - keep max ~10`);
+  // `for` is one stable purpose clause, never a question or phrasing.
+  // shortcut: verb-starts ("Ask health") are legit purposes, so only flag questions/phrasings.
+  const looksInstruction = (s: string) => s.includes("?") || /where is|what is|how (do|to|do i)/i.test(s);
 
   // Live values ($1,234, record names) go stale per user - the map holds stable anchors only.
   const looksLive = (s: string) => /\$\s*\d/.test(s);
@@ -25,6 +31,9 @@ export function validateContext(ctx: PointeryContext): string[] {
     if (!e.label) errors.push(`entries[${i}] (${e.id || "?"}): missing label`);
     if (e.label && looksLive(e.label)) errors.push(`entries[${i}] (${e.id || "?"}): label looks like live data - keep stable anchors only`);
     if (e.for && looksLive(e.for)) errors.push(`entries[${i}] (${e.id || "?"}): for looks like live data - keep stable anchors only`);
+    if (e.for && e.for.length > 140) errors.push(`entries[${i}] (${e.id || "?"}): for is ${e.for.length} chars - keep one short clause`);
+    if (e.for && looksInstruction(e.for)) errors.push(`entries[${i}] (${e.id || "?"}): for looks like an instruction/question - keep a purpose clause ("Downloads the pipeline as CSV")`);
+    for (const a of e.aliases ?? []) if (a.includes("?")) errors.push(`entries[${i}] (${e.id || "?"}): alias "${a}" looks like a phrasing - aliases are synonyms only ("csv")`);
   });
 
   const pages = new Set(entries.map((e) => e.page));

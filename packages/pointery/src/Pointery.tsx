@@ -59,6 +59,8 @@ export function pulse(key: string, filter?: string, ms = 2600) {
   requestAnimationFrame(() => {
     const el = document.querySelector(`[data-pointery="${key}"]`);
     if (!el) {
+      // shortcut: dev-only console line names the dead anchor; users get the toast via pointery:missing.
+      if (process.env.NODE_ENV !== "production") console.warn(`[pointery] missing anchor "${key}" - no data-pointery in rendered DOM`);
       window.dispatchEvent(new CustomEvent("pointery:missing", { detail: key }));
       return;
     }
