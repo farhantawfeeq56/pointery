@@ -279,6 +279,7 @@ export default function Pointery(props: PointeryProps) {
 
       {guide && (
         <div className="pointery-guide" role="dialog" aria-label={guide.title}>
+          <button className="pointery-guide-close" onClick={() => setGuide(null)} aria-label="Close guide">✕</button>
           <div className="pointery-guide-title">{guide.title} <span>· {guideIdx + 1}/{guide.steps.length}</span></div>
           <p className="pointery-guide-step">{guide.steps[guideIdx]?.text}</p>
           <div className="pointery-guide-row">
@@ -286,7 +287,6 @@ export default function Pointery(props: PointeryProps) {
             {guideIdx < guide.steps.length - 1
               ? <button className="primary" onClick={() => { const n = guideIdx + 1; setGuideIdx(n); const s = guide.steps[n]; goSpot(s.go, s.spot, s.text, s.filter); }}>{cfg.labels.next}</button>
               : <button className="primary" onClick={() => { setGuide(null); say(cfg.labels.guideComplete!); }}>{cfg.labels.doneBtn}</button>}
-            <button onClick={() => setGuide(null)} aria-label="Close guide">✕</button>
           </div>
         </div>
       )}
