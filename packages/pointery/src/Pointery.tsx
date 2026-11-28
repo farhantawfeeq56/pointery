@@ -243,8 +243,8 @@ export default function Pointery(props: PointeryProps) {
             {loading && <p className="pointery-meta">Thinking…</p>}
             {!q && (
               <div className="pointery-suggest">
-                {(cfg.suggestions ?? []).map((s) => (
-                  <button key={s} onClick={() => { setQ(s); ask(s); }}>{s}</button>
+                {(cfg.suggestions ?? []).map((s, i) => (
+                  s.trim() ? <button key={i} onClick={() => { setQ(s); ask(s); }}>{s}</button> : null
                 ))}
               </div>
             )}
