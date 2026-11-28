@@ -19,6 +19,7 @@ export type {
   PointeryAction,
   PointeryTheme,
   PointeryPosition,
+  PointeryAnimation,
   PointeryLabels,
   PointeryLLMAdapter,
   AskHandlerOptions,

@@ -79,12 +79,16 @@ export type PointeryResult = {
 
 export type PointeryTheme = { primary?: string; radius?: number };
 export type PointeryPosition = "top" | "center" | "bottom";
+/** Palette entrance. `slide` drifts in from the palette edge (down on top, up on bottom). */
+export type PointeryAnimation = "fade" | "slide" | "scale" | "none";
 export type PointeryLabels = { placeholder?: string; empty?: string; confirmTitle?: string };
 
 export type PointeryProps = {
   trigger?: string; // any "+"-joined combo, e.g. "shift+a" (default) or "ctrl+shift+p" — ctrl/cmd treated the same, plus cmd/ctrl+k always on
   theme?: PointeryTheme;
   position?: PointeryPosition;
+  /** Palette entrance animation. Defaults to "slide". */
+  animation?: PointeryAnimation;
   suggestions?: string[];
   allowActions?: string[];
   labels?: PointeryLabels;

@@ -37,6 +37,7 @@ export default function PointeryMount() {
             trigger: c.trigger,
             theme: c.theme,
             position: c.position,
+            animation: c.animation,
             suggestions: c.suggestions,
             allowActions: c.allowActions,
             labels: c.labels,

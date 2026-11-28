@@ -29,6 +29,7 @@ const STARTER_CONFIG = {
   trigger: "shift+a",
   theme: { primary: "#00A878", radius: 14 },
   position: "top",
+  animation: "slide",
   suggestions: ["Where is export?"],
   allowActions: ["export-report"],
 };

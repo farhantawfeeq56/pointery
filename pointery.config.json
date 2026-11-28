@@ -5,6 +5,7 @@
     "radius": 14
   },
   "position": "bottom",
+  "animation": "slide",
   "suggestions": [
     "Where is export?",
     "How do I invite a teammate?",

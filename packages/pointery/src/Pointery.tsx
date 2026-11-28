@@ -12,6 +12,7 @@ const DEFAULTS = {
   trigger: "shift+a",
   theme: { primary: "#00A878", radius: 14 },
   position: "top" as const,
+  animation: "slide" as const,
   suggestions: getSuggestions(),
   allowActions: [],
   labels: { placeholder: 'Ask "where is export?" or "how do I invite?"', empty: "No match — try “export”, “invite”, or “pipeline”.", confirmTitle: "Run this action?" },
@@ -195,7 +196,8 @@ export default function Pointery(props: PointeryProps) {
     );
   }
 
-  const pos = cfg.position === "center" ? "items-center" : cfg.position === "bottom" ? "items-end pb-16" : "items-start pt-16";
+  const pos = cfg.position === "center" ? "pointery-pos-center" : cfg.position === "bottom" ? "pointery-pos-bottom" : "pointery-pos-top";
+  const anim = !cfg.animation || cfg.animation === "none" ? "" : `pointery-anim-${cfg.animation}`;
 
   return (
     <>
@@ -229,7 +231,7 @@ export default function Pointery(props: PointeryProps) {
 
       {open && (
         <div className={`pointery-overlay ${pos}`} onClick={() => setOpen(false)}>
-          <div className="pointery-palette" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Ask Pointery">
+          <div className={`pointery-palette ${anim}`.trim()} onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Ask Pointery">
             <form onSubmit={(e) => { e.preventDefault(); ask(q); }}>
               <input
                 ref={inputRef}
