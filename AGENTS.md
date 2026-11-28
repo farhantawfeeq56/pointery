@@ -185,7 +185,7 @@ There is no test framework yet. Before calling a change done, run `npm run lint`
 - `pointery.context.json` is the index of stable UI anchors for in-app ask-anything (`/api/ask` sends the top-ranked slice as system context in an OpenAI-compatible `{ model, messages }` call to our own model). Keep it small and current: max ~40 entries, ~10 flows, allowlisted actions only.
 - Whenever you add, move, rename, or remove a user-facing control or route: update its `data-pointery="kebab-id"` in code AND its entry in `pointery.context.json` (label + purpose; `confirm: true` for destructive actions). Keep ids stable; never invent selectors - only ids present in the rendered DOM.
 - After any UI change, run `npx pointery init --check` (two-way: fails on code anchors missing from the map AND map entries missing from rendered code, plus stale steps) and fix what it reports.
-- `pointery.schema.json` is truth for `pointery.config.json` (position: top|center|bottom, animation: fade|slide|scale|none). After any config edit, run `npx pointery config --validate`.
+- `node_modules/pointery/schema.json` is truth for `pointery.config.json` (position: top|center|bottom, animation: fade|slide|scale|none). After any config edit, run `npx pointery config --validate`.
 <!-- pointery:end -->
 
 <!-- BEGIN:nextjs-agent-feedback -->

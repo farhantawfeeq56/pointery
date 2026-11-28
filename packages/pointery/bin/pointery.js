@@ -335,7 +335,8 @@ keyless mode). Re-run whenever your UI changes.
 >    - \`pins[]\` = curated fast-path (optional): exact-phrase wins checked
 >      before generic scoring, served locally with no LLM. Strict match only
 >      (no word-overlap). Use for golden demo paths; the rest still
->      resolves generically.
+>      resolves generically. Every \`spot\`/\`action\`/\`guide\` must reference a real
+>      entry id / action name / flow id, and every \`go\` a real entry page.
 >    - \`label\`: the element's own words ("Export"). \`for\`: stable purpose,
 >      one clause ("Downloads the pipeline as CSV") - never an instruction.
 >    - \`aliases\`: non-obvious synonyms only ("csv"). Matching derives from
@@ -352,15 +353,15 @@ keyless mode). Re-run whenever your UI changes.
 >    code anchors with no map entry AND map entries with no rendered anchor,
 >    plus guide steps pointing at missing targets, live \`$\` data, bloated maps
 >    (max ~40 entries, ~10 flows), instruction-style \`for\` text,
->    or config errors (unknown keys, bad enums). \`pointery.schema.json\` is truth
+>    or config errors (unknown keys, bad enums). \`node_modules/pointery/schema.json\` is truth
 >    for \`pointery.config.json\`: position is top|center|bottom, animation is
 >    fade|slide|scale|none. Run \`npx pointery config --validate\` after any config edit.
 > 6. Brain (my key, my bill, required - one step): walk me through it - add \`POINTERY_LLM_URL\` (my model endpoint: OpenAI-compatible chat-completions URL, or native Anthropic \`…/v1/messages\` / Gemini \`…:generateContent\` - auto-detected), \`POINTERY_LLM_KEY\`, AND \`POINTERY_LLM_MODEL\` (exact model id as the provider spells it) to \`.env.local\` together, restart dev, and
->    verify with “where is export?”. Without all three, \`/api/ask\` fails closed (503). OpenAI defaults the model to \`gpt-4o-mini\` when unset; every other provider needs it. Never print or commit the key.
+>    verify with a real question built from THIS map (a flow title or entry label you just indexed - never the "export" placeholder if the app has no export). Without all three, \`/api/ask\` fails closed (503). OpenAI defaults the model to \`gpt-4o-mini\` when unset; every other provider needs it. Never print or commit the key.
 > 7. Settings page (\`/pointery\`): \`init\` already dropped a starter
 >    (Next: \`app/pointery/page.tsx\` + \`app/api/admin/config/route.ts\`;
->    other stacks: build the equivalent). It is read-only by design:
->    customization lives in the \`<Pointery/>\` props in code, so the page
+>    other stacks: build the equivalent). It is read-only by design and
+>    dev-only (must render \`notFound()\` in production): the page
 >    shows system status (ask health, brain, context validity) and the
 >    context table. It loads
 >    \`pointery.config.json\` via GET only (PUT stays dev-only and refuses
@@ -374,20 +375,21 @@ keyless mode). Re-run whenever your UI changes.
 >    Set \`suggestions\` to 3-5 real first-run questions for THIS app, built
 >    from the entry labels and flow titles you just indexed (the palette
 >    shows them as its default list) - never the "export" placeholder if
->    the app has no export. Tag its
+>    the app has no export - and rewrite the starter \`labels\` placeholder/empty
+>    copy the same way. Tag its
 >    sections with \`data-pointery\` ids and keep the matching
 >    \`pointery-settings-*\` entries on page \`/pointery\` in sync; re-run step 5.
 >
-> Then show me the wiring diff: mount \`<Pointery/>\` once in \`layout.tsx\`
-> (via a client wrapper that loads \`pointery.config.json\` and listens for
-> \`pointery:config\`), gated off marketing pages (wrapper returns null on
-> \`/\`, or mount only in the \`(app)\` group layout). Sync the palette to my
+> Then show me the wiring diff: \`pointery.config.json\` is truth - mount \`<Pointery/>\` once in \`layout.tsx\`
+> via a client wrapper (e.g. \`components/pointery-wrapper.tsx\`) that passes the config file as props and listens for
+> \`pointery:config\`, gated off marketing pages (wrapper returns null on
+> \`/\`, or mount only in the \`(app)\` group layout). Keep every key the starter sets
+> (\`trigger, theme, position, animation, suggestions, allowActions, hiddenRoutes, fab, endpoint, timing, brain\`) flowing through - don't drop keys to match a shorter snippet. Sync the palette to my
 > brand at init: lift my primary color and corner radius from my theme /
-> tokens into \`pointery.config.json\` and the \`<Pointery/>\` props (trigger,
-> theme, position, suggestions), so it looks native on day one - everything
-> stays user-configurable afterwards via props or the config file. Ensure
-> \`/api/ask\` calls \`createAskHandler(context, { llm: { url, key, model } })\`
-> (required - no keyless mode), and confirm \`/pointery\` shows status ok, done.
+> tokens into \`pointery.config.json\` (props only override it where you explicitly pass them), so it looks native on day one. Ensure
+> \`/api/ask\` calls \`createAskHandler(context, { llm: { url, key, model }, retrieve, limits, cache })\`
+> with \`retrieve/limits/cache\` (plus \`llm.temperature/maxTokens\`) read from \`pointery.config.json\` \`brain\`
+> (required - no keyless mode; never strip tuning to match a shorter snippet), and confirm \`/pointery\` shows status ok, done.
 
 **Rules for the agent:** no fake selectors, \`confirm:true\` on destructive,
 re-run on UI change. This file is versioned per stack (Next / Vue / HTML) -
@@ -403,18 +405,20 @@ const AGENTS_BLOCK = `${AGENTS_START} - do not remove; \`npx pointery init --for
 - \`pointery.context.json\` is the index of stable UI anchors (\`/api/ask\` sends the top-ranked slice as system context in an OpenAI-compatible \`{ model, messages }\` call to our own model). Keep it small and current: max ~40 entries, ~10 flows, allowlisted actions only.
 - Whenever you add, move, rename, or remove a user-facing control or route: update its \`data-pointery="kebab-id"\` in code AND its entry in \`pointery.context.json\` (label + purpose; \`confirm: true\` for destructive actions). Keep ids stable; never invent selectors - only ids present in the rendered DOM.
 - After any UI change, run \`npx pointery init --check\` (two-way: fails on code anchors missing from the map AND map entries missing from rendered code, plus stale steps) and fix what it reports.
-- \`pointery.schema.json\` is truth for \`pointery.config.json\` (position: top|center|bottom, animation: fade|slide|scale|none). After any config edit, run \`npx pointery config --validate\`.
+- \`node_modules/pointery/schema.json\` is truth for \`pointery.config.json\` (position: top|center|bottom, animation: fade|slide|scale|none). After any config edit, run \`npx pointery config --validate\`.
 ${AGENTS_END}`;
 
 const SNIPPET = `import { Pointery } from "pointery";
 import "pointery/styles.css";
 
-// once in your root layout, next to {children}:
+// once in your root layout, next to {children} (via a client wrapper that
+// passes pointery.config.json as props and listens for pointery:config):
 <Pointery />
 // API route (app/api/ask/route.ts):
 // import { createAskHandler } from "pointery";
 // import context from "@/pointery.context.json";
-// export const POST = createAskHandler(context, { llm: { url: process.env.POINTERY_LLM_URL ?? "", key: process.env.POINTERY_LLM_KEY ?? "", model: process.env.POINTERY_LLM_MODEL ?? "" } });`;
+// import config from "@/pointery.config.json";
+// export const POST = createAskHandler(context, { llm: { url: process.env.POINTERY_LLM_URL ?? "", key: process.env.POINTERY_LLM_KEY ?? "", model: process.env.POINTERY_LLM_MODEL ?? "", temperature: config.brain?.llm?.temperature, maxTokens: config.brain?.llm?.maxTokens }, retrieve: config.brain?.retrieve, limits: config.brain?.limits, cache: config.brain?.cache });`;
 
 function write(name, data) {
   const p = path.join(cwd, name);
