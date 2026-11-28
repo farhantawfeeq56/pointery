@@ -116,7 +116,7 @@ export default function Pointery(props: PointeryProps) {
   const [q, setQ] = useState("");
   const [toast, setToast] = useState<Toast>(null);
   const [guide, setGuide] = useState<GuideState>(null);
-  const [pendingAction, setPendingAction] = useState<{ name: string; label: string } | null>(null);
+  const [pendingAction, setPendingAction] = useState<{ name: string; label: string; target?: string } | null>(null);
   const [guideIdx, setGuideIdx] = useState(0);
   const [sel, setSel] = useState(0);
   const [leaving, setLeaving] = useState(false);
@@ -237,18 +237,20 @@ export default function Pointery(props: PointeryProps) {
       }
       // Blocked actions fall through to spot/go below - never execute.
       if (data.action && !cfg.allowActions.includes(data.action)) {
-        say(fmt(cfg.labels.blocked!, { action: data.actionLabel ?? data.action }));
+        const subject = (data.actionLabel ?? data.action) + (data.actionTarget ? ` on ${data.actionTarget}` : "");
+        say(fmt(cfg.labels.blocked!, { action: subject }));
         announced = true;
         data.action = undefined;
       }
       if (data.action) {
         const label = data.actionLabel ?? data.hint ?? data.action;
-        if (data.confirm === false) await runAction(data.action, label);
+        const subject = label + (data.actionTarget ? ` on ${data.actionTarget}` : "");
+        if (data.confirm === false) await runAction(data.action, subject);
         else {
           // Confirm dialog speaks for itself - drop the pending toast.
           if (toastTimer.current) window.clearTimeout(toastTimer.current);
           setToast(null);
-          setPendingAction({ name: data.action, label });
+          setPendingAction({ name: data.action, label: subject });
         }
       }
       else if (!walkthrough && (data.go || data.spot)) goSpot(data.go, data.spot, announced ? undefined : data.hint, data.filter);
