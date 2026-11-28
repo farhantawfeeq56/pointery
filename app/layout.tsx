@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Pointery — ask anything in-app, get taken there",
+  title: "Pointery - ask anything in-app, get taken there",
   description: "Drop-in kit: palette, guides, and allowlisted actions for any SaaS. Demo CRM included.",
 };
 

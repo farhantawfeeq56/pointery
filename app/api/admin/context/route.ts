@@ -16,7 +16,7 @@ export async function GET() {
 
 export async function PUT(req: Request) {
   // Local Studio only: refuse disk writes in production unconditionally.
-  // Edit the file directly and redeploy — no env-flag bypass, no login of our own.
+  // Edit the file directly and redeploy - no env-flag bypass, no login of our own.
   if (process.env.NODE_ENV === "production") {
     return Response.json({ error: "Refusing to write pointery.context.json in production. Edit the file directly and redeploy." }, { status: 403 });
   }

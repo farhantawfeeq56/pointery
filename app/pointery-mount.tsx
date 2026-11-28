@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { Pointery } from "pointery";
 import type { PointeryProps } from "pointery";
 
-// Marketing pages have no app UI to point at — keep the palette inside the app.
+// Marketing pages have no app UI to point at - keep the palette inside the app.
 
 // Server-component layout can't render the client <Pointery/> directly.
 // Disk is truth: load pointery.config.json via /api/admin/config so the

@@ -38,7 +38,7 @@ export default function PipelinePage() {
           <p className="text-sm text-zinc-500">{rows.length} deals · drag-and-drop is out of scope for this demo</p>
         </div>
         <div className="flex gap-2">
-          <button data-pointery="add-deal-button" className="rounded-full border px-4 py-2 text-sm font-medium hover:bg-zinc-50" onClick={() => alert("Add deal is a stub in the demo — wire it to your CRM.")}>+ Add deal</button>
+          <button data-pointery="add-deal-button" className="rounded-full border px-4 py-2 text-sm font-medium hover:bg-zinc-50" onClick={() => alert("Add deal is a stub in the demo - wire it to your CRM.")}>+ Add deal</button>
           <button data-pointery="export-button" onClick={exportCsv} className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700">Export</button>
         </div>
       </div>

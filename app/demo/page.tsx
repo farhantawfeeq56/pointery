@@ -6,7 +6,7 @@ export default function DemoHome() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Good morning, Farhan</h1>
-        <p className="text-sm text-zinc-500">Here’s what needs you today. (Demo data — Pointery is the product.)</p>
+        <p className="text-sm text-zinc-500">Here’s what needs you today. (Demo data - Pointery is the product.)</p>
       </div>
       <div className="grid grid-cols-3 gap-4">
         <div data-pointery="pipeline-value" className="rounded-2xl border bg-white p-5">

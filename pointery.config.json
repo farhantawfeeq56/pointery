@@ -19,7 +19,7 @@
   ],
   "labels": {
     "placeholder": "Ask \"where is export?\" or \"how do I invite?\"",
-    "empty": "No match — try “export”, “invite”, or “pipeline”.",
+    "empty": "No match - try “export”, “invite”, or “pipeline”.",
     "confirmTitle": "Run this action?"
   },
   "endpoint": "/api/ask",

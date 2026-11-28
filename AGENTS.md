@@ -2,9 +2,9 @@
 
 ## This is NOT the Next.js you know
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+This version has breaking changes - APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
 
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+This block is written and re-added by `next dev` - verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
 
@@ -72,7 +72,7 @@ Two developers. GitHub Issues is the only to-do list. WhatsApp is for talking, G
 
 Rules for that code:
 
-- **Package-first: buyer-facing changes go in `packages/pointery`, never only in the harness.** `app/` is the demo — nothing there ships to buyers. Any behavior, copy, or wiring pattern a buyer should get belongs in the package (`src/`, `bin/`, or the embedded starters), with the harness updated to match — not the other way round. `app/`-only changes are for demo-specific needs (e.g. hiding our own landing-page palette) and must be called out as such.
+- **Package-first: buyer-facing changes go in `packages/pointery`, never only in the harness.** `app/` is the demo - nothing there ships to buyers. Any behavior, copy, or wiring pattern a buyer should get belongs in the package (`src/`, `bin/`, or the embedded starters), with the harness updated to match - not the other way round. `app/`-only changes are for demo-specific needs (e.g. hiding our own landing-page palette) and must be called out as such.
 - The harness uses the workspace copy of `pointery`, not the registry one.
 - Subpath imports (`pointery/server`, `pointery/resolver`, `pointery/validate`) work without Next. The root import needs it.
 - Keep relative imports in the package `.js`-suffixed, so Node ESM resolves them.
@@ -180,10 +180,10 @@ There is no test framework yet. Before calling a change done, run `npm run lint`
 - `partialPrefetching: true`: links prefetch a reusable app shell per route. It requires `cacheComponents`.
 - Tailwind runs through the `@tailwindcss/turbopack` loader in `next.config.ts`. There is no PostCSS config or `tailwind.config.*`; theme tokens live in `app/globals.css` under `@theme`.
 
-<!-- pointery:start --> — do not remove; `npx pointery init --force` refreshes this block.
-## Pointery — keep pointery.context.json in sync
+<!-- pointery:start --> - do not remove; `npx pointery init --force` refreshes this block.
+## Pointery - keep pointery.context.json in sync
 - `pointery.context.json` is the index of stable UI anchors for in-app ask-anything (`/api/ask` sends the top-ranked slice as system context in an OpenAI-compatible `{ model, messages }` call to our own model). Keep it small and current: max ~40 entries, ~10 flows, allowlisted actions only.
-- Whenever you add, move, rename, or remove a user-facing control or route: update its `data-pointery="kebab-id"` in code AND its entry in `pointery.context.json` (label + purpose; `confirm: true` for destructive actions). Keep ids stable; never invent selectors — only ids present in the rendered DOM.
+- Whenever you add, move, rename, or remove a user-facing control or route: update its `data-pointery="kebab-id"` in code AND its entry in `pointery.context.json` (label + purpose; `confirm: true` for destructive actions). Keep ids stable; never invent selectors - only ids present in the rendered DOM.
 - After any UI change, run `npx pointery init --check` (fails when a flow step points at a missing entry) and fix what it reports.
 - `pointery.schema.json` is truth for `pointery.config.json` (position: top|center|bottom, animation: fade|slide|scale|none). After any config edit, run `npx pointery config --validate`.
 <!-- pointery:end -->

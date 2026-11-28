@@ -23,7 +23,7 @@ export default function ContactsPage() {
           Invite teammate
         </button>
       </div>
-      {sent && <p className="rounded-xl bg-green-50 px-4 py-2.5 text-sm text-green-800">Invite sent (demo) — they’ll land here.</p>}
+      {sent && <p className="rounded-xl bg-green-50 px-4 py-2.5 text-sm text-green-800">Invite sent (demo) - they’ll land here.</p>}
       <input
         data-pointery="search-contacts"
         value={q}

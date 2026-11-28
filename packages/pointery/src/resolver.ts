@@ -4,7 +4,7 @@ type Action = PointeryContext["actions"][number];
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9\s-]/g, " ").replace(/\s+/g, " ").trim();
 
-/** Minimum entry score to count as a match — filters single-word overlap noise. */
+/** Minimum entry score to count as a match - filters single-word overlap noise. */
 const MIN_ENTRY_SCORE = 3;
 
 const score = (q: string, keywords: string[]) => {
@@ -44,7 +44,7 @@ export type RetrieveOptions = {
   entries?: number;
   flows?: number;
   actions?: number;
-  /** Current route — same-page entries rank slightly higher. */
+  /** Current route - same-page entries rank slightly higher. */
   page?: string;
 };
 
@@ -60,7 +60,7 @@ export function splitClauses(query: string, max = 4): string[] {
 
 /**
  * Rank the map for a query and return only the top candidates.
- * The LLM gets this slice — never the whole file — and writes the wording.
+ * The LLM gets this slice - never the whole file - and writes the wording.
  * Clause-aware: each "and/then" clause contributes, unioned, so combo
  * queries don't drown the second intent.
  */
@@ -74,7 +74,7 @@ export function retrieveCandidates(
   if (!q) return { entries: [], flows: [], actions: [] } as Pick<PointeryContext, "entries" | "flows" | "actions">;
   const clauses = splitClauses(query);
   const multi = clauses.length > 1;
-  // Candidates favor recall (>0) — the LLM reranks. Direct resolve below uses MIN_ENTRY_SCORE.
+  // Candidates favor recall (>0) - the LLM reranks. Direct resolve below uses MIN_ENTRY_SCORE.
   const rankBy = <T>(items: T[], sc: (clause: string, item: T) => number, n: number) => {
     const best = new Map<T, number>();
     for (const c of clauses) {
@@ -119,7 +119,7 @@ export function matchPin(query: string, context: PointeryContext): PointeryResul
     }
   }
   if (!best) return null;
-  // Guide pins reference a flow id — rebuild steps from the flow.
+  // Guide pins reference a flow id - rebuild steps from the flow.
   if (best.guide && flows.has(best.guide)) {
     const guide = buildGuide(flows.get(best.guide)!, entries);
     const first = guide.steps[0];
@@ -138,7 +138,7 @@ export function matchPin(query: string, context: PointeryContext): PointeryResul
   return null;
 }
 
-/** Build ad-hoc plan steps from anchor ids. Wording is templated like guides — the map holds no sentences. */
+/** Build ad-hoc plan steps from anchor ids. Wording is templated like guides - the map holds no sentences. */
 export function buildPlan(ids: string[], entries: PointeryEntry[], title = "Your steps", filters?: Record<string, string>, max = 4): PointeryPlan {
   const steps = ids
     .map((id) => byId(entries, id))
@@ -177,7 +177,7 @@ export function resolveCombo(query: string, context: PointeryContext, page?: str
   return { plan, spot: first?.spot, go: first?.go, filter: first?.filter, hint: plan.title };
 }
 
-/** Build guide steps from a flow's anchor ids. Wording is templated — the map holds no sentences. */
+/** Build guide steps from a flow's anchor ids. Wording is templated - the map holds no sentences. */
 export function buildGuide(flow: PointeryFlow, entries: PointeryEntry[]): PointeryGuide {
   const steps = flow.steps
     .map((id) => byId(entries, id))

@@ -10,10 +10,10 @@ const brain = (rawConfig as { brain?: { retrieve?: { entries?: number; flows?: n
 // TEMP test hooks: type 1-7 in the palette to preview each feedback.
 // 1 spot, 2 go, 3 answer, 4 guide, 5 plan, 6 action(confirm), 7 filter(row). Delete before merge.
 const TEST_HOOKS: Record<string, unknown> = {
-  "1": { spot: "nav-pipeline", hint: "1 — spot: pulsing Pipeline nav" },
-  "2": { go: "/demo/contacts", spot: "invite-button", hint: "2 — go: navigated to Contacts" },
+  "1": { spot: "nav-pipeline", hint: "1 - spot: pulsing Pipeline nav" },
+  "2": { go: "/demo/contacts", spot: "invite-button", hint: "2 - go: navigated to Contacts" },
   "3": {
-    answer: "3 — answer: open pipeline is $20,400",
+    answer: "3 - answer: open pipeline is $20,400",
     spot: "pipeline-value",
     go: "/demo",
     hint: "Open pipeline",
@@ -29,7 +29,7 @@ const TEST_HOOKS: Record<string, unknown> = {
     },
     spot: "nav-contacts",
     go: "/demo/contacts",
-    hint: "4 — guide: Invite a teammate",
+    hint: "4 - guide: Invite a teammate",
   },
   "5": {
     plan: {
@@ -41,7 +41,7 @@ const TEST_HOOKS: Record<string, unknown> = {
     },
     spot: "nav-pipeline",
     go: "/demo/pipeline",
-    hint: "5 — plan: Pipeline + Export",
+    hint: "5 - plan: Pipeline + Export",
   },
   "6": {
     action: "mark-won",
@@ -54,7 +54,7 @@ const TEST_HOOKS: Record<string, unknown> = {
     spot: "pipeline-table",
     go: "/demo/pipeline",
     filter: "Acme",
-    hint: "7 — filter: Acme row in Pipeline table",
+    hint: "7 - filter: Acme row in Pipeline table",
   },
 };
 

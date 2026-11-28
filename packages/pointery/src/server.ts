@@ -31,7 +31,7 @@ function sanitizePlan(raw: unknown, context: PointeryContext, planMax = 4): Poin
   return { title, steps: out };
 }
 
-/** Drop LLM fields that point outside the shipped map (LLM text is untrusted). Guide steps are rebuilt from the flow — the model picks anchors, never wording. */
+/** Drop LLM fields that point outside the shipped map (LLM text is untrusted). Guide steps are rebuilt from the flow - the model picks anchors, never wording. */
 function sanitizeResult(r: PointeryResult, context: PointeryContext, allowed?: string[], planMax = 4): PointeryResult {
   const out: PointeryResult = {};
   const ids = new Set((context.entries ?? []).map((e) => e.id));
@@ -40,7 +40,7 @@ function sanitizeResult(r: PointeryResult, context: PointeryContext, allowed?: s
   const actionNames = new Set((context.actions ?? []).map((a) => a.name));
   const flows = new Map((context.flows ?? []).map((f) => [f.id, f]));
   const confirmOf = (name: string) => (context.actions ?? []).find((a) => a.name === name)?.confirm;
-  // Blocked actions are dropped but spot/go/guide survive — the UI routes there instead.
+  // Blocked actions are dropped but spot/go/guide survive - the UI routes there instead.
   if (r.action && actionNames.has(r.action) && (!allowed || allowed.includes(r.action))) {
     out.action = r.action;
     out.confirm = confirmOf(r.action);
@@ -57,7 +57,7 @@ function sanitizeResult(r: PointeryResult, context: PointeryContext, allowed?: s
   }
   if (r.spot && ids.has(r.spot)) {
     out.spot = r.spot;
-    // Row search text survives only on rows:true containers — never per-record ids.
+    // Row search text survives only on rows:true containers - never per-record ids.
     const f = typeof r.filter === "string" ? r.filter.trim().slice(0, 80) : "";
     if (f && byId.get(r.spot)?.rows) out.filter = f;
   }
@@ -74,9 +74,9 @@ function sanitizeResult(r: PointeryResult, context: PointeryContext, allowed?: s
  * fails closed with a 503 + "LLM not configured" answer instead of
  * returning a guessed keyword result. Keyword scoring still runs first
  * (curated `pins[]` before generic scoring, combo clauses before single)
- * to save cost — confident hits return at once — but misses need the model:
+ * to save cost - confident hits return at once - but misses need the model:
  * candidates (top-ranked slice, never the whole file) go as system context
- * in one LLM call to the customer's own endpoint (their key, their cost —
+ * in one LLM call to the customer's own endpoint (their key, their cost -
  * nothing comes to us). OpenAI-compatible is the default wire; native
  * Anthropic/Gemini endpoints are auto-detected from the URL host.
  *
@@ -102,7 +102,7 @@ function defaultModelFor(url: string): string {
   try {
     if (new URL(url).host.includes("openai.com")) return "gpt-4o-mini";
   } catch {
-    /* relative or empty url — no default */
+    /* relative or empty url - no default */
   }
   return "";
 }
@@ -110,7 +110,7 @@ function defaultModelFor(url: string): string {
 type LLMProvider = "openai" | "anthropic" | "gemini";
 
 /** Native translators live here: Anthropic Messages + Gemini generateContent are
- *  detected from the URL host — same `{ url, key, model }` shape, no extra config.
+ *  detected from the URL host - same `{ url, key, model }` shape, no extra config.
  *  Everything else speaks the OpenAI-compatible wire (OpenAI, OpenRouter, Ollama…). */
 function providerFor(url: string): LLMProvider {
   try {
@@ -118,7 +118,7 @@ function providerFor(url: string): LLMProvider {
     if (host.includes("anthropic.com")) return "anthropic";
     if (host.includes("googleapis.com")) return "gemini";
   } catch {
-    /* relative or empty url — default wire */
+    /* relative or empty url - default wire */
   }
   return "openai";
 }
@@ -151,7 +151,7 @@ export function createAskHandler(context: PointeryContext, opts: AskHandlerOptio
     const cacheMax = opts.cache?.max ?? DEFAULT_CACHE_MAX;
     const temperature = opts.llm?.temperature ?? 0;
     const maxTokens = opts.llm?.maxTokens ?? 300;
-    // Cap what we forward — long pastes cost tokens without helping retrieval.
+    // Cap what we forward - long pastes cost tokens without helping retrieval.
     const q = query.trim().slice(0, queryMax);
 
     // Compulsory brain: fail closed instead of guessing from keywords alone.
@@ -171,7 +171,7 @@ export function createAskHandler(context: PointeryContext, opts: AskHandlerOptio
       return Response.json(override ?? combo);
     }
     const local = sanitizeResult(resolveQuery(q, context, page), context, opts.allowActions, planMax);
-    // Confident local hit: skip the LLM entirely (fast, free) — unless the
+    // Confident local hit: skip the LLM entirely (fast, free) - unless the
     // query looks like a combo whose other half the single hit would hide.
     const looksCombo = splitClauses(q).length > 1;
     if ((local.spot || local.go || local.action || local.guide) && !looksCombo) {

@@ -2,7 +2,7 @@ export type PointerySpot = { key: string; page: string; hint: string };
 export type PointeryGuideStep = { text: string; go: string; spot: string };
 export type PointeryGuide = { id: string; title: string; steps: PointeryGuideStep[] };
 
-/** Ad-hoc multi-intent walkthrough — templated steps, same UI as a guide. Max 4 steps. */
+/** Ad-hoc multi-intent walkthrough - templated steps, same UI as a guide. Max 4 steps. */
 export type PointeryPlanStep = { text: string; go: string; spot: string; filter?: string };
 export type PointeryPlan = { title: string; steps: PointeryPlanStep[] };
 
@@ -11,7 +11,7 @@ export type PointeryEntry = {
   id: string;
   page: string;
   label: string;
-  /** Stable purpose, one clause ("Downloads the pipeline as CSV") — never an instruction. */
+  /** Stable purpose, one clause ("Downloads the pipeline as CSV") - never an instruction. */
   for?: string;
   type?: "nav" | "button" | "table" | "card" | "field" | "section" | string;
   /** Non-obvious synonyms only ("csv"); matching derives from label + for. */
@@ -20,7 +20,7 @@ export type PointeryEntry = {
   rows?: boolean;
 };
 
-/** Ordered anchor ids — the model (or the "Go to {label}" template) writes the wording. */
+/** Ordered anchor ids - the model (or the "Go to {label}" template) writes the wording. */
 export type PointeryFlow = {
   id: string;
   title: string;
@@ -39,15 +39,15 @@ export type PointeryAction = {
 };
 
 /** Curated fast-path: exact-phrase wins that skip generic scoring and the LLM.
- *  Strict match only (no word-overlap fallback) — nothing else is pinned. */
+ *  Strict match only (no word-overlap fallback) - nothing else is pinned. */
 export type PointeryPin = {
-  /** Canonical phrase, e.g. "where is export" — normalized before compare. */
+  /** Canonical phrase, e.g. "where is export" - normalized before compare. */
   match: string;
   aliases?: string[];
   spot?: string;
   go?: string;
   action?: string;
-  /** Flow id — steps are rebuilt from the flow, never stored here. */
+  /** Flow id - steps are rebuilt from the flow, never stored here. */
   guide?: string;
   hint?: string;
 };
@@ -60,16 +60,16 @@ export type PointeryContext = {
   pins?: PointeryPin[];
 };
 
-/** Top-ranked slice of the map sent to the LLM — never the whole file. */
+/** Top-ranked slice of the map sent to the LLM - never the whole file. */
 export type PointeryCandidates = Pick<PointeryContext, "entries" | "flows" | "actions">;
 
 export type PointeryResult = {
   spot?: string;
   go?: string;
   action?: string;
-  /** Row search text — kept only alongside a `spot` whose entry has `rows: true`. */
+  /** Row search text - kept only alongside a `spot` whose entry has `rows: true`. */
   filter?: string;
-  /** Echoed from the matched action's `confirm` flag — UI confirms only when true. */
+  /** Echoed from the matched action's `confirm` flag - UI confirms only when true. */
   confirm?: boolean;
   answer?: string;
   guide?: PointeryGuide;
@@ -122,7 +122,7 @@ export type PointeryLabels = {
 };
 
 export type PointeryProps = {
-  trigger?: string; // any "+"-joined combo, e.g. "shift+a" (default) or "ctrl+shift+p" — ctrl/cmd treated the same, plus cmd/ctrl+k always on
+  trigger?: string; // any "+"-joined combo, e.g. "shift+a" (default) or "ctrl+shift+p" - ctrl/cmd treated the same, plus cmd/ctrl+k always on
   theme?: PointeryTheme;
   /** Extra `--pointery-*` overrides (keys may include the prefix or not). */
   cssVars?: Record<string, string>;
@@ -149,7 +149,7 @@ export type PointeryProps = {
   onAction?: (name: string) => void | Promise<void>;
 };
 
-/** Customer's own LLM endpoint. Required at runtime — the handler 503s without it. OpenAI-compatible is the default wire (`{ model, messages }`); native Anthropic Messages / Gemini `generateContent` URLs are auto-detected from the host — same shape, no extra config. `model` passes through verbatim: copy the exact id from the provider dashboard (`gpt-4o-mini`, `claude-3-5-haiku-latest`, `gemini-2-flash`, `anthropic/claude-3-5-haiku` via OpenRouter, …). Key and cost are theirs. */
+/** Customer's own LLM endpoint. Required at runtime - the handler 503s without it. OpenAI-compatible is the default wire (`{ model, messages }`); native Anthropic Messages / Gemini `generateContent` URLs are auto-detected from the host - same shape, no extra config. `model` passes through verbatim: copy the exact id from the provider dashboard (`gpt-4o-mini`, `claude-3-5-haiku-latest`, `gemini-2-flash`, `anthropic/claude-3-5-haiku` via OpenRouter, …). Key and cost are theirs. */
 export type PointeryLLMAdapter = {
   url: string;
   key?: string;

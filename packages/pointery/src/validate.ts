@@ -13,7 +13,7 @@ export function validateContext(ctx: PointeryContext): string[] {
   const flows = ctx.flows ?? [];
   const actions = ctx.actions ?? [];
 
-  // Live values ($1,234, record names) go stale per user — the map holds stable anchors only.
+  // Live values ($1,234, record names) go stale per user - the map holds stable anchors only.
   const looksLive = (s: string) => /\$\s*\d/.test(s);
 
   const ids = new Set<string>();
@@ -23,8 +23,8 @@ export function validateContext(ctx: PointeryContext): string[] {
     else ids.add(e.id);
     if (!e.page) errors.push(`entries[${i}] (${e.id || "?"}): missing page`);
     if (!e.label) errors.push(`entries[${i}] (${e.id || "?"}): missing label`);
-    if (e.label && looksLive(e.label)) errors.push(`entries[${i}] (${e.id || "?"}): label looks like live data — keep stable anchors only`);
-    if (e.for && looksLive(e.for)) errors.push(`entries[${i}] (${e.id || "?"}): for looks like live data — keep stable anchors only`);
+    if (e.label && looksLive(e.label)) errors.push(`entries[${i}] (${e.id || "?"}): label looks like live data - keep stable anchors only`);
+    if (e.for && looksLive(e.for)) errors.push(`entries[${i}] (${e.id || "?"}): for looks like live data - keep stable anchors only`);
   });
 
   const pages = new Set(entries.map((e) => e.page));
@@ -73,12 +73,12 @@ export function validateConfig(cfg: unknown): string[] {
   const errors: string[] = [];
   if (!cfg || typeof cfg !== "object" || Array.isArray(cfg)) return ["config must be a JSON object"];
   const c = cfg as Record<string, unknown>;
-  for (const k of Object.keys(c)) if (!CONFIG_KEYS.has(k)) errors.push(`unknown key "${k}" — see schema.json`);
+  for (const k of Object.keys(c)) if (!CONFIG_KEYS.has(k)) errors.push(`unknown key "${k}" - see schema.json`);
   if (c.position !== undefined && !["top", "center", "bottom"].includes(c.position as string))
     errors.push(`position must be one of top|center|bottom (got ${JSON.stringify(c.position)})`);
   if (c.animation !== undefined && !["fade", "slide", "scale", "none"].includes(c.animation as string))
     errors.push(`animation must be one of fade|slide|scale|none (got ${JSON.stringify(c.animation)})`);
-  // shortcut: numbers that arrive as strings ("14px") silently break CSS vars — flag them.
+  // shortcut: numbers that arrive as strings ("14px") silently break CSS vars - flag them.
   for (const k of ["zIndex", "paletteWidth", "overlayBlur"]) {
     const v = (c[k] as unknown);
     if (v !== undefined && typeof v !== "number") errors.push(`${k} must be a number (got ${JSON.stringify(v)})`);

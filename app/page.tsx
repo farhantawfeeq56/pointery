@@ -5,17 +5,17 @@ const STEPS = [
   {
     n: "01",
     t: "Drop in the UI",
-    d: "<Pointery/> — palette, toast, pulse on data-pointery, Next/Back guides, confirm step for actions. Mount once via a client wrapper, gated off marketing pages.",
+    d: "<Pointery/> - palette, toast, pulse on data-pointery, Next/Back guides, confirm step for actions. Mount once via a client wrapper, gated off marketing pages.",
   },
   {
     n: "02",
     t: "Map your app",
-    d: "pointery.context.json — entries, flows, actions, pins. Stable anchors only, no live values. Your agent builds it with POINTERY_PROMPT.md, checked with init --check.",
+    d: "pointery.context.json - entries, flows, actions, pins. Stable anchors only, no live values. Your agent builds it with POINTERY_PROMPT.md, checked with init --check.",
   },
   {
     n: "03",
     t: "Bring your key",
-    d: "createAskHandler in /api/ask — local keywords first (fast, free), LLM only on a miss. OpenAI-compatible default, Anthropic/Gemini auto-detected, fails closed without a key.",
+    d: "createAskHandler in /api/ask - local keywords first (fast, free), LLM only on a miss. OpenAI-compatible default, Anthropic/Gemini auto-detected, fails closed without a key.",
   },
 ];
 
@@ -30,7 +30,7 @@ const DOES = [
   },
   {
     t: "Act",
-    d: "“Mark deal as won” runs only allowlisted actions — blocked by default, destructive ones confirm first.",
+    d: "“Mark deal as won” runs only allowlisted actions - blocked by default, destructive ones confirm first.",
   },
   {
     t: "Pin down rows",
@@ -38,7 +38,7 @@ const DOES = [
   },
   {
     t: "Answer",
-    d: "Anything keywords can't cover falls through to your own model — same guardrails, same spot/go shape.",
+    d: "Anything keywords can't cover falls through to your own model - same guardrails, same spot/go shape.",
   },
   {
     t: "Curated fast-paths",
@@ -56,20 +56,20 @@ const TRIES = [
 
 const WIRE = `npx pointery init   # context + config + prompt + settings page
 
-// layout.tsx — mount once, gated off marketing pages
+// layout.tsx - mount once, gated off marketing pages
 import { Pointery } from "pointery";
 import "pointery/styles.css";
 // wrapper returns null on "/" so the palette lives inside the app
 <Pointery trigger="shift+a" />  // Cmd/Ctrl+K always works too
 
-// app/api/ask/route.ts — your endpoint, your key, your data
+// app/api/ask/route.ts - your endpoint, your key, your data
 import { createAskHandler } from "pointery/server";
 export const POST = createAskHandler(context, {
-  llm: { url, key, model },   // required — 503 without it
+  llm: { url, key, model },   // required - 503 without it
   allowActions: ["export-pipeline"],  // UI default is [] (blocked)
 });
 
-// optional side-effects — otherwise logs + toasts + pointery:action event
+// optional side-effects - otherwise logs + toasts + pointery:action event
 <Pointery onAction={async (name) => { /* your logic */ }} />
 
 npx pointery init --check   # flows/pins point at real entries`;
@@ -117,14 +117,14 @@ export default function Home() {
 
           <main className="flex flex-col items-center py-16 text-center">
             <p className="py-inset rounded-full px-4 py-1.5 text-xs font-medium shadow-sm">
-              Drop-in kit for any SaaS · the palette lives inside the app, not this page{demo && <> — open the demo and press <kbd className="rounded bg-white px-1.5 py-0.5 font-mono">Shift+A</kbd></>}
+              Drop-in kit for any SaaS · the palette lives inside the app, not this page{demo && <> - open the demo and press <kbd className="rounded bg-white px-1.5 py-0.5 font-mono">Shift+A</kbd></>}
             </p>
             <h1 className="mt-6 max-w-2xl text-5xl font-bold leading-[1.05] tracking-tight">
               Users ask.<br />Pointery takes them there.
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-8" style={{ color: "var(--color-text-secondary)" }}>
-              Find, walk, act, pin down rows, answer — with confirmation where it matters.
-              The CRM here is just the demo — <strong style={{ color: "var(--color-text-primary)" }}>Pointery is the product.</strong>
+              Find, walk, act, pin down rows, answer - with confirmation where it matters.
+              The CRM here is just the demo - <strong style={{ color: "var(--color-text-primary)" }}>Pointery is the product.</strong>
             </p>
             <div className="mt-8 flex gap-3">
               {demo ? (
@@ -145,7 +145,7 @@ export default function Home() {
               ))}
             </div>
 
-            <p className="mt-14 w-full text-left text-xs font-medium uppercase tracking-wider text-zinc-400">01 — What it does</p>
+            <p className="mt-14 w-full text-left text-xs font-medium uppercase tracking-wider text-zinc-400">01 - What it does</p>
             <div className="mt-3 grid w-full gap-4 text-left sm:grid-cols-2 lg:grid-cols-3">
               {DOES.map((s) => (
                 <div key={s.t} className="py-card p-5">
@@ -155,18 +155,18 @@ export default function Home() {
               ))}
             </div>
 
-            <p id="how" className="mt-10 w-full text-left text-xs font-medium uppercase tracking-wider text-zinc-400">02 — How it works</p>
+            <p id="how" className="mt-10 w-full text-left text-xs font-medium uppercase tracking-wider text-zinc-400">02 - How it works</p>
             <div className="mt-3 grid w-full gap-4 text-left sm:grid-cols-3">
               {STEPS.map((s) => (
                 <div key={s.n} className="py-card p-5">
                   <p className="font-mono text-xs" style={{ color: "var(--color-primary)" }}>{s.n}</p>
                   <h2 className="mt-1 font-semibold">{s.t}</h2>
-                  <p className="mt-2 text-sm leading-6" style={{ color: "var(--color-text-secondary)" }}><code className="font-mono text-[13px]" style={{ color: "var(--color-text-primary)" }}>{s.d.split(" — ")[0]}</code> — {s.d.split(" — ")[1]}</p>
+                  <p className="mt-2 text-sm leading-6" style={{ color: "var(--color-text-secondary)" }}><code className="font-mono text-[13px]" style={{ color: "var(--color-text-primary)" }}>{s.d.split(" - ")[0]}</code> - {s.d.split(" - ")[1]}</p>
                 </div>
               ))}
             </div>
 
-            <p className="mt-10 w-full text-left text-xs font-medium uppercase tracking-wider text-zinc-400">03 — Wire up</p>
+            <p className="mt-10 w-full text-left text-xs font-medium uppercase tracking-wider text-zinc-400">03 - Wire up</p>
             <div className="py-code mt-3 w-full rounded-[14px] p-5 text-left">
               <pre className="overflow-x-auto whitespace-pre-wrap font-mono text-[13px] leading-6">{WIRE}</pre>
             </div>
@@ -175,12 +175,12 @@ export default function Home() {
               <div className="py-card p-5">
                 <h2 className="font-semibold">Tune it in /pointery</h2>
                 <p className="mt-2 text-sm leading-6" style={{ color: "var(--color-text-secondary)" }}>
-                  Shortcut recorder (Shift+A, Cmd+K, or your own combo), brand color + radius, position, suggestions —
+                  Shortcut recorder (Shift+A, Cmd+K, or your own combo), brand color + radius, position, suggestions -
                   live preview, status pills for ask / LLM / context, auto-save to disk with a Save button.
                 </p>
                 {demo
                   ? <Link href="/pointery" className="mt-3 inline-block text-sm font-medium hover:underline" style={{ color: "var(--color-primary)" }}>Open settings →</Link>
-                  : <span className="mt-3 inline-block text-sm" style={{ color: "var(--color-text-tertiary)" }}>Settings is dev-only — it 404s in production.</span>}
+                  : <span className="mt-3 inline-block text-sm" style={{ color: "var(--color-text-tertiary)" }}>Settings is dev-only - it 404s in production.</span>}
               </div>
               <div className="py-card p-5">
                 <h2 className="font-semibold">Safe by default</h2>
@@ -196,7 +196,7 @@ export default function Home() {
               <div className="py-card mt-4 w-full p-5 text-left">
                 <h2 className="font-semibold">The demo CRM (dev-only)</h2>
                 <p className="mt-2 text-sm leading-6" style={{ color: "var(--color-text-secondary)" }}>
-                  Dashboard, pipeline (Export CSV, mark-won via event, row pulse), contacts (invite, search), settings stubs —
+                  Dashboard, pipeline (Export CSV, mark-won via event, row pulse), contacts (invite, search), settings stubs -
                   18 anchors over 5 pages plus the /pointery ones, 3 guides (invite / export / close), 3 actions.
                   It 404s in production unless <code className="font-mono text-[13px]" style={{ color: "var(--color-text-primary)" }}>POINTERY_DEMO=1</code>.
                 </p>
@@ -206,7 +206,7 @@ export default function Home() {
           </main>
 
           <footer className="flex items-center justify-between border-t py-6 text-xs text-zinc-400" style={{ borderColor: "var(--color-border)" }}>
-            <span>Pointery — self-hosted · BYOK · no data to us</span>
+            <span>Pointery - self-hosted · BYOK · no data to us</span>
             <span>{demo && (<><Link href="/demo/settings" className="underline">Demo settings</Link> · </>)}<Link href="/pointery" className="underline">Settings</Link> · POINTERY_PROMPT.md ships on purchase</span>
           </footer>
         </div>

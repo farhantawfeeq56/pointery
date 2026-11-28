@@ -17,15 +17,15 @@ const DEFAULTS = {
   allowActions: [],
   labels: {
     placeholder: 'Ask "where is export?" or "how do I invite?"',
-    empty: "No match — try “export”, “invite”, or “pipeline”.",
+    empty: "No match - try “export”, “invite”, or “pipeline”.",
     confirmTitle: "Run this action?",
     asking: "Asking…",
-    blocked: "“{action}” needs approval — taking you there instead.",
-    done: "Done — {action}.",
-    unreachable: "Pointery is unreachable — is {endpoint} mounted?",
-    pressEnter: "No match — press Enter to ask anyway.",
+    blocked: "“{action}” needs approval - taking you there instead.",
+    done: "Done - {action}.",
+    unreachable: "Pointery is unreachable - is {endpoint} mounted?",
+    pressEnter: "No match - press Enter to ask anyway.",
     guideComplete: "Guide complete.",
-    ambiguous: "Several rows match — showing “{title}”.",
+    ambiguous: "Several rows match - showing “{title}”.",
     confirmBody: "“{action}” needs your confirmation.",
     back: "Back",
     next: "Next",
@@ -40,7 +40,7 @@ const DEFAULTS = {
   hiddenRoutes: ["/"],
 };
 
-// shortcut: {token} templates in labels — unknown tokens left as-is.
+// shortcut: {token} templates in labels - unknown tokens left as-is.
 const fmt = (t: string, vars: Record<string, string>) =>
   t.replace(/\{(\w+)\}/g, (m, k) => vars[k] ?? m);
 
@@ -96,7 +96,7 @@ function parseTrigger(t: string) {
 function triggerMatches(e: KeyboardEvent, trigger: string) {
   const t = parseTrigger(trigger);
   if (!t.key || e.key.toLowerCase() !== t.key) return false;
-  // single-char triggers (e.g. "?") need shift to type — don't require it off.
+  // single-char triggers (e.g. "?") need shift to type - don't require it off.
   if (!(t.key.length === 1 && !t.mod && !t.alt)) {
     if (e.shiftKey !== t.shift) return false;
   }
@@ -158,7 +158,7 @@ export default function Pointery(props: PointeryProps) {
     if (cfg.cssVars) for (const [k, v] of Object.entries(cfg.cssVars)) root.style.setProperty(k.startsWith("--") ? k : `--pointery-${k}`, v);
   }, [cfg.theme.primary, cfg.theme.accent, cfg.theme.background, cfg.theme.text, cfg.theme.border, cfg.theme.radius, cfg.zIndex, cfg.paletteWidth, cfg.overlayBlur, cfg.cssVars]);
 
-  // Several rows matched the filter — toast which one is shown.
+  // Several rows matched the filter - toast which one is shown.
   useEffect(() => {
     const onAmbiguous = (e: Event) => {
       const title = (e as CustomEvent<string>).detail;
@@ -168,7 +168,7 @@ export default function Pointery(props: PointeryProps) {
     return () => window.removeEventListener("pointery:ambiguous", onAmbiguous);
   }, [say, cfg.labels.ambiguous]);
 
-  // Esc always closes; cfg.trigger toggles — even while typing in the palette.
+  // Esc always closes; cfg.trigger toggles - even while typing in the palette.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") { close(); setGuide(null); setPendingAction(null); return; }
@@ -197,7 +197,7 @@ export default function Pointery(props: PointeryProps) {
       const log = JSON.parse(localStorage.getItem("pointery-actions") ?? "[]");
       log.push({ name, at: Date.now() });
       localStorage.setItem("pointery-actions", JSON.stringify(log));
-    } catch { /* storage unavailable — event still fires */ }
+    } catch { /* storage unavailable - event still fires */ }
     window.dispatchEvent(new CustomEvent("pointery:action", { detail: name }));
     say(fmt(cfg.labels.done!, { action: name }));
   }, [props, say, cfg.labels.done]);
@@ -209,12 +209,12 @@ export default function Pointery(props: PointeryProps) {
   }, [router, say, cfg.timing.pulseMs, cfg.timing.navigateMs, cfg.timing.navigateIdleMs]);
 
   // Submit closes the palette at once; the answer surfaces as toast, guide
-  // card, confirm dialog, navigation and pulse — nothing waits on a row click.
+  // card, confirm dialog, navigation and pulse - nothing waits on a row click.
   const ask = useCallback(async (query: string) => {
     const queryText = query.trim();
     if (!queryText) return;
     close();
-    // Palette is gone, so pending state lives in the toast slot — every
+    // Palette is gone, so pending state lives in the toast slot - every
     // outcome below replaces it (answer, hint, done, empty, unreachable).
     say(cfg.labels.asking!);
     try {
@@ -227,16 +227,16 @@ export default function Pointery(props: PointeryProps) {
       if (walkthrough) {
         setGuide({ title: walkthrough.title, steps: walkthrough.steps, i: 0 });
         setGuideIdx(0);
-        // Card is the feedback — dismiss the Asking toast instead of leaving it stale.
+        // Card is the feedback - dismiss the Asking toast instead of leaving it stale.
         if (toastTimer.current) window.clearTimeout(toastTimer.current);
         setToast(null);
         const first = walkthrough.steps[0];
         // Single toast announcing the guide; top-level go/spot/hint below is skipped for walkthroughs.
-        // Card shows the step — announce silently (navigate + pulse only).
+        // Card shows the step - announce silently (navigate + pulse only).
         if (first) goSpot(first.go, first.spot, undefined, "filter" in first ? first.filter : undefined);
         announced = true;
       }
-      // Blocked actions fall through to spot/go below — never execute.
+      // Blocked actions fall through to spot/go below - never execute.
       if (data.action && !cfg.allowActions.includes(data.action)) {
         say(fmt(cfg.labels.blocked!, { action: data.action }));
         announced = true;
@@ -245,7 +245,7 @@ export default function Pointery(props: PointeryProps) {
       if (data.action) {
         if (data.confirm === false) await runAction(data.action);
         else {
-          // Confirm dialog speaks for itself — drop the pending toast.
+          // Confirm dialog speaks for itself - drop the pending toast.
           if (toastTimer.current) window.clearTimeout(toastTimer.current);
           setToast(null);
           setPendingAction(data.action);
@@ -274,7 +274,7 @@ export default function Pointery(props: PointeryProps) {
   const pos = cfg.position === "center" ? "pointery-pos-center" : cfg.position === "bottom" ? "pointery-pos-bottom" : "pointery-pos-top";
   const anim = !cfg.animation || cfg.animation === "none" ? "" : `pointery-anim-${cfg.animation}`;
   // Classic list of the config suggestions, filtered as you type.
-  // Submit (or a row click) closes the palette and asks — no result rows;
+  // Submit (or a row click) closes the palette and asks - no result rows;
   // the answer acts directly (toast, guide card, confirm, navigate, pulse).
   const needle = q.trim().toLowerCase();
   const rows = (cfg.suggestions ?? []).filter((s) => s.trim() && (!needle || s.toLowerCase().includes(needle)));

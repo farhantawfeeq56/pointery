@@ -1,7 +1,7 @@
 import { connection } from "next/server";
 
 // Read-only LLM status for Studio. Env is truth: reports whether a key is
-// set and which host it points at — the key itself never leaves the server.
+// set and which host it points at - the key itself never leaves the server.
 // Smart default so OpenAI works with zero model config; every other
 // provider passes its model id through verbatim (never validated here).
 function defaultModelFor(url: string): string {
@@ -9,7 +9,7 @@ function defaultModelFor(url: string): string {
     const host = new URL(url).host;
     if (host.includes("openai.com")) return "gpt-4o-mini";
   } catch {
-    /* relative or empty url — no default */
+    /* relative or empty url - no default */
   }
   return "";
 }

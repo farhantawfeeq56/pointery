@@ -108,7 +108,7 @@ export default function PointerySettingsPage() {
         <div>
           <h1 className="text-2xl font-medium tracking-tight">Pointery status</h1>
           <p className="text-sm text-zinc-500">
-            Customize with <code className="font-mono">{"<Pointery/>"}</code> props in your layout — this page shows system status.
+            Customize with <code className="font-mono">{"<Pointery/>"}</code> props in your layout - this page shows system status.
           </p>
         </div>
       </div>
@@ -119,7 +119,7 @@ export default function PointerySettingsPage() {
           /api/ask {askOk == null ? "…" : askOk ? "reachable ✓" : "unreachable"}
         </span>
         <span className={`rounded-full px-3 py-1 font-medium ${llm?.configured ? "py-ok" : "py-err"}`}>
-          {llm == null ? "brain …" : llm.configured ? `LLM → ${llm.host || "env"}${llm.model ? ` / ${llm.model}` : ""} ✓` : "LLM required — missing key/url/model"}
+          {llm == null ? "brain …" : llm.configured ? `LLM → ${llm.host || "env"}${llm.model ? ` / ${llm.model}` : ""} ✓` : "LLM required - missing key/url/model"}
         </span>
         {counts && <span className="py-subtle rounded-full px-3 py-1 font-medium">{counts}</span>}
         <span className={`rounded-full px-3 py-1 font-medium ${errors.length === 0 ? "py-ok" : "py-err"}`}>
@@ -143,22 +143,22 @@ export default function PointerySettingsPage() {
       )}
       {ctx && (
         <div data-pointery="pointery-settings-context" className="border-t border-zinc-200 pt-8 text-sm">
-          <h2 className="text-sm font-medium">Context <span className="font-normal text-zinc-500">(read-only — edit <code className="font-mono">pointery.context.json</code>)</span></h2>
+          <h2 className="text-sm font-medium">Context <span className="font-normal text-zinc-500">(read-only - edit <code className="font-mono">pointery.context.json</code>)</span></h2>
           <div className="mt-3 overflow-x-auto">
             <table className="w-full text-xs">
               <thead className="text-left uppercase tracking-wider text-zinc-400">
-                <tr><th className="py-1 pr-3">id</th><th className="py-1 pr-3">page</th><th className="py-1">label — for</th></tr>
+                <tr><th className="py-1 pr-3">id</th><th className="py-1 pr-3">page</th><th className="py-1">label - for</th></tr>
               </thead>
               <tbody className="divide-y font-mono">
                 {(ctx.entries ?? []).map((t) => (
-                  <tr key={t.id}><td className="py-1 pr-3">{t.id}</td><td className="py-1 pr-3">{t.page}</td><td className="py-1">{t.label}{t.for ? ` — ${t.for}` : ""}</td></tr>
+                  <tr key={t.id}><td className="py-1 pr-3">{t.id}</td><td className="py-1 pr-3">{t.page}</td><td className="py-1">{t.label}{t.for ? ` - ${t.for}` : ""}</td></tr>
                 ))}
               </tbody>
             </table>
           </div>
           <p className="mt-3 font-mono text-xs text-zinc-500">
-            flows: {(ctx.flows ?? []).map((g) => `${g.id} (${g.steps.length})`).join(", ") || "—"} · actions:{" "}
-            {(ctx.actions ?? []).map((a) => `${a.name}${a.confirm ? " ⚠" : ""}`).join(", ") || "—"}
+            flows: {(ctx.flows ?? []).map((g) => `${g.id} (${g.steps.length})`).join(", ") || "-"} · actions:{" "}
+            {(ctx.actions ?? []).map((a) => `${a.name}${a.confirm ? " ⚠" : ""}`).join(", ") || "-"}
           </p>
         </div>
       )}
