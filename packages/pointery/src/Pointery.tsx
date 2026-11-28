@@ -116,7 +116,7 @@ export default function Pointery(props: PointeryProps) {
   const [q, setQ] = useState("");
   const [toast, setToast] = useState<Toast>(null);
   const [guide, setGuide] = useState<GuideState>(null);
-  const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<{ name: string; label: string } | null>(null);
   const [guideIdx, setGuideIdx] = useState(0);
   const [sel, setSel] = useState(0);
   const [leaving, setLeaving] = useState(false);
@@ -191,7 +191,7 @@ export default function Pointery(props: PointeryProps) {
 
   // Default action behavior: log + event + toast. Consumers override
   // via onAction for real side-effects (their data stays theirs).
-  const runAction = useCallback(async (name: string) => {
+  const runAction = useCallback(async (name: string, label?: string) => {
     if (props.onAction) return props.onAction(name);
     try {
       const log = JSON.parse(localStorage.getItem("pointery-actions") ?? "[]");
@@ -199,7 +199,7 @@ export default function Pointery(props: PointeryProps) {
       localStorage.setItem("pointery-actions", JSON.stringify(log));
     } catch { /* storage unavailable - event still fires */ }
     window.dispatchEvent(new CustomEvent("pointery:action", { detail: name }));
-    say(fmt(cfg.labels.done!, { action: name }));
+    say(fmt(cfg.labels.done!, { action: label ?? name }));
   }, [props, say, cfg.labels.done]);
 
   const goSpot = useCallback((go?: string, spot?: string, hint?: string, filter?: string) => {
@@ -231,24 +231,24 @@ export default function Pointery(props: PointeryProps) {
         if (toastTimer.current) window.clearTimeout(toastTimer.current);
         setToast(null);
         const first = walkthrough.steps[0];
-        // Single toast announcing the guide; top-level go/spot/hint below is skipped for walkthroughs.
         // Card shows the step - announce silently (navigate + pulse only).
         if (first) goSpot(first.go, first.spot, undefined, "filter" in first ? first.filter : undefined);
         announced = true;
       }
       // Blocked actions fall through to spot/go below - never execute.
       if (data.action && !cfg.allowActions.includes(data.action)) {
-        say(fmt(cfg.labels.blocked!, { action: data.action }));
+        say(fmt(cfg.labels.blocked!, { action: data.actionLabel ?? data.action }));
         announced = true;
         data.action = undefined;
       }
       if (data.action) {
-        if (data.confirm === false) await runAction(data.action);
+        const label = data.actionLabel ?? data.hint ?? data.action;
+        if (data.confirm === false) await runAction(data.action, label);
         else {
           // Confirm dialog speaks for itself - drop the pending toast.
           if (toastTimer.current) window.clearTimeout(toastTimer.current);
           setToast(null);
-          setPendingAction(data.action);
+          setPendingAction({ name: data.action, label });
         }
       }
       else if (!walkthrough && (data.go || data.spot)) goSpot(data.go, data.spot, announced ? undefined : data.hint, data.filter);
@@ -302,10 +302,10 @@ export default function Pointery(props: PointeryProps) {
 
       {pendingAction && (
         <div className="pointery-confirm" role="alertdialog" aria-label={cfg.labels.confirmTitle}>
-          <p><strong>{cfg.labels.confirmTitle}</strong><br />{fmt(cfg.labels.confirmBody!, { action: pendingAction })}</p>
+          <p><strong>{cfg.labels.confirmTitle}</strong><br />{fmt(cfg.labels.confirmBody!, { action: pendingAction.label })}</p>
           <div className="pointery-guide-row">
             <button onClick={() => setPendingAction(null)}>{cfg.labels.cancel}</button>
-            <button className="primary" onClick={async () => { const a = pendingAction; setPendingAction(null); close(); await runAction(a); }}>{cfg.labels.confirmBtn}</button>
+            <button className="primary" onClick={async () => { const a = pendingAction; setPendingAction(null); close(); await runAction(a.name, a.label); }}>{cfg.labels.confirmBtn}</button>
           </div>
         </div>
       )}

@@ -41,9 +41,14 @@ function sanitizeResult(r: PointeryResult, context: PointeryContext, allowed?: s
   const flows = new Map((context.flows ?? []).map((f) => [f.id, f]));
   const confirmOf = (name: string) => (context.actions ?? []).find((a) => a.name === name)?.confirm;
   // Blocked actions are dropped but spot/go/guide survive - the UI routes there instead.
-  if (r.action && actionNames.has(r.action) && (!allowed || allowed.includes(r.action))) {
-    out.action = r.action;
-    out.confirm = confirmOf(r.action);
+  // The human label rides along either way so toasts and the confirm dialog name the action, not its id.
+  const knownAction = (context.actions ?? []).find((a) => a.name === r.action);
+  if (r.action && actionNames.has(r.action)) {
+    out.actionLabel = knownAction?.label ?? r.action;
+    if (!allowed || allowed.includes(r.action)) {
+      out.action = r.action;
+      out.confirm = confirmOf(r.action);
+    }
   }
   if (r.guide && flows.has(r.guide.id)) out.guide = buildGuide(flows.get(r.guide.id)!, context.entries ?? []);
   const plan = sanitizePlan((r as { plan?: unknown }).plan, context, planMax);

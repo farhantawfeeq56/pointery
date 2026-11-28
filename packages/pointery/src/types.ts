@@ -67,6 +67,8 @@ export type PointeryResult = {
   spot?: string;
   go?: string;
   action?: string;
+  /** Human label of the action from the map (falls back to the action name) - shown in the confirm dialog and Done toast. */
+  actionLabel?: string;
   /** Row search text - kept only alongside a `spot` whose entry has `rows: true`. */
   filter?: string;
   /** Echoed from the matched action's `confirm` flag - UI confirms only when true. */
