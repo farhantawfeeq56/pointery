@@ -406,3 +406,11 @@ vartest5: click-to-edit preview variants on /pointery (dev-only test chrome).
 Removed vartest5 scaffolding from /pointery.
 
 - `app/pointery/page.tsx` — restored to pre-vartest (15186dc); variant state/keys, floating toolbar, clickPalette/editorBody/fakeApp helpers and variant CSS removed. tsc + eslint clean.
+
+## Pass 57 (feat/basic-changes, 2026-11-28)
+/pointery is status-only; customization moved to `<Pointery/>` props.
+
+- `app/pointery/page.tsx` — removed the customize + preview section and all dead code (ColorPicker, RadiusSlider, shortcut recorder, autosave, broadcast, unused CSS). Page keeps system status, brain setup, context table, install snippet with copy button. Header retitled "Pointery status", enter animation dropped from header.
+- `pointery.context.json` — removed stale shortcut/brand/behavior/preview/save entries on `/pointery`.
+- `POINTERY_PROMPT.md` + `packages/pointery/bin/pointery.js` (STARTER_PROMPT) — step 7 rewritten: page is read-only by design, customization lives in props.
+- Ran `npm run pointery:sync-page`; lint + tsc + `init --check` clean.
