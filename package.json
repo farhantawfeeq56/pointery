@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "next": "16.4.6",
-    "pointery": "0.2.1",
+    "pointery": "0.3.0",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },
