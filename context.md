@@ -577,3 +577,10 @@ Two-way map check: code anchors without entries AND entries without anchors.
 - `packages/pointery/src/Pointery.tsx` - `pulse()` logs a dev-only `console.warn` naming the dead anchor (users still get the missing toast via `pointery:missing`).
 - `.github/workflows/ci.yml` - new `node packages/pointery/bin/pointery.js init --check` step after install, so map drift fails the PR.
 - Verified: `init --check` ok on harness, fails both directions in a scratch dir (ghost entry + unmapped anchor), `lint` + `kit:build` + `npm run build` clean.
+
+## Pass 80 (feat/basic-changes, 2026-11-28)
+Brand tokens across harness (app-only, no kit change).
+
+- `app/globals.css` + `app/layout.tsx` - single brand source (`--color-primary`/`--color-surface`/`--color-muted-foreground`/`--color-border`/`--color-success`), body uses `bg-background text-foreground`.
+- `app/demo/**` + `app/page.tsx` - landing and demo CRM share the tokens (`bg-surface`, `text-muted-foreground`, `bg-primary`); blue `#235789` primary, red `#ED1C24` secondary; `pointery.config.json` theme primary matches.
+- Verified: `lint` + `npm run build` clean.
