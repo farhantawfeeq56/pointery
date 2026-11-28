@@ -414,3 +414,9 @@ Removed vartest5 scaffolding from /pointery.
 - `pointery.context.json` — removed stale shortcut/brand/behavior/preview/save entries on `/pointery`.
 - `POINTERY_PROMPT.md` + `packages/pointery/bin/pointery.js` (STARTER_PROMPT) — step 7 rewritten: page is read-only by design, customization lives in props.
 - Ran `npm run pointery:sync-page`; lint + tsc + `init --check` clean.
+
+## Pass 58 (feat/basic-changes, 2026-11-28)
+Removed the install snippet from `/pointery` — page is now status + context table only.
+
+- `app/pointery/page.tsx` — dropped snippet section, config load, and dead state/CSS (Config, copied, copyTimer, snippet, loaded gate, py-press/swap/stack). Props editing lives entirely in code now.
+- `pointery.context.json` + CLI `STARTER_CONTEXT` — removed snippet entry. Prompt step 7 updated in both files. Re-synced CLI starter; lint + tsc + `init --check` clean.
