@@ -1,6 +1,6 @@
 # Pointery — ask anything in-app, get taken there.
 
-Drop-in kit for any SaaS. User presses Shift+A (or Cmd+K), types
+Drop-in kit for any SaaS. User presses their shortcut (default Shift+A), types
 "where is export?" or "how do I invite a teammate?", and Pointery
 highlights the button, navigates to the right page, and walks them
 step-by-step.
@@ -70,7 +70,7 @@ your app.
 
 | Prop | Default | What |
 | ---- | ------- | ---- |
-| `trigger` | `"shift+a"` | Shortcut (Cmd/Ctrl+K always works too) |
+| `trigger` | `"shift+a"` | Shortcut the user configures (the only toggle) |
 | `theme` | `{ primary: "#6d28d9", radius: 14 }` | Applied as `--pointery-*` CSS vars |
 | `position` | `"top"` | `"top"` / `"center"` / `"bottom"` |
 | `suggestions` | built-in 5 | Buttons shown before typing |

@@ -1,5 +1,5 @@
 {
-  "trigger": "s",
+  "trigger": "ctrl+k",
   "theme": {
     "primary": "#00A878",
     "radius": 14

@@ -119,12 +119,11 @@ export default function Pointery(props: PointeryProps) {
     return () => window.removeEventListener("pointery:ambiguous", onAmbiguous);
   }, [say]);
 
-  // trigger: cfg.trigger is primary (any combo), Cmd/Ctrl+K always works as secondary
+  // trigger: only cfg.trigger toggles — no forced secondary shortcut.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === "INPUT" && open) return; // let them type
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k" && !e.shiftKey && !e.altKey) { e.preventDefault(); setOpen((v) => !v); return; }
       if (triggerMatches(e, cfg.trigger)) { e.preventDefault(); setOpen((v) => !v); }
       if (e.key === "Escape") { setOpen(false); setGuide(null); setPendingAction(null); }
     };
@@ -259,7 +258,7 @@ export default function Pointery(props: PointeryProps) {
                 </div>
               </div>
             )}
-            <p className="pointery-meta">{prettyTrigger(cfg.trigger)} toggles · ⌘K works too · Esc closes</p>
+            <p className="pointery-meta">{prettyTrigger(cfg.trigger)} toggles · Esc closes</p>
           </div>
         </div>
       )}
