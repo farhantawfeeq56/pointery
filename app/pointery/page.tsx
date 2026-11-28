@@ -105,7 +105,7 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (v: string)
         onClick={() => { if (!open) setDraft(value); setOpen((o) => !o); }}
         aria-expanded={open}
         aria-label="Pick primary color"
-        className="flex h-full w-full items-center gap-2 rounded-[14px] border border-zinc-200 px-2.5 py-1.5 text-left hover:border-zinc-400"
+        className="py-press relative flex h-full w-full items-center gap-2 rounded-[14px] border border-zinc-200 px-2.5 py-1.5 text-left hover:border-zinc-400"
       >
         <span className="h-8 w-8 shrink-0 rounded-lg border border-black/10 shadow-sm" style={{ background: value }} />
         <span className="min-w-0 flex-1">
@@ -115,7 +115,7 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (v: string)
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 text-zinc-400 transition ${open ? "rotate-180" : ""}`}><path d="m6 9 6 6 6-6" /></svg>
       </button>
       {open && (
-        <div className="absolute z-20 mt-2 w-60 rounded-[14px] border border-zinc-200 bg-white p-3 shadow-lg">
+        <div className="py-pop absolute z-20 mt-2 w-60 rounded-[14px] border border-zinc-200 bg-white p-3 shadow-lg">
           <div
             role="slider"
             tabIndex={0}
@@ -226,6 +226,8 @@ export default function PointerySettingsPage() {
   const [errors, setErrors] = useState<string[]>([]);
   const [llm, setLlm] = useState<{ configured: boolean; host: string; model: string } | null>(null);
   const [preview, setPreview] = useState<"closed" | "open">("open");
+  const [copied, setCopied] = useState(false);
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const firstRun = useRef(true);
 
@@ -409,11 +411,37 @@ export default function PointerySettingsPage() {
         input.py-slider::-moz-range-track { height: 8px; border-radius: 999px; background: var(--color-border); }
         input.py-slider::-moz-range-progress { height: 8px; border-radius: 999px; background: var(--fill, #00A878); }
         input.py-slider:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--color-border-focus); outline-offset: 2px; }
+        /* ---- interior.dev motion system: ease, press, crossfade, pop, sheet ---- */
+        .pointery-settings { --py-ease: cubic-bezier(0.23, 1, 0.32, 1); }
+        .py-press { transition: transform 150ms var(--py-ease), background-color 150ms var(--py-ease), border-color 150ms var(--py-ease), box-shadow 150ms var(--py-ease), color 150ms var(--py-ease); touch-action: manipulation; }
+        .py-press:active { transform: translateY(1px) scale(0.98); }
+        .py-field { transition: border-color 150ms var(--py-ease), box-shadow 150ms var(--py-ease); }
+        .py-field:focus-within, .py-field:focus-visible { border-color: var(--color-border-focus); box-shadow: 0 1px 2px rgba(11,5,0,0.08), 0 0 0 3px color-mix(in srgb, var(--color-border-focus) 18%, transparent); outline: none; }
+        @keyframes py-enter { from { opacity: 0; transform: translateY(8px); filter: blur(4px); } to { opacity: 1; transform: none; filter: blur(0); } }
+        .py-enter { animation: py-enter 480ms var(--py-ease) both; }
+        @keyframes py-swap-in { from { opacity: 0; transform: translateY(3px); filter: blur(3px); } to { opacity: 1; transform: none; filter: blur(0); } }
+        .py-swap { display: inline-block; animation: py-swap-in 220ms var(--py-ease); }
+        @keyframes py-pop-in { from { opacity: 0; transform: scale(0.96) translateY(-4px); filter: blur(3px); } to { opacity: 1; transform: none; filter: blur(0); } }
+        .py-pop { animation: py-pop-in 180ms var(--py-ease); transform-origin: top center; }
+        @keyframes py-sheet-in { from { opacity: 0; transform: translateY(8px) scale(0.98); filter: blur(3px); } to { opacity: 1; transform: none; filter: blur(0); } }
+        .py-sheet { animation: py-sheet-in 240ms var(--py-ease); }
+        @keyframes py-fade-in { from { opacity: 0; } to { opacity: 1; } }
+        .py-fade { animation: py-fade-in 180ms var(--py-ease); }
+        .py-thumb { transition: transform 220ms var(--py-ease); }
+        .py-stack { display: grid; }
+        .py-stack > * { grid-area: 1 / 1; }
+        @keyframes py-spin { to { transform: rotate(360deg); } }
+        .py-spin { animation: py-spin 0.85s linear infinite; }
+        @media (prefers-reduced-motion: reduce) {
+          .py-enter, .py-swap, .py-pop, .py-sheet, .py-fade { animation-duration: 0ms; }
+          .py-press:active { transform: none; }
+          .py-thumb { transition: none; }
+        }
       `}</style>
     <div className="pointery-settings w-full flex-1">
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-10">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
+        <div className="py-enter">
           <h1 className="text-2xl font-medium tracking-tight">Pointery Settings</h1>
           <p className="text-sm text-zinc-500">
             Auto saves to <code className="font-mono">pointery.config.json</code> and updates the palette live.
@@ -423,12 +451,12 @@ export default function PointerySettingsPage() {
           data-pointery="pointery-settings-save"
           className={`rounded-full px-3 py-1 text-xs font-medium ${saveState === "saved" ? "py-ok" : saveState === "saving" ? "py-warn" : saveState === "error" ? "py-err" : "py-idle"}`}
         >
-          {saveState === "saved" ? "Saved ✓" : saveState === "saving" ? "Saving…" : saveState === "error" ? "Save failed" : "Auto-save on"}
+          <span key={saveState} className="py-swap">{saveState === "saved" ? "Saved ✓" : saveState === "saving" ? "Saving…" : saveState === "error" ? "Save failed" : "Auto-save on"}</span>
         </span>
       </div>
 
-      <p className="text-xs font-medium uppercase tracking-wider text-zinc-400">01 - System status</p>
-      <div data-pointery="pointery-settings-status" className="flex flex-wrap gap-2 text-xs">
+      <p className="py-enter text-xs font-medium uppercase tracking-wider text-zinc-400" style={{ animationDelay: "60ms" }}>01 - System status</p>
+      <div data-pointery="pointery-settings-status" className="py-enter flex flex-wrap gap-2 text-xs" style={{ animationDelay: "110ms" }}>
         <span className={`rounded-full px-3 py-1 font-medium ${askOk ? "py-ok" : "py-idle"}`}>
           /api/ask {askOk == null ? "…" : askOk ? "reachable ✓" : "unreachable"}
         </span>
@@ -455,20 +483,21 @@ export default function PointerySettingsPage() {
           {errors.length > 3 && <li>+{errors.length - 3} more</li>}
         </ul>
       )}
-      <div className="border-t border-zinc-200 pt-6">
+      <div className="py-enter border-t border-zinc-200 pt-6" style={{ animationDelay: "160ms" }}>
         <p className="text-xs font-medium uppercase tracking-wider text-zinc-400">02 - Customize and preview</p>
       </div>
-      <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-12">
+      <div className="py-enter grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-12" style={{ animationDelay: "210ms" }}>
         <section data-pointery="pointery-settings-preview" className="self-start lg:order-2 lg:sticky lg:top-6">
           <div className="flex flex-wrap items-center justify-end gap-3">
-            <div className="py-inset flex rounded-2xl p-1 text-sm font-medium" role="tablist" aria-label="Preview state">
+            <div className="py-inset relative flex rounded-2xl p-1 text-sm font-medium" role="tablist" aria-label="Preview state">
+              <span aria-hidden className="py-thumb absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-xl border border-zinc-200 bg-white shadow-sm" style={{ transform: preview === "open" ? "translateX(100%)" : "translateX(0)" }} />
               {(["closed", "open"] as const).map((s) => (
                 <button
                   key={s}
                   role="tab"
                   aria-selected={preview === s}
                   onClick={() => setPreview(s)}
-                  className={`rounded-xl px-3 py-1 capitalize transition ${preview === s ? "border border-zinc-200 bg-white text-zinc-900 shadow-sm" : "border border-transparent text-zinc-500 hover:text-zinc-800"}`}
+                  className={`py-press relative z-10 rounded-xl px-3 py-1 capitalize ${preview === s ? "text-zinc-900" : "text-zinc-500 hover:text-zinc-800"}`}
                 >
                   {s === "closed" ? "Palette closed" : "Palette open"}
                 </button>
@@ -510,8 +539,8 @@ export default function PointerySettingsPage() {
               </div>
               <span className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center text-base font-semibold text-white shadow-lg" style={{ background: cfg.theme.primary, borderRadius: 999 }} title="Ask Pointery">?</span>
               {preview === "open" && (
-                <div className={`absolute inset-0 flex justify-center bg-black/25 px-4 ${cfg.position === "center" ? "items-center" : cfg.position === "bottom" ? "items-end pb-6" : "items-start pt-6"}`}>
-                  <div className="w-full max-w-[360px] bg-white p-2 shadow-2xl" style={{ borderRadius: cfg.theme.radius }} onClick={(e) => e.stopPropagation()}>
+                <div key={cfg.position} className={`py-fade absolute inset-0 flex justify-center bg-black/25 px-4 ${cfg.position === "center" ? "items-center" : cfg.position === "bottom" ? "items-end pb-6" : "items-start pt-6"}`}>
+                  <div className="py-sheet w-full max-w-[360px] bg-white p-2 shadow-2xl" style={{ borderRadius: cfg.theme.radius }} onClick={(e) => e.stopPropagation()}>
                     <p className="rounded-md border px-3 py-2 text-xs text-zinc-700" style={{ borderRadius: Math.max(4, cfg.theme.radius - 4) }}>{cfg.labels?.placeholder || 'Ask "where is export?"…'}</p>
                     <div className="flex flex-wrap gap-2 p-2">
                       {(cfg.suggestions.filter(Boolean).length ? cfg.suggestions.filter(Boolean).slice(0, 3) : ["No suggestions yet — add some above"]).map((s, i) => (
@@ -537,7 +566,7 @@ export default function PointerySettingsPage() {
                 onClick={() => { setRecording((r) => !r); setRecordingPreview(null); }}
                 aria-label={recording ? "Stop recording" : "Record new shortcut"}
                 title={recording ? "Stop (Esc)" : "Record new shortcut"}
-                className={recording ? "grid h-8 w-8 shrink-0 place-items-center rounded-full bg-amber-500 text-white" : "grid h-8 w-8 shrink-0 place-items-center rounded-full border border-zinc-200 text-zinc-600 hover:border-zinc-400"}
+                className={recording ? "py-press grid h-8 w-8 shrink-0 place-items-center rounded-full bg-amber-500 text-white" : "py-press grid h-8 w-8 shrink-0 place-items-center rounded-full border border-zinc-200 text-zinc-600 hover:border-zinc-400"}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /></svg>
               </button>
@@ -545,7 +574,8 @@ export default function PointerySettingsPage() {
             </div>
             <div className="w-fit min-w-36 rounded-[14px] border border-zinc-200 px-2.5 py-1.5">
                 <p id="py-position-label" className="text-xs text-zinc-500">Palette position</p>
-                <div className="mt-1 flex h-8 items-center gap-1" role="radiogroup" aria-labelledby="py-position-label">
+                <div className="relative mt-1 flex h-8 items-center gap-1 rounded-lg" role="radiogroup" aria-labelledby="py-position-label">
+                  <span aria-hidden className="py-thumb absolute inset-y-0 left-0 rounded-lg border border-zinc-200 bg-white shadow-sm" style={{ width: "calc(100% / 3)", transform: cfg.position === "top" ? "translateX(0%)" : cfg.position === "center" ? "translateX(100%)" : "translateX(200%)" }} />
                   {(["top", "center", "bottom"] as const).map((o) => (
                     <button
                       key={o}
@@ -553,7 +583,7 @@ export default function PointerySettingsPage() {
                       role="radio"
                       aria-checked={cfg.position === o}
                       onClick={() => setCfg({ ...cfg, position: o })}
-                      className={cfg.position === o ? "rounded-lg border border-zinc-200 bg-white px-2.5 py-1 text-xs font-medium text-zinc-900 shadow-sm" : "rounded-lg border border-transparent px-2.5 py-1 text-xs font-medium text-zinc-500 hover:text-zinc-800"}
+                      className={cfg.position === o ? "py-press relative z-10 flex-1 rounded-lg px-2.5 py-1 text-xs font-medium text-zinc-900" : "py-press relative z-10 flex-1 rounded-lg px-2.5 py-1 text-xs font-medium text-zinc-500 hover:text-zinc-800"}
                     >
                       {o[0].toUpperCase() + o.slice(1)}
                     </button>
@@ -580,13 +610,13 @@ export default function PointerySettingsPage() {
                       value={s}
                       onChange={(e) => { const v = e.target.value; setCfg((c) => { const next = [...c.suggestions]; while (next.length <= i) next.push(""); next[i] = v; return { ...c, suggestions: next }; }); }}
                       placeholder={["Where is export?", "How do I invite a teammate?", "Try a third query…", "One more…"][i] ?? ("Suggestion " + (i + 1))}
-                      className="w-full rounded-lg border px-2.5 py-1.5 font-mono text-xs"
+                      className="py-field w-full rounded-lg border px-2.5 py-1.5 font-mono text-xs"
                     />
                     {i < cfg.suggestions.length && (
                       <button
                         onClick={() => setCfg((c) => ({ ...c, suggestions: c.suggestions.filter((_, j) => j !== i) }))}
                         aria-label={"Remove suggestion " + (i + 1)}
-                        className="shrink-0 rounded-full border border-zinc-200 px-2 py-0.5 text-xs font-medium text-zinc-500 hover:border-zinc-400"
+                        className="py-press shrink-0 rounded-full border border-zinc-200 px-2 py-0.5 text-xs font-medium text-zinc-500 hover:border-zinc-400"
                       >
                         −
                       </button>
@@ -598,7 +628,7 @@ export default function PointerySettingsPage() {
                 <div className="mt-2">
                   <button
                     onClick={() => setCfg((c) => ({ ...c, suggestions: [...c.suggestions, ""].slice(0, 4) }))}
-                    className="rounded-full border border-dashed border-zinc-300 px-2.5 py-0.5 text-xs font-medium text-zinc-500 hover:border-zinc-500"
+                    className="py-press rounded-full border border-dashed border-zinc-300 px-2.5 py-0.5 text-xs font-medium text-zinc-500 hover:border-zinc-500"
                   >
                     + Add suggestion
                   </button>
@@ -608,8 +638,18 @@ export default function PointerySettingsPage() {
           </section>
 
           <div className="flex items-center gap-3 py-6">
-            <button onClick={saveNow} className="py-save w-fit rounded-full px-5 py-2 text-sm font-medium">
-              {saveState === "saved" ? "Saved ✓" : "Save now"}
+            <button onClick={saveNow} disabled={saveState === "saving"} className="py-save py-press w-fit rounded-full px-5 py-2 text-sm font-medium disabled:opacity-70">
+              <span className="py-stack items-center text-center">
+                <span className={saveState === "saving" ? "invisible" : ""}>
+                  <span key={saveState} className="py-swap">{saveState === "saved" ? "Saved ✓" : "Save now"}</span>
+                </span>
+                {saveState === "saving" && (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="py-spin h-3.5 w-3.5" viewBox="0 0 12 12" fill="none" aria-hidden="true"><circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.3" /><path d="M10.5 6A4.5 4.5 0 0 0 6 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                    Saving…
+                  </span>
+                )}
+              </span>
             </button>
             <p className="text-xs text-zinc-500">Edits auto-save ~1s after you stop typing — no reload needed.</p>
           </div>
@@ -638,13 +678,16 @@ export default function PointerySettingsPage() {
         </div>
       )}
 
-      <div data-pointery="pointery-settings-snippet" className="rounded-[14px] border border-zinc-200 bg-white p-5 text-sm text-zinc-800">
+      <div data-pointery="pointery-settings-snippet" className="py-enter rounded-[14px] border border-zinc-200 bg-white p-5 text-sm text-zinc-800" style={{ animationDelay: "260ms" }}>
         <pre className="overflow-x-auto font-mono text-sm leading-6 text-zinc-800">{snippet}</pre>
         <button
-          onClick={() => { navigator.clipboard.writeText(snippet); }}
-          className="mt-3 rounded-full bg-zinc-900 px-4 py-1.5 text-sm font-medium text-white"
+          onClick={() => { navigator.clipboard.writeText(snippet); setCopied(true); if (copyTimer.current) clearTimeout(copyTimer.current); copyTimer.current = setTimeout(() => setCopied(false), 2000); }}
+          className="py-press mt-3 rounded-full bg-zinc-900 px-4 py-1.5 text-sm font-medium text-white"
         >
-          Copy snippet
+          <span className="py-stack items-center text-center">
+            <span className={copied ? "invisible" : ""}>Copy snippet</span>
+            {copied && <span className="py-swap">Copied ✓</span>}
+          </span>
         </button>
       </div>
     </div>
