@@ -474,3 +474,10 @@ Config discoverability: schema is truth, validated everywhere.
 - `app/api/admin/config/route.ts` (+ starter route) — PUT validates, 400 with reasons instead of silent save.
 - `pointery.config.json` — `$schema` pointer added.
 - Verified: `config --validate` ok, bad config fails 3 ways (exit 1), `init --check` ok, `kit:build` + lint + full `build` clean.
+
+## Pass 66 (feat/basic-changes, 2026-11-28)
+Demo-only loading-state test hook: type "1" + Enter holds the "Asking…" toast.
+
+- `app/api/ask/route.ts` — wrapped `createAskHandler` output; exact query "1" sleeps 5s before delegating, so the palette's `labels.asking` toast stays visible for inspection. Harness-only, never synced to CLI starter, no package change (no release triggered).
+- Current loading UX (unchanged): palette closes on submit, pending state lives in the toast slot (`say(labels.asking)` → "Asking…"), replaced by answer/hint/empty/unreachable.
+- Verified: `tsc` + `lint` clean.
