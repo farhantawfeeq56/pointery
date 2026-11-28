@@ -84,9 +84,6 @@ export default function Pointery(props: PointeryProps) {
   const cfg = { ...DEFAULTS, ...props, theme: { ...DEFAULTS.theme, ...props.theme }, labels: { ...DEFAULTS.labels, ...props.labels } };
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [res, setRes] = useState<PointeryResult | null>(null);
-  const [resSeq, setResSeq] = useState(0); // bumps per answer so the result state re-animates
   const [toast, setToast] = useState<Toast>(null);
   const [guide, setGuide] = useState<GuideState>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
@@ -173,37 +170,38 @@ export default function Pointery(props: PointeryProps) {
     if (hint) say(hint);
   }, [router, say]);
 
+  // Submit closes the palette at once; the answer surfaces as toast, guide
+  // card, confirm dialog, navigation and pulse — nothing waits on a row click.
   const ask = useCallback(async (query: string) => {
     const queryText = query.trim();
     if (!queryText) return;
-    setLoading(true);
+    close();
     try {
       const r = await fetch(cfg.endpoint, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ query: queryText, page: window.location.pathname }) });
       const data = (await r.json()) as PointeryResult;
-      setRes(data); setResSeq((s) => s + 1);
       if (data.answer) say(data.answer);
-      if (data.plan) { setGuide({ title: data.plan.title, steps: data.plan.steps, i: 0 }); setGuideIdx(0); }
-      else if (data.guide) { setGuide({ title: data.guide.title, steps: data.guide.steps, i: 0 }); setGuideIdx(0); }
-      // Blocked actions fall through to spot/go/guide below — never execute.
+      const walkthrough = data.plan ?? data.guide;
+      if (walkthrough) {
+        setGuide({ title: walkthrough.title, steps: walkthrough.steps, i: 0 });
+        setGuideIdx(0);
+        const first = walkthrough.steps[0];
+        if (first) goSpot(first.go, first.spot, `${walkthrough.title} — step 1/${walkthrough.steps.length}: ${first.text}`, "filter" in first ? first.filter : undefined);
+      }
+      // Blocked actions fall through to spot/go below — never execute.
       if (data.action && !cfg.allowActions.includes(data.action)) {
         say(`“${data.action}” needs approval — taking you there instead.`);
         data.action = undefined;
       }
       if (data.action) {
-        if (data.confirm === false) { close(); await runAction(data.action); }
+        if (data.confirm === false) await runAction(data.action);
         else setPendingAction(data.action);
       }
       else if (data.go || data.spot) goSpot(data.go, data.spot, data.hint, data.filter);
-      else if (!data.answer && !data.guide && !data.plan) say(cfg.labels.empty!);
+      else if (!data.answer && !walkthrough) say(cfg.labels.empty!);
     } catch {
       say(`Pointery is unreachable — is ${cfg.endpoint} mounted?`);
-    } finally { setLoading(false); }
+    }
   }, [cfg.allowActions, cfg.labels.empty, cfg.endpoint, goSpot, runAction, say, close]);
-
-  const startGuide = (g: NonNullable<GuideState>) => {
-    const s = g.steps[guideIdx];
-    if (s) goSpot(s.go, s.spot, `${g.title} — step ${guideIdx + 1}/${g.steps.length}: ${s.text}`, s.filter);
-  };
 
   if (!open && !guide && !toast && !pendingAction) {
     return (
@@ -218,44 +216,12 @@ export default function Pointery(props: PointeryProps) {
 
   const pos = cfg.position === "center" ? "pointery-pos-center" : cfg.position === "bottom" ? "pointery-pos-bottom" : "pointery-pos-top";
   const anim = !cfg.animation || cfg.animation === "none" ? "" : `pointery-anim-${cfg.animation}`;
-  // Keyed wrapper remounts (replaying the enter animation) on every state swap.
-  const hasRes = Boolean(res && (res.go || res.spot || res.action || res.guide || res.plan));
-  const viewKey = loading ? "loading" : hasRes ? `result-${resSeq}` : !q ? "suggest" : "empty";
-  // Classic list: result actions on top, config suggestions below, filtered as you type.
-  // Everything here resolves through the same ask() — answer/hint/guide/plan/action
-  // outputs are unchanged, only the rendering is rows.
+  // Classic list of the config suggestions, filtered as you type.
+  // Submit (or a row click) closes the palette and asks — no result rows;
+  // the answer acts directly (toast, guide card, confirm, navigate, pulse).
   const needle = q.trim().toLowerCase();
-  const filtered = (cfg.suggestions ?? []).filter((s) => s.trim() && (!needle || s.toLowerCase().includes(needle)));
-  // Result actions render as list rows; text outputs (answer toast, guide,
-  // confirm) flow through the same handlers as before — only rows are new.
-  // Render stays pure data; clicks run through activateRow (event context).
-  type Row = { id: string; title: string; sub?: string; kind: "take" | "steps" | "action" | "suggest" };
-  const head: Row[] = [];
-  if (!loading && res && (res.go || res.spot)) {
-    head.push({ id: "take-me-there", title: res.hint ?? "Take me there", kind: "take" });
-  }
-  if (!loading && res && (res.plan || res.guide)) {
-    const g = res.plan ?? res.guide!;
-    head.push({ id: "start-steps", title: res.plan ? `Start steps (${res.plan.steps.length})` : "Start guide", sub: g.title, kind: "steps" });
-  }
-  if (!loading && res?.action) {
-    head.push({ id: "run-action", title: res.confirm ? `Run “${res.action}” — needs confirm` : `Run “${res.action}”`, kind: "action" });
-  }
-  const rows: Row[] = loading
-    ? []
-    : [...head, ...filtered.map((s): Row => ({ id: `suggest:${s}`, title: s, kind: "suggest" }))];
+  const rows = (cfg.suggestions ?? []).filter((s) => s.trim() && (!needle || s.toLowerCase().includes(needle)));
   const active = rows.length ? Math.min(sel, rows.length - 1) : 0;
-  const activateRow = (row: Row) => {
-    if (row.kind === "suggest") { setQ(row.title); setSel(0); void ask(row.title); }
-    else if (row.kind === "take" && res) { goSpot(res.go, res.spot, res.hint, res.filter); close(); }
-    else if (row.kind === "steps" && res && (res.plan || res.guide)) {
-      const g = res.plan ?? res.guide!;
-      setGuideIdx(0); startGuide({ title: g.title, steps: g.steps, i: 0 }); close();
-    } else if (row.kind === "action" && res?.action) {
-      const a = res.action;
-      if (res.confirm) { close(); setPendingAction(a); } else { close(); void runAction(a); }
-    }
-  };
 
   return (
     <>
@@ -290,11 +256,11 @@ export default function Pointery(props: PointeryProps) {
       {(open || leaving) && (
         <div className={`pointery-overlay ${pos}${leaving ? " pointery-leaving" : ""}`} onClick={close}>
           <div className={["pointery-palette", anim, leaving && "pointery-leaving"].filter(Boolean).join(" ")} onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Ask Pointery">
-            <form onSubmit={(e) => { e.preventDefault(); const hit = rows[active]; if (hit) activateRow(hit); else void ask(q); }}>
+            <form onSubmit={(e) => { e.preventDefault(); const hit = rows[active]; if (hit) { setQ(hit); setSel(0); void ask(hit); } else void ask(q); }}>
               <input
                 ref={inputRef}
                 value={q}
-                onChange={(e) => { setQ(e.target.value); setRes(null); setPendingAction(null); setSel(0); }}
+                onChange={(e) => { setQ(e.target.value); setPendingAction(null); setSel(0); }}
                 onKeyDown={(e) => {
                   if (e.key === "ArrowDown") { e.preventDefault(); setSel((s) => Math.min(s + 1, Math.max(rows.length - 1, 0))); }
                   if (e.key === "ArrowUp") { e.preventDefault(); setSel((s) => Math.max(s - 1, 0)); }
@@ -304,25 +270,24 @@ export default function Pointery(props: PointeryProps) {
                 role="combobox"
                 aria-controls="pointery-list"
                 aria-expanded={rows.length > 0}
-                aria-activedescendant={rows[active]?.id}
+                aria-activedescendant={rows.length ? `pointery-opt-${active}` : undefined}
               />
             </form>
-            <div key={viewKey} className="pointery-view">
-            {loading && <p className="pointery-meta">Thinking…</p>}
-            {!loading && rows.length > 0 && (
+            <div className="pointery-view">
+            {rows.length > 0 && (
               <ul id="pointery-list" className="pointery-list" role="listbox" aria-label="Suggestions">
-                {rows.map((r, i) => (
-                  <li key={r.id} id={r.id} role="option" aria-selected={i === active}>
-                    <button className="pointery-row" data-active={i === active} onMouseEnter={() => setSel(i)} onClick={() => activateRow(r)}>
+                {rows.map((s, i) => (
+                  <li key={s} id={`pointery-opt-${i}`} role="option" aria-selected={i === active}>
+                    <button className="pointery-row" data-active={i === active} onMouseEnter={() => setSel(i)} onClick={() => { setQ(s); setSel(0); void ask(s); }}>
                       <span className="pointery-row-dot" aria-hidden />
-                      <span className="pointery-row-text"><span>{r.title}</span>{r.sub ? <span className="pointery-row-sub">{r.sub}</span> : null}</span>
+                      <span className="pointery-row-text">{s}</span>
                       <kbd>↵</kbd>
                     </button>
                   </li>
                 ))}
               </ul>
             )}
-            {!loading && rows.length === 0 && q.trim() && (
+            {rows.length === 0 && q.trim() && (
               <p className="pointery-meta">No match — press Enter to ask anyway.</p>
             )}
             </div>
