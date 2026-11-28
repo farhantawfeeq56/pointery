@@ -300,3 +300,9 @@ Stripped section headings in /pointery customize zone.
 
 - `app/pointery/page.tsx` — removed the Keyboard shortcut / Brand / Behavior / Preview h2s + gray sub descriptions; field labels (Primary color, Corner radius, Palette position, etc.) carry the meaning now. Preview tabs right-aligned in the freed header row.
 - Re-synced via `npm run pointery:sync-page`; `init --check` ok, `tsc` clean.
+
+## Pass 39 (feat/basic-changes, 2026-11-28)
+Removed section dividers in /pointery customize zone.
+
+- `app/pointery/page.tsx` — dropped `divide-y divide-zinc-200` from the controls column; sections now separated by padding alone.
+- Re-synced via `npm run pointery:sync-page`; `init --check` ok, `tsc` clean.

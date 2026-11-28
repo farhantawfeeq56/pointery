@@ -405,7 +405,7 @@ export default function PointerySettingsPage() {
           </div>
         </section>
 
-        <div className="min-w-0 divide-y divide-zinc-200 lg:order-1">
+        <div className="min-w-0 lg:order-1">
           <section data-pointery="pointery-settings-shortcut" className="py-8 first:pt-0">
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               {(["shift+a", "cmd+k"] as const).map((v) => (
