@@ -528,6 +528,7 @@ export default function PointerySettingsPage() {
 
         <div className="min-w-0 lg:order-1">
           <section data-pointery="pointery-settings-shortcut" className="py-6 first:pt-0">
+            <div className="flex flex-wrap gap-4">
             <div className="flex w-fit min-w-60 items-center justify-between gap-6 rounded-[14px] border border-zinc-200 px-2.5 py-1.5">
               <div className="min-w-0">
                 <p className="text-xs text-zinc-500">{recording ? "Recording — press keys…" : "Current shortcut"}</p>
@@ -542,27 +543,7 @@ export default function PointerySettingsPage() {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /></svg>
               </button>
             </div>
-            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-              <span className="text-zinc-500">Suggestions:</span>
-              {(["shift+a", "cmd+k"] as const).map((v) => (
-                <button
-                  key={v}
-                  onClick={() => setCfg({ ...cfg, trigger: v })}
-                  className={cfg.trigger === v && !recording ? "rounded-full border border-zinc-200 bg-white px-2.5 py-0.5 font-mono font-medium text-zinc-900 shadow-sm" : "rounded-full border border-transparent px-2.5 py-0.5 font-mono text-zinc-500 hover:text-zinc-800"}
-                >
-                  {v === "shift+a" ? "Shift + A" : "⌘/Ctrl + K"}
-                </button>
-              ))}
-              {cfg.trigger !== "shift+a" && cfg.trigger !== "cmd+k" && <span className="py-subtle rounded-full px-2 py-0.5 font-medium">custom</span>}
-            </div>
-            <p className="mt-2 text-xs text-zinc-500">{recording ? "Press keys… (Esc to cancel)" : "Try it now — press your shortcut anywhere on this page."}</p>
-          </section>
-
-          <section data-pointery="pointery-settings-brand" className="py-6">
-            <div className="flex flex-wrap gap-4">
-              <ColorPicker value={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: v } })} />
-              <RadiusSlider value={cfg.theme.radius} primary={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: v } })} />
-              <div className="w-fit min-w-36 rounded-[14px] border border-zinc-200 px-2.5 py-1.5">
+            <div className="w-fit min-w-36 rounded-[14px] border border-zinc-200 px-2.5 py-1.5">
                 <p id="py-position-label" className="text-xs text-zinc-500">Palette position</p>
                 <div className="mt-1 flex gap-1" role="radiogroup" aria-labelledby="py-position-label">
                   {(["top", "center", "bottom"] as const).map((o) => (
@@ -579,6 +560,13 @@ export default function PointerySettingsPage() {
                   ))}
                 </div>
               </div>
+            </div>
+          </section>
+
+          <section data-pointery="pointery-settings-brand" className="py-6">
+            <div className="flex flex-wrap gap-4">
+              <ColorPicker value={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: v } })} />
+              <RadiusSlider value={cfg.theme.radius} primary={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: v } })} />
             </div>
           </section>
 

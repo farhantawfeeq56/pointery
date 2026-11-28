@@ -373,3 +373,9 @@ Restyled /pointery in lintapple's design language (repo used as reference only, 
 - Type: chrome semibold/bold → medium (h1 stays 24px tight); all rendered text ≥12px (10/11/13px bumps); snippet code 14px.
 - Controls: position select → light segmented radiogroup; preview toggle + shortcut pills → light active pill (surface + border + shadow); buttons 14px/medium; brand cards, shortcut card, popover, snippet box → 14px radius; 8px gap rhythm.
 - Re-synced via `npm run pointery:sync-page`; lint + build clean.
+
+## Pass 51 (feat/basic-changes, 2026-11-28)
+Shortcut line cleanup per page feedback.
+
+- `app/pointery/page.tsx` — removed the shortcut suggestion pills + "try it now" hint; palette position segmented control moved up onto the shortcut line (hugging flex row with the shortcut card); brand row back to color + radius.
+- Re-synced via `npm run pointery:sync-page`; lint + build clean.
