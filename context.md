@@ -324,3 +324,9 @@ Tightened shortcut-box padding per page feedback.
 
 - `app/pointery/page.tsx` — current-shortcut card `px-4 py-3` → `px-3 py-2`, pencil `p-2` → `p-1.5`, suggestion chips `px-3 py-1` → `px-2.5 py-0.5`.
 - Re-synced via `npm run pointery:sync-page`; `init --check` ok, `tsc` clean.
+
+## Pass 43 (feat/basic-changes, 2026-11-28)
+Behavior section rework per page feedback (4 items).
+
+- `app/pointery/page.tsx` — position select shortened to `w-40`; Allowed actions editor removed; Suggestions textarea replaced by boxes (3 by default, pad-to-3 when empty, + adds up to 4, − per stored row); Placeholder/Empty/Confirm grid removed. Live preview now filters blank suggestions so half-typed boxes never render empty chips.
+- Re-synced via `npm run pointery:sync-page`; `init --check` ok, `tsc` clean.

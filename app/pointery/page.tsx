@@ -316,8 +316,8 @@ export default function PointerySettingsPage() {
                   <div className="w-full max-w-[360px] bg-white p-2 shadow-2xl" style={{ borderRadius: cfg.theme.radius }} onClick={(e) => e.stopPropagation()}>
                     <p className="rounded-md border px-3 py-2 text-xs text-zinc-700" style={{ borderRadius: Math.max(4, cfg.theme.radius - 4) }}>{cfg.labels?.placeholder || 'Ask "where is export?"…'}</p>
                     <div className="flex flex-wrap gap-1.5 px-1 pb-1 pt-2">
-                      {(cfg.suggestions.length ? cfg.suggestions.slice(0, 3) : ["No suggestions yet — add some above"]).map((s) => (
-                        <span key={s} className={`rounded-full border px-2.5 py-1 text-[10px] ${cfg.suggestions.length ? "py-inset" : "text-zinc-400"}`}>{s}</span>
+                      {(cfg.suggestions.filter(Boolean).length ? cfg.suggestions.filter(Boolean).slice(0, 3) : ["No suggestions yet — add some above"]).map((s, i) => (
+                        <span key={s + i} className={"rounded-full border px-2.5 py-1 text-[10px] " + (cfg.suggestions.filter(Boolean).length ? "py-inset" : "text-zinc-400")}>{s}</span>
                       ))}
                     </div>
                     <p className="px-1 pt-1 text-[10px] text-zinc-400">{prettyShortcut(cfg.trigger)} toggles · ⌘K works too · Esc closes</p>
@@ -376,49 +376,46 @@ export default function PointerySettingsPage() {
             </div>
           </section>
 
-          <section data-pointery="pointery-settings-behavior" className="py-8">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="block text-sm">
-                <span className="font-medium">Palette position</span>
-                <select value={cfg.position} onChange={(e) => setCfg({ ...cfg, position: e.target.value as Config["position"] })} className="mt-2 w-full rounded-lg border px-3 py-2">
-                  <option value="top">Top</option>
-                  <option value="center">Center</option>
-                  <option value="bottom">Bottom</option>
-                </select>
-              </label>
-              <label className="block text-sm">
-                <span className="font-medium">Allowed actions (comma-separated names from the context)</span>
-                <input
-                  value={cfg.allowActions.join(", ")}
-                  onChange={(e) => setCfg({ ...cfg, allowActions: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })}
-                  placeholder="export-pipeline, invite-teammate"
-                  className="mt-2 w-full rounded-lg border px-3 py-2 font-mono text-xs"
-                />
-              </label>
-            </div>
-            <label className="mt-3 block text-sm">
-              <span className="font-medium">Suggestions (one per line)</span>
-              <textarea
-                value={cfg.suggestions.join("\n")}
-                onChange={(e) => setCfg({ ...cfg, suggestions: e.target.value.split("\n").map((s) => s.trim()).filter(Boolean) })}
-                rows={3}
-                placeholder={"Where is export?\nHow do I invite a teammate?"}
-                className="mt-2 w-full rounded-lg border px-3 py-2 font-mono text-xs"
-              />
+                    <section data-pointery="pointery-settings-behavior" className="py-8">
+            <label className="block text-sm">
+              <span className="font-medium">Palette position</span>
+              <select value={cfg.position} onChange={(e) => setCfg({ ...cfg, position: e.target.value as Config["position"] })} className="mt-2 w-40 rounded-lg border px-3 py-2">
+                <option value="top">Top</option>
+                <option value="center">Center</option>
+                <option value="bottom">Bottom</option>
+              </select>
             </label>
-            <div className="mt-3 grid gap-3 sm:grid-cols-3">
-              <label className="text-sm">
-                <span className="font-medium">Placeholder</span>
-                <input value={cfg.labels?.placeholder ?? ""} onChange={(e) => setCfg({ ...cfg, labels: { ...cfg.labels, placeholder: e.target.value } })} placeholder='Ask "where is export?"…' className="mt-2 w-full rounded-lg border px-3 py-2 text-xs" />
-              </label>
-              <label className="text-sm">
-                <span className="font-medium">Empty state</span>
-                <input value={cfg.labels?.empty ?? ""} onChange={(e) => setCfg({ ...cfg, labels: { ...cfg.labels, empty: e.target.value } })} placeholder="No match — try…" className="mt-2 w-full rounded-lg border px-3 py-2 text-xs" />
-              </label>
-              <label className="text-sm">
-                <span className="font-medium">Confirm title</span>
-                <input value={cfg.labels?.confirmTitle ?? ""} onChange={(e) => setCfg({ ...cfg, labels: { ...cfg.labels, confirmTitle: e.target.value } })} placeholder="Run this action?" className="mt-2 w-full rounded-lg border px-3 py-2 text-xs" />
-              </label>
+            <div className="mt-3 text-sm">
+              <span className="font-medium">Suggestions</span>
+              <div className="mt-2 space-y-2">
+                {(() => { const rows = [...cfg.suggestions]; while (rows.length < 3) rows.push(""); return rows; })().map((s, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <input
+                      value={s}
+                      onChange={(e) => { const v = e.target.value; setCfg((c) => { const next = [...c.suggestions]; while (next.length <= i) next.push(""); next[i] = v; return { ...c, suggestions: next }; }); }}
+                      placeholder={["Where is export?", "How do I invite a teammate?", "Try a third query…", "One more…"][i] ?? ("Suggestion " + (i + 1))}
+                      className="w-full rounded-lg border px-3 py-2 font-mono text-xs"
+                    />
+                    {i < cfg.suggestions.length && (
+                      <button
+                        onClick={() => setCfg((c) => ({ ...c, suggestions: c.suggestions.filter((_, j) => j !== i) }))}
+                        aria-label={"Remove suggestion " + (i + 1)}
+                        className="shrink-0 rounded-full border border-zinc-200 px-2 py-0.5 text-xs font-semibold text-zinc-500 hover:border-zinc-400"
+                      >
+                        −
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {cfg.suggestions.length < 4 && (
+                  <button
+                    onClick={() => setCfg((c) => ({ ...c, suggestions: [...c.suggestions, ""].slice(0, 4) }))}
+                    className="rounded-full border border-dashed border-zinc-300 px-3 py-1 text-xs font-semibold text-zinc-500 hover:border-zinc-500"
+                  >
+                    + Add suggestion
+                  </button>
+                )}
+              </div>
             </div>
           </section>
 
