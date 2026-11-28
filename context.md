@@ -385,3 +385,9 @@ Shortcut line alignment per page feedback.
 
 - `app/pointery/page.tsx` — shortcut + position cards share one anatomy (label on top, fixed `h-8` control row, same padding/radius); record button is now a 32px grid-centered target.
 - Re-synced via `npm run pointery:sync-page`; lint + build clean.
+
+## Pass 53 (feat/basic-changes, 2026-11-28)
+vartest10: 10 controls variants on /pointery (dev-only test chrome).
+
+- `app/pointery/page.tsx` — V1 keeps the current controls untouched; V2-V10 recompose the same state (shortcut, position, color, radius, suggestions, save) in new layouts: Cards, Rows, Stacked, Big touch, Compact, Appearance first, Suggestions first, Action bar, Descriptive. Same Figtree/colors, preview mock untouched, single subtle enter per variant. Floating toolbar bottom-right + keys 1-9/0 switch variants. All data-pointery ids preserved in every variant.
+- tsc + eslint clean. Deliberately NOT running `pointery:sync-page` — test chrome must not ship in the CLI starter.
