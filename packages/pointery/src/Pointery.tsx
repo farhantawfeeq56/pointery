@@ -220,17 +220,22 @@ export default function Pointery(props: PointeryProps) {
     try {
       const r = await fetch(cfg.endpoint, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ query: queryText, page: window.location.pathname }) });
       const data = (await r.json()) as PointeryResult;
-      if (data.answer) say(data.answer);
+      // One toast per ask: the first message wins, the rest stay silent.
+      let announced = false;
+      if (data.answer) { say(data.answer); announced = true; }
       const walkthrough = data.plan ?? data.guide;
       if (walkthrough) {
         setGuide({ title: walkthrough.title, steps: walkthrough.steps, i: 0 });
         setGuideIdx(0);
         const first = walkthrough.steps[0];
+        // Single toast announcing the guide; top-level go/spot/hint below is skipped for walkthroughs.
         if (first) goSpot(first.go, first.spot, `${walkthrough.title} — step 1/${walkthrough.steps.length}: ${first.text}`, "filter" in first ? first.filter : undefined);
+        announced = true;
       }
       // Blocked actions fall through to spot/go below — never execute.
       if (data.action && !cfg.allowActions.includes(data.action)) {
         say(fmt(cfg.labels.blocked!, { action: data.action }));
+        announced = true;
         data.action = undefined;
       }
       if (data.action) {
@@ -242,8 +247,8 @@ export default function Pointery(props: PointeryProps) {
           setPendingAction(data.action);
         }
       }
-      else if (data.go || data.spot) goSpot(data.go, data.spot, data.hint, data.filter);
-      else if (!data.answer && !walkthrough) say(cfg.labels.empty!);
+      else if (!walkthrough && (data.go || data.spot)) goSpot(data.go, data.spot, announced ? undefined : data.hint, data.filter);
+      else if (!announced) say(cfg.labels.empty!);
     } catch {
       say(fmt(cfg.labels.unreachable!, { endpoint: cfg.endpoint }));
     }
@@ -285,7 +290,7 @@ export default function Pointery(props: PointeryProps) {
           <div className="pointery-guide-row">
             <button disabled={guideIdx === 0} onClick={() => { const n = guideIdx - 1; setGuideIdx(n); const s = guide.steps[n]; goSpot(s.go, s.spot, undefined, s.filter); }}>{cfg.labels.back}</button>
             {guideIdx < guide.steps.length - 1
-              ? <button className="primary" onClick={() => { const n = guideIdx + 1; setGuideIdx(n); const s = guide.steps[n]; goSpot(s.go, s.spot, s.text, s.filter); }}>{cfg.labels.next}</button>
+              ? <button className="primary" onClick={() => { const n = guideIdx + 1; setGuideIdx(n); const s = guide.steps[n]; goSpot(s.go, s.spot, undefined, s.filter); }}>{cfg.labels.next}</button>
               : <button className="primary" onClick={() => { setGuide(null); say(cfg.labels.guideComplete!); }}>{cfg.labels.doneBtn}</button>}
           </div>
         </div>
