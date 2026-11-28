@@ -481,3 +481,9 @@ Demo-only loading-state test hook: type "1" + Enter holds the "Asking…" toast.
 - `app/api/ask/route.ts` — wrapped `createAskHandler` output; exact query "1" sleeps 5s before delegating, so the palette's `labels.asking` toast stays visible for inspection. Harness-only, never synced to CLI starter, no package change (no release triggered).
 - Current loading UX (unchanged): palette closes on submit, pending state lives in the toast slot (`say(labels.asking)` → "Asking…"), replaced by answer/hint/empty/unreachable.
 - Verified: `tsc` + `lint` clean.
+
+## Pass 67 (feat/basic-changes, 2026-11-28)
+Removed the "1" loading-state test hook.
+
+- `app/api/ask/route.ts` — back to direct `export const POST = createAskHandler(...)`; no stall, no wrapper.
+- Verified: `tsc` + `lint` clean.

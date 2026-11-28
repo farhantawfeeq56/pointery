@@ -12,7 +12,7 @@ const brain = (rawConfig as { brain?: { retrieve?: { entries?: number; flows?: n
 // to the customer's own model endpoint (their key, their cost).
 // Nothing goes to Pointery. Missing env fails closed with a 503.
 // Tuning (retrieve/limits/cache/temperature) lives in pointery.config.json `brain`.
-const basePOST = createAskHandler(context, {
+export const POST = createAskHandler(context, {
   llm: {
     url: process.env.POINTERY_LLM_URL ?? "",
     key: process.env.POINTERY_LLM_KEY ?? "",
@@ -29,16 +29,3 @@ const basePOST = createAskHandler(context, {
       ? { answer: "The demo CRM is disabled in this environment. Set POINTERY_DEMO=1 to explore it." }
       : null,
 });
-
-// Demo-only test hook (harness, never ships): query "1" stalls 5s so the
-// palette's "Asking…" toast (labels.asking) stays visible for inspection.
-export const POST = async (req: Request): Promise<Response> => {
-  try {
-    const body = (await req.clone().json().catch(() => ({}))) as { query?: unknown };
-    if (typeof body.query === "string" && body.query.trim() === "1")
-      await new Promise((r) => setTimeout(r, 5000));
-  } catch {
-    /* fall through to base handler */
-  }
-  return basePOST(req);
-};
