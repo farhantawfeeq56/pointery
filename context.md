@@ -425,3 +425,9 @@ Removed the install snippet from `/pointery` — page is now status + context ta
 Prompt: brand-sync the palette at init.
 
 - `POINTERY_PROMPT.md` + CLI `STARTER_PROMPT` — wiring-diff paragraph now tells the agent to lift primary color + radius from the app's theme/tokens into `pointery.config.json` and `<Pointery/>` props at init (native on day one, still user-configurable). Also fixed stale "confirm `/pointery` saves to disk" (page is read-only now). No code touched; `node --check` + `init --check` clean.
+
+## Pass 60 (feat/basic-changes, 2026-11-28)
+Brand-synced the palette.
+
+- `pointery.config.json` — theme to brand green `#00A878`, radius 14 (matches landing tokens + card radius). Mount reads config, so no code change needed for the palette itself.
+- `app/pointery-mount.tsx` — comment-only: no longer claims the /pointery page drives live updates; documents the `pointery:config` contract instead.
