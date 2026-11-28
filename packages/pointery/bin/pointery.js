@@ -26,6 +26,7 @@ const STARTER_CONTEXT = {
 };
 
 const STARTER_CONFIG = {
+  "$schema": "./node_modules/pointery/schema.json",
   trigger: "shift+a",
   theme: { primary: "#00A878", radius: 14 },
   position: "top",
@@ -51,6 +52,32 @@ const STARTER_CONFIG = {
     llm: { temperature: 0, maxTokens: 300 },
   },
 };
+
+// schema.json is truth: editors get autocomplete via the "$schema" key above,
+// agents read node_modules/pointery/schema.json for every key + allowed values
+// (position: top|center|bottom, animation: fade|slide|scale|none). `config
+// --validate` enforces the same rules without dependencies.
+function validateConfigJson(c) {
+  const errs = [];
+  if (!c || typeof c !== "object" || Array.isArray(c)) return ["config must be a JSON object"];
+  const known = new Set(["$schema", "trigger", "theme", "cssVars", "zIndex", "paletteWidth", "overlayBlur", "fab", "hiddenRoutes", "timing", "position", "animation", "suggestions", "allowActions", "labels", "endpoint", "brain"]);
+  for (const k of Object.keys(c)) if (!known.has(k)) errs.push(`unknown key "${k}" — see schema.json`);
+  if (c.position !== undefined && !["top", "center", "bottom"].includes(c.position)) errs.push(`position must be one of top|center|bottom (got ${JSON.stringify(c.position)})`);
+  if (c.animation !== undefined && !["fade", "slide", "scale", "none"].includes(c.animation)) errs.push(`animation must be one of fade|slide|scale|none (got ${JSON.stringify(c.animation)})`);
+  for (const k of ["zIndex", "paletteWidth", "overlayBlur"]) {
+    if (c[k] !== undefined && typeof c[k] !== "number") errs.push(`${k} must be a number (got ${JSON.stringify(c[k])})`);
+  }
+  return errs;
+}
+
+function readConfig(cwd) {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(cwd, "pointery.config.json"), "utf8"));
+  } catch (e) {
+    console.log(`cannot read pointery.config.json: ${e}`);
+    process.exit(1);
+  }
+}
 
 // Minimal GET+PUT for pointery.config.json (disk is truth). The /pointery
 // settings page reads via GET; PUT remains for direct edits (dev-only, refuses in production).
@@ -83,6 +110,11 @@ export async function PUT(req: Request) {
   }
   if (!config || typeof config !== "object" || Array.isArray(config)) {
     return Response.json({ error: "Config must be a JSON object" }, { status: 400 });
+  }
+  const { validateConfig } = await import("pointery");
+  const configErrors = validateConfig(config);
+  if (configErrors.length) {
+    return Response.json({ error: configErrors.join("; ") }, { status: 400 });
   }
   await fs.writeFile(FILE, JSON.stringify(config, null, 2) + "\\n", "utf8");
   return Response.json({ ok: true });
@@ -315,7 +347,10 @@ keyless mode). Re-run whenever your UI changes.
 > 4. Keep it small: max ~40 entries, ~10 flows, only allowlisted actions.
 >    Delete stale ids for removed UI.
 > 5. Run \`npx pointery init --check\` and fix whatever it reports (guide step
->    pointing at a missing target or wrong page, live \`$\` data baked into the map).
+>    pointing at a missing target or wrong page, live \`$\` data baked into the map,
+>    or config errors (unknown keys, bad enums). \`pointery.schema.json\` is truth
+>    for \`pointery.config.json\`: position is top|center|bottom, animation is
+>    fade|slide|scale|none. Run \`npx pointery config --validate\` after any config edit.
 > 6. Brain (my key, my bill, required — one step): walk me through it — add \`POINTERY_LLM_URL\` (my model endpoint: OpenAI-compatible chat-completions URL, or native Anthropic \`…/v1/messages\` / Gemini \`…:generateContent\` — auto-detected), \`POINTERY_LLM_KEY\`, AND \`POINTERY_LLM_MODEL\` (exact model id as the provider spells it) to \`.env.local\` together, restart dev, and
 >    verify with “where is export?”. Without all three, \`/api/ask\` fails closed (503). OpenAI defaults the model to \`gpt-4o-mini\` when unset; every other provider needs it. Never print or commit the key.
 > 7. Settings page (\`/pointery\`): \`init\` already dropped a starter
@@ -325,7 +360,8 @@ keyless mode). Re-run whenever your UI changes.
 >    shows system status (ask health, brain, context validity) and the
 >    context table. It loads
 >    \`pointery.config.json\` via GET only (PUT stays dev-only and refuses
->    in production — edit the file directly and redeploy). Personalize it
+>    in production — edit the file directly and redeploy; PUT validates with the
+>    same rules as \`config --validate\`). Personalize it
 >    on first run from the files you just wrote:
 >    status probe must use real queries from the
 >    context (a flow title, an entry label — never the "export"
@@ -363,6 +399,7 @@ const AGENTS_BLOCK = `${AGENTS_START} — do not remove; \`npx pointery init --f
 - \`pointery.context.json\` is the index of stable UI anchors (\`/api/ask\` sends the top-ranked slice as system context in an OpenAI-compatible \`{ model, messages }\` call to our own model). Keep it small and current: max ~40 entries, ~10 flows, allowlisted actions only.
 - Whenever you add, move, rename, or remove a user-facing control or route: update its \`data-pointery="kebab-id"\` in code AND its entry in \`pointery.context.json\` (label + purpose; \`confirm: true\` for destructive actions). Keep ids stable; never invent selectors — only ids present in the rendered DOM.
 - After any UI change, run \`npx pointery init --check\` (fails when a flow step points at a missing entry) and fix what it reports.
+- \`pointery.schema.json\` is truth for \`pointery.config.json\` (position: top|center|bottom, animation: fade|slide|scale|none). After any config edit, run \`npx pointery config --validate\`.
 ${AGENTS_END}`;
 
 const SNIPPET = `import { Pointery } from "pointery";
@@ -406,6 +443,13 @@ function upsertAgents() {
   const sep = existing === "" ? "" : existing.endsWith("\n") ? "\n" : "\n\n";
   fs.writeFileSync(p, existing + sep + AGENTS_BLOCK + "\n");
   console.log(existing === "" ? "wrote AGENTS.md" : "wrote AGENTS.md (pointery block appended)");
+}
+
+if (cmd === "config" && args[1] === "--validate") {
+  const cfg = readConfig(cwd);
+  const errs = validateConfigJson(cfg);
+  console.log(errs.length ? "config invalid:\n- " + errs.join("\n- ") : "config ok");
+  process.exit(errs.length ? 1 : 0);
 }
 
 if (cmd === "init") {
@@ -454,10 +498,11 @@ if (cmd === "init") {
       if (p.guide && !_flows.has(p.guide)) problems.push(`pins[${i}] (${p.match || "?"}): guide "${p.guide}" matches no flow`);
       if (p.go && ![..._pages].includes(p.go)) problems.push(`pins[${i}] (${p.match || "?"}): go "${p.go}" matches no entry page`);
     });
+    for (const e of validateConfigJson(readConfig(cwd))) problems.push("config: " + e);
     console.log(problems.length ? "\ncheck failed:\n- " + problems.join("\n- ") : "\ncheck ok");
     process.exit(problems.length ? 1 : 0);
   }
 } else {
-  console.log("Usage: npx pointery init [--force] [--check]");
+  console.log("Usage: npx pointery init [--force] [--check] | npx pointery config --validate");
   process.exit(cmd ? 1 : 0);
 }

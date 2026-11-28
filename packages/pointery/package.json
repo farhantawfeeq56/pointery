@@ -23,11 +23,13 @@
       "types": "./dist/validate.d.ts",
       "default": "./dist/validate.js"
     },
+    "./schema.json": "./schema.json",
     "./styles.css": "./src/styles.css",
     "./package.json": "./package.json"
   },
   "files": [
     "dist",
+    "schema.json",
     "src/styles.css",
     "fonts",
     "bin",

@@ -463,3 +463,14 @@ Config gaps 1-5: labels/timing/fab/hiddenRoutes/theme/brain all configurable via
 - `app/api/ask/route.ts` — reads `brain {retrieve,limits,cache,llm}` from pointery.config.json.
 - `pointery.config.json` + `bin/pointery.js` STARTER_CONFIG — new defaults shipped.
 - `kit:build` + lint + full `build` clean.
+
+## Pass 65 (feat/basic-changes, 2026-11-28)
+Config discoverability: schema is truth, validated everywhere.
+
+- `packages/pointery/schema.json` (new, shipped in `files` + `exports`) — full `pointery.config.json` reference with enums (position top|center|bottom, animation fade|slide|scale|none). Editors get autocomplete via the `$schema` key `init` writes; agents read one file.
+- `src/validate.ts` — new `validateConfig()` (unknown keys, bad enums, non-number timing/zIndex/width/blur + brain numbers); exported from index. Zero deps.
+- `bin/pointery.js` — `config --validate` command; `init --check` also validates config; STARTER `$schema`; prompt step 5/7 + AGENTS block say "schema is truth".
+- Root `POINTERY_PROMPT.md` + `AGENTS.md` pointery block — same schema lines (kept in sync with CLI strings).
+- `app/api/admin/config/route.ts` (+ starter route) — PUT validates, 400 with reasons instead of silent save.
+- `pointery.config.json` — `$schema` pointer added.
+- Verified: `config --validate` ok, bad config fails 3 ways (exit 1), `init --check` ok, `kit:build` + lint + full `build` clean.

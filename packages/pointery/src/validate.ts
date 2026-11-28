@@ -56,3 +56,64 @@ export function validateContext(ctx: PointeryContext): string[] {
 
   return errors;
 }
+
+/** Allowed top-level keys of `pointery.config.json` (`$schema` is ignored). Mirrors schema.json. */
+const CONFIG_KEYS = new Set([
+  "$schema", "trigger", "theme", "cssVars", "zIndex", "paletteWidth", "overlayBlur",
+  "fab", "hiddenRoutes", "timing", "position", "animation", "suggestions",
+  "allowActions", "labels", "endpoint", "brain",
+]);
+
+/**
+ * Check a `pointery.config.json` for unknown keys, wrong types and bad enums
+ * (e.g. `animation: "slid"`). Returns human-readable errors (empty = valid).
+ * Used by `npx pointery config --validate`, `init --check` and the admin PUT route.
+ */
+export function validateConfig(cfg: unknown): string[] {
+  const errors: string[] = [];
+  if (!cfg || typeof cfg !== "object" || Array.isArray(cfg)) return ["config must be a JSON object"];
+  const c = cfg as Record<string, unknown>;
+  for (const k of Object.keys(c)) if (!CONFIG_KEYS.has(k)) errors.push(`unknown key "${k}" — see schema.json`);
+  if (c.position !== undefined && !["top", "center", "bottom"].includes(c.position as string))
+    errors.push(`position must be one of top|center|bottom (got ${JSON.stringify(c.position)})`);
+  if (c.animation !== undefined && !["fade", "slide", "scale", "none"].includes(c.animation as string))
+    errors.push(`animation must be one of fade|slide|scale|none (got ${JSON.stringify(c.animation)})`);
+  // shortcut: numbers that arrive as strings ("14px") silently break CSS vars — flag them.
+  for (const k of ["zIndex", "paletteWidth", "overlayBlur"]) {
+    const v = (c[k] as unknown);
+    if (v !== undefined && typeof v !== "number") errors.push(`${k} must be a number (got ${JSON.stringify(v)})`);
+  }
+  const numObj = (key: string, fields: string[]) => {
+    const v = c[key];
+    if (v === undefined) return;
+    if (!v || typeof v !== "object" || Array.isArray(v)) { errors.push(`${key} must be an object`); return; }
+    for (const f of fields) {
+      const n = (v as Record<string, unknown>)[f];
+      if (n !== undefined && typeof n !== "number") errors.push(`${key}.${f} must be a number (got ${JSON.stringify(n)})`);
+    }
+  };
+  numObj("timing", ["toastMs", "pulseMs", "closeMs", "focusMs", "navigateMs", "navigateIdleMs"]);
+  const brain = c.brain;
+  if (brain !== undefined) {
+    if (!brain || typeof brain !== "object" || Array.isArray(brain)) errors.push("brain must be an object");
+    else {
+      const b = brain as Record<string, unknown>;
+      for (const k of Object.keys(b)) if (!["retrieve", "limits", "cache", "llm"].includes(k)) errors.push(`brain: unknown key "${k}"`);
+      numObj("brain.retrieve", []);
+      const sub = (sk: string, fields: string[]) => {
+        const v = b[sk];
+        if (v === undefined) return;
+        if (!v || typeof v !== "object" || Array.isArray(v)) { errors.push(`brain.${sk} must be an object`); return; }
+        for (const f of fields) {
+          const n = (v as Record<string, unknown>)[f];
+          if (n !== undefined && typeof n !== "number") errors.push(`brain.${sk}.${f} must be a number (got ${JSON.stringify(n)})`);
+        }
+      };
+      sub("retrieve", ["entries", "flows", "actions"]);
+      sub("limits", ["queryMax", "planMax"]);
+      sub("cache", ["ttlMs", "max"]);
+      sub("llm", ["temperature", "maxTokens"]);
+    }
+  }
+  return errors;
+}

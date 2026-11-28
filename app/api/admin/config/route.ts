@@ -28,6 +28,11 @@ export async function PUT(req: Request) {
   if (!config || typeof config !== "object" || Array.isArray(config)) {
     return Response.json({ error: "Config must be a JSON object" }, { status: 400 });
   }
+  const { validateConfig } = await import("pointery");
+  const configErrors = validateConfig(config);
+  if (configErrors.length) {
+    return Response.json({ error: configErrors.join("; ") }, { status: 400 });
+  }
   await fs.writeFile(FILE, JSON.stringify(config, null, 2) + "\n", "utf8");
   return Response.json({ ok: true });
 }

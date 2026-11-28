@@ -48,7 +48,10 @@ keyless mode). Re-run whenever your UI changes.
 > 4. Keep it small: max ~40 entries, ~10 flows, only allowlisted actions.
 >    Delete stale ids for removed UI.
 > 5. Run `npx pointery init --check` and fix whatever it reports (guide step
->    pointing at a missing target or wrong page, live `$` data baked into the map).
+>    pointing at a missing target or wrong page, live `$` data baked into the map,
+>    or config errors — unknown keys, bad enums). `pointery.schema.json` is truth
+>    for `pointery.config.json`: position is top|center|bottom, animation is
+>    fade|slide|scale|none. Run `npx pointery config --validate` after any config edit.
 > 6. Brain (my key, my bill, required — one step): walk me through it — add `POINTERY_LLM_URL` (my model endpoint: OpenAI-compatible chat-completions URL, or native Anthropic `…/v1/messages` / Gemini `…:generateContent` — auto-detected), `POINTERY_LLM_KEY`, AND `POINTERY_LLM_MODEL` (exact model id as the provider spells it: `gpt-4o-mini`, `claude-3-5-haiku-latest`, `gemini-2-flash`, …) to `.env.local` together, restart dev, and
 >    verify with “where is export?”. Without all three, `/api/ask` fails closed (503). OpenAI defaults the model to `gpt-4o-mini` when unset; every other provider needs it. Never print or commit the key.
 > 7. Settings page (`/pointery`): `init` already dropped a starter
@@ -58,7 +61,8 @@ keyless mode). Re-run whenever your UI changes.
 >    shows system status (ask health, brain, context validity) and the
 >    context table. It loads
 >    `pointery.config.json` via GET only (PUT stays dev-only and refuses
->    in production — edit the file directly and redeploy). Personalize it
+>    in production — edit the file directly and redeploy; PUT validates with the
+>    same rules as `config --validate`). Personalize it
 >    on first run from the files you just wrote:
 >    status probe must use real queries from the
 >    context (a flow title, an entry label — never the "export"

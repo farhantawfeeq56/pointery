@@ -1,4 +1,5 @@
 {
+  "$schema": "./node_modules/pointery/schema.json",
   "trigger": "ctrl+k",
   "theme": {
     "primary": "#00A878",

@@ -2,7 +2,7 @@ export { default as Pointery, pulse } from "./Pointery.js";
 export { resolveQuery, resolveCombo, retrieveCandidates, buildGuide, buildPlan, splitClauses, getSuggestions, matchPin } from "./resolver.js";
 export type { RetrieveOptions } from "./resolver.js";
 export { createAskHandler } from "./server.js";
-export { validateContext } from "./validate.js";
+export { validateContext, validateConfig } from "./validate.js";
 export type {
   PointeryProps, PointeryTiming,
   PointeryResult,
