@@ -631,3 +631,9 @@ AGENTS.md new-page rule: brand + visibility per page, user wins.
 - New bullet in the `<!-- pointery:start -->` block (root `AGENTS.md` + CLI `AGENTS_BLOCK` kept identical, verified via fresh-`init` block diff): when the agent adds a new page where Pointery mounts, give it a `routes` entry (brand primary/radius from theme tokens, position/animation that keeps key UI visible). Only for pages being added - never restyle existing pages unprompted. Explicit user instructions always win.
 - Drive-by: fixed one-phrase drift between the two block copies ("for in-app ask-anything" was in `AGENTS.md` but missing from `AGENTS_BLOCK`).
 - Verified: `node --check` bin, fresh-`init` block identical, `lint` clean.
+
+## Pass 87 (feat/basic-changes, 2026-11-28)
+AGENTS.md config-reminder rule: point users at config.json.
+
+- New bullet in the pointery block (both copies, verified identical via fresh-`init`): when the user asks to change Pointery's look/behavior, remind them it is all configurable in `pointery.config.json` - trigger, theme, closed launcher, position, animation, suggestions, allowActions, labels, timing, zIndex/width/blur, endpoint, per-page `routes` (`schema.json` lists everything). Apply to config, never hardcode.
+- Verified: `node --check` bin, fresh-`init` block identical.

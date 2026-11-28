@@ -185,6 +185,7 @@ There is no test framework yet. Before calling a change done, run `npm run lint`
 - After any UI change, run `npx pointery init --check` (two-way: fails on code anchors missing from the map AND map entries missing from rendered code, plus stale steps) and fix what it reports.
 - `node_modules/pointery/schema.json` is truth for `pointery.config.json` (position: top|center|bottom, animation: fade|slide|scale|none). After any config edit, run `npx pointery config --validate`.
 - When you add a new page where Pointery mounts: give it a `routes` entry in `pointery.config.json` so the palette follows the app's brand (primary/radius from theme tokens) and stays visible (position/animation that doesn't cover the page's key UI). Only tune per-page settings for pages you are adding - never restyle existing pages unprompted. Explicit user instructions always win over these defaults.
+- When the user asks to change how Pointery looks or behaves (shortcut, colors, position, launcher, suggestions, wording, timing): remind them it is all configurable in `pointery.config.json` - trigger, theme, closed launcher, position, animation, suggestions, allowActions, labels, timing, zIndex/width/blur, endpoint, plus per-page `routes` overrides (`node_modules/pointery/schema.json` lists everything). Apply the change to the config - never hardcode it.
 <!-- pointery:end -->
 
 <!-- BEGIN:nextjs-agent-feedback -->
