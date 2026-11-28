@@ -40,7 +40,7 @@ const STARTER_CONFIG = {
 };
 
 // Minimal GET+PUT for pointery.config.json (disk is truth). The /pointery
-// settings page reads via GET and auto-saves via PUT.
+// settings page reads via GET; PUT remains for direct edits (dev-only, refuses in production).
 const STARTER_ADMIN_CONFIG_ROUTE = `import { promises as fs } from "fs";
 import path from "path";
 
@@ -76,14 +76,12 @@ export async function PUT(req: Request) {
 }
 `;
 
-// Starter SaaS settings page. Same contract as the harness /pointery page:
-// loads config via GET, auto-saves via PUT (debounced) + Save button,
-// applies theme vars live, dispatches pointery:config so the mounted
-// <Pointery/> (wrapper listens) updates without reload. Degrades gracefully
-// when /api/admin/context or /api/admin/llm are absent.
+// Starter settings page. Same contract as the harness /pointery page:
+// read-only status + context table + mount snippet, config via GET.
+// Degrades gracefully when /api/admin/context or /api/admin/llm are absent.
 const STARTER_SETTINGS_PAGE = `"use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { notFound } from "next/navigation";
 import type { PointeryContext } from "pointery";
 
@@ -104,215 +102,17 @@ const DEFAULTS: Config = {
   allowActions: [],
 };
 
-type SaveState = "idle" | "saving" | "saved" | "error";
-
 const ENV_SNIPPET = "POINTERY_LLM_URL=https://api.openai.com/v1/chat/completions\\nPOINTERY_LLM_KEY=sk-...\\nPOINTERY_LLM_MODEL=gpt-4o-mini";
-
-const normalizeHex = (v: string) => {
-  const t = v.trim().replace(/^#/, "");
-  return /^[0-9a-fA-F]{6}$/.test(t) ? ("#" + t.toUpperCase()) : null;
-};
-
-const hexToHsv = (hex: string) => {
-  const n = parseInt(hex.slice(1), 16);
-  const r = ((n >> 16) & 255) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255;
-  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
-  const raw = d === 0 ? 0 : max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
-  return { h: (raw * 60 + 360) % 360, s: max === 0 ? 0 : (d / max) * 100, v: max * 100 };
-};
-
-const hsvToHex = (h: number, s: number, v: number) => {
-  s /= 100;
-  v /= 100;
-  const k = (n: number) => (n + h / 60) % 6;
-  const f = (n: number) => v - v * s * Math.max(0, Math.min(k(n), 4 - k(n), 1));
-  const to = (x: number) => Math.round(x * 255).toString(16).padStart(2, "0");
-  return ("#" + to(f(5)) + to(f(3)) + to(f(1))).toUpperCase();
-};
-
-const HUE_BAR = "linear-gradient(to right,hsl(0,100%,50%),hsl(60,100%,50%),hsl(120,100%,50%),hsl(180,100%,50%),hsl(240,100%,50%),hsl(300,100%,50%),hsl(360,100%,50%))";
-
-function ColorPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const [open, setOpen] = useState(false);
-  const [draft, setDraft] = useState(value);
-  const boxRef = useRef<HTMLDivElement>(null);
-  const current = normalizeHex(value) ?? "#00A878";
-  const { h, s, v } = hexToHsv(current);
-  // Fully custom picker: shade square + hue bar + hex field. No native <input type="color" /> anywhere.
-  const pick = (hex: string) => {
-    onChange(hex);
-    setDraft(hex);
-  };
-  const shadeFromPointer = (e: React.PointerEvent<HTMLDivElement>) => {
-    const r = e.currentTarget.getBoundingClientRect();
-    const ns = Math.min(100, Math.max(0, ((e.clientX - r.left) / r.width) * 100));
-    const nv = Math.min(100, Math.max(0, 100 - ((e.clientY - r.top) / r.height) * 100));
-    pick(hsvToHex(h, ns, nv));
-  };
-  const hueFromPointer = (e: React.PointerEvent<HTMLDivElement>) => {
-    const r = e.currentTarget.getBoundingClientRect();
-    const nh = Math.min(360, Math.max(0, ((e.clientX - r.left) / r.width) * 360));
-    pick(hsvToHex(nh, s, v));
-  };
-  const grab = (e: React.PointerEvent<HTMLDivElement>, fn: (e: React.PointerEvent<HTMLDivElement>) => void) => {
-    e.currentTarget.setPointerCapture?.(e.pointerId);
-    fn(e);
-  };
-  const move = (e: React.PointerEvent<HTMLDivElement>, fn: (e: React.PointerEvent<HTMLDivElement>) => void) => {
-    if (e.buttons) fn(e);
-  };
-  useEffect(() => {
-    if (!open) return;
-    const onDoc = (e: MouseEvent) => {
-      if (boxRef.current && !boxRef.current.contains(e.target as Node)) setOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("mousedown", onDoc);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDoc);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open ]);
-  const commit = (raw: string) => {
-    const hex = normalizeHex(raw);
-    if (hex) pick(hex);
-    else setDraft(value);
-  };
-  return (
-    <div ref={boxRef} className="relative w-56 max-w-full">
-      <button
-        type="button"
-        onClick={() => { if (!open) setDraft(value); setOpen((o) => !o); }}
-        aria-expanded={open}
-        aria-label="Pick primary color"
-        className="py-press relative flex h-full w-full items-center gap-2 rounded-[14px] border border-zinc-200 px-2.5 py-1.5 text-left hover:border-zinc-400"
-      >
-        <span className="h-8 w-8 shrink-0 rounded-lg border border-black/10 shadow-sm" style={{ background: value }} />
-        <span className="min-w-0 flex-1">
-          <span className="block text-xs text-zinc-500">Primary color</span>
-          <code className="block truncate font-mono text-sm font-medium">{value}</code>
-        </span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={\`shrink-0 text-zinc-400 transition \${open ? "rotate-180" : ""}\`}><path d="m6 9 6 6 6-6" /></svg>
-      </button>
-      {open && (
-        <div className="py-pop absolute z-20 mt-2 w-60 rounded-[14px] border border-zinc-200 bg-white p-3 shadow-lg">
-          <div
-            role="slider"
-            tabIndex={0}
-            aria-label="Shade"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={Math.round(v)}
-            aria-valuetext={current}
-            onPointerDown={(e) => grab(e, shadeFromPointer)}
-            onPointerMove={(e) => move(e, shadeFromPointer)}
-            onKeyDown={(e) => {
-              const step = 4;
-              if (e.key === "ArrowLeft") pick(hsvToHex(h, Math.max(0, s - step), v));
-              else if (e.key === "ArrowRight") pick(hsvToHex(h, Math.min(100, s + step), v));
-              else if (e.key === "ArrowUp") pick(hsvToHex(h, s, Math.min(100, v + step)));
-              else if (e.key === "ArrowDown") pick(hsvToHex(h, s, Math.max(0, v - step)));
-              else return;
-              e.preventDefault();
-            }}
-            className="relative h-36 w-full cursor-crosshair touch-none rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2"
-            style={{ backgroundColor: \`hsl(\${Math.round(h)},100%,50%)\` }}
-          >
-            <div className="absolute inset-0 rounded-lg" style={{ background: "linear-gradient(to right,#fff,transparent)" }} />
-            <div className="absolute inset-0 rounded-lg" style={{ background: "linear-gradient(to top,#000,transparent)" }} />
-            <span
-              className="absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-md"
-              style={{ left: \`\${s}%\`, top: \`\${100 - v}%\`, background: current }}
-            />
-          </div>
-          <div
-            role="slider"
-            tabIndex={0}
-            aria-label="Hue"
-            aria-valuemin={0}
-            aria-valuemax={360}
-            aria-valuenow={Math.round(h)}
-            onPointerDown={(e) => grab(e, hueFromPointer)}
-            onPointerMove={(e) => move(e, hueFromPointer)}
-            onKeyDown={(e) => {
-              if (e.key === "ArrowLeft") pick(hsvToHex((h + 355) % 360, s, v));
-              else if (e.key === "ArrowRight") pick(hsvToHex((h + 5) % 360, s, v));
-              else return;
-              e.preventDefault();
-            }}
-            className="relative mt-2 h-2.5 w-full cursor-pointer touch-none rounded-full outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2"
-            style={{ background: HUE_BAR }}
-          >
-            <span
-              className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-md"
-              style={{ left: \`\${(h / 360) * 100}%\`, background: \`hsl(\${Math.round(h)},100%,50%)\` }}
-            />
-          </div>
-          <div className="mt-3 flex items-center gap-2">
-            <span className="flex flex-1 items-center rounded-lg border border-zinc-200 px-2 py-1 font-mono text-xs focus-within:border-zinc-900">
-              <span className="text-zinc-400">#</span>
-              <input
-                value={draft.replace(/^#/, "")}
-                onChange={(e) => setDraft("#" + e.target.value)}
-                onBlur={() => commit(draft)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") commit(draft);
-                }}
-                maxLength={6}
-                spellCheck={false}
-                aria-label="Hex color code"
-                className="w-full bg-transparent uppercase outline-none"
-              />
-            </span>
-            <span className="h-8 w-8 shrink-0 rounded-lg border border-black/10" style={{ background: normalizeHex(draft) ?? value }} />
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function RadiusSlider({ value, primary, onChange }: { value: number; primary: string; onChange: (v: number) => void }) {
-  const pct = ((value - 4) / (24 - 4)) * 100;
-  return (
-    <div className="w-56 max-w-full rounded-[14px] border border-zinc-200 px-2.5 py-1.5">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-xs text-zinc-500">Corner radius</p>
-        <span className="py-inset rounded-full px-2.5 py-0.5 font-mono text-xs font-medium text-zinc-700">{value}px</span>
-      </div>
-      <input
-        type="range"
-        min={4}
-        max={24}
-        step={1}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        aria-label="Corner radius"
-        className="py-slider mt-3 w-full"
-        style={{ ["--pct" as string]: \`\${pct}%\`, ["--fill" as string]: primary }}
-      />
-    </div>
-  );
-}
 
 export default function PointerySettingsPage() {
   const [cfg, setCfg] = useState<Config>(DEFAULTS);
   const [loaded, setLoaded] = useState(false);
-  const [saveState, setSaveState] = useState<SaveState>("idle");
-  const [recording, setRecording] = useState(false);
-  const [recordingPreview, setRecordingPreview] = useState<string | null>(null);
   const [askOk, setAskOk] = useState<boolean | null>(null);
   const [ctx, setCtx] = useState<PointeryContext | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [llm, setLlm] = useState<{ configured: boolean; host: string; model: string } | null>(null);
-  const [preview, setPreview] = useState<"closed" | "open">("open");
   const [copied, setCopied] = useState(false);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const firstRun = useRef(true);
 
   // Disk is truth: load pointery.config.json + context summary on mount.
   useEffect(() => {
@@ -343,80 +143,6 @@ export default function PointerySettingsPage() {
       .then((d) => d && setLlm(d))
       .catch(() => {});
   }, []);
-
-  const prettyShortcut = (t: string) =>
-    t.split("+").map((p) => (p === "cmd" ? "⌘" : p === "ctrl" ? "Ctrl" : p === "alt" ? "Alt" : p === "shift" ? "Shift" : p.length === 1 ? p.toUpperCase() : p)).join(" + ");
-
-  // Custom shortcut recorder: display updates live; next full combo (not bare modifiers) becomes the trigger.
-  useEffect(() => {
-    if (!recording) return;
-    const onKey = (e: KeyboardEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (e.key === "Escape") { setRecording(false); setRecordingPreview(null); return; }
-      const parts: string[] = [];
-      if (e.ctrlKey || e.metaKey) parts.push(e.metaKey ? "cmd" : "ctrl");
-      if (e.altKey) parts.push("alt");
-      if (e.shiftKey) parts.push("shift");
-      if (["Control", "Shift", "Alt", "Meta"].includes(e.key)) {
-        setRecordingPreview(parts.length ? parts.join("+") + "+…" : "…");
-        return; // wait for the full combo
-      }
-      parts.push(e.key.toLowerCase() === " " ? "space" : e.key.toLowerCase());
-      setCfg((c) => ({ ...c, trigger: parts.join("+") }));
-      setRecording(false);
-      setRecordingPreview(null);
-    };
-    window.addEventListener("keydown", onKey, true);
-    return () => window.removeEventListener("keydown", onKey, true);
-  }, [recording]);
-
-  // Live: apply theme vars + notify the mounted <Pointery/> instantly.
-  const broadcast = useCallback((next: Config) => {
-    document.documentElement.style.setProperty("--pointery-primary", next.theme.primary);
-    document.documentElement.style.setProperty("--pointery-radius", \`\${next.theme.radius}px\`);
-    window.dispatchEvent(new CustomEvent("pointery:config", { detail: next }));
-  }, []);
-
-  // Auto-save to disk (debounced) on every edit after initial load.
-  useEffect(() => {
-    if (!loaded || firstRun.current) {
-      if (loaded) firstRun.current = false;
-      return;
-    }
-    broadcast(cfg);
-    setSaveState("saving");
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(async () => {
-      try {
-        const r = await fetch("/api/admin/config", {
-          method: "PUT",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ config: cfg }),
-        });
-        setSaveState(r.ok ? "saved" : "error");
-      } catch {
-        setSaveState("error");
-      }
-    }, 700);
-    return () => {
-      if (saveTimer.current) clearTimeout(saveTimer.current);
-    };
-  }, [cfg, loaded, broadcast]);
-
-  const saveNow = useCallback(async () => {
-    setSaveState("saving");
-    try {
-      const r = await fetch("/api/admin/config", {
-        method: "PUT",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ config: cfg }),
-      });
-      setSaveState(r.ok ? "saved" : "error");
-    } catch {
-      setSaveState("error");
-    }
-  }, [cfg]);
 
   // Dev-only: writes to disk with no login, so it never renders in production.
   if (process.env.NODE_ENV === "production") notFound();
@@ -481,64 +207,34 @@ export default function PointerySettingsPage() {
         .py-ok::before { background: var(--color-success); }
         .py-warn::before { background: var(--color-warning); }
         .py-err::before { background: var(--color-error); }
-        .py-inset { background: var(--color-background-secondary); color: var(--color-text-secondary); border-color: var(--color-border); }
         .py-code { background: var(--color-background-secondary); border: 1px solid var(--color-border); color: var(--color-text-primary); }
-        .py-save { background: var(--color-action-primary); color: #fff; }
-        .py-save:hover { background: var(--color-action-primary-hover); }
-        input.py-slider { -webkit-appearance: none; appearance: none; height: 8px; border-radius: 999px; outline: none;
-          background: linear-gradient(to right, var(--fill, #00A878) 0%, var(--fill, #00A878) var(--pct, 50%), var(--color-border) var(--pct, 50%), var(--color-border) 100%); }
-        input.py-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; height: 20px; width: 20px; border-radius: 999px;
-          background: #fff; border: 2px solid var(--fill, #00A878); box-shadow: var(--shadow-md); cursor: pointer; }
-        input.py-slider::-moz-range-thumb { height: 20px; width: 20px; border-radius: 999px;
-          background: #fff; border: 2px solid var(--fill, #00A878); box-shadow: var(--shadow-md); cursor: pointer; }
-        input.py-slider::-moz-range-track { height: 8px; border-radius: 999px; background: var(--color-border); }
-        input.py-slider::-moz-range-progress { height: 8px; border-radius: 999px; background: var(--fill, #00A878); }
-        input.py-slider:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--color-border-focus); outline-offset: 2px; }
         /* ---- interior.dev motion system: ease, press, crossfade, pop, sheet ---- */
         .pointery-settings { --py-ease: cubic-bezier(0.23, 1, 0.32, 1); }
         .py-press { transition: transform 150ms var(--py-ease), background-color 150ms var(--py-ease), border-color 150ms var(--py-ease), box-shadow 150ms var(--py-ease), color 150ms var(--py-ease); touch-action: manipulation; }
         .py-press:active { transform: translateY(1px) scale(0.98); }
-        .py-field { transition: border-color 150ms var(--py-ease), box-shadow 150ms var(--py-ease); }
-        .py-field:focus-within, .py-field:focus-visible { border-color: var(--color-border-focus); box-shadow: 0 1px 2px rgba(11,5,0,0.08), 0 0 0 3px color-mix(in srgb, var(--color-border-focus) 18%, transparent); outline: none; }
         @keyframes py-enter { from { opacity: 0; transform: translateY(8px); filter: blur(4px); } to { opacity: 1; transform: none; filter: blur(0); } }
         .py-enter { animation: py-enter 480ms var(--py-ease) both; }
         @keyframes py-swap-in { from { opacity: 0; transform: translateY(3px); filter: blur(3px); } to { opacity: 1; transform: none; filter: blur(0); } }
         .py-swap { display: inline-block; animation: py-swap-in 220ms var(--py-ease); }
-        @keyframes py-pop-in { from { opacity: 0; transform: scale(0.96) translateY(-4px); filter: blur(3px); } to { opacity: 1; transform: none; filter: blur(0); } }
-        .py-pop { animation: py-pop-in 180ms var(--py-ease); transform-origin: top center; }
-        @keyframes py-sheet-in { from { opacity: 0; transform: translateY(8px) scale(0.98); filter: blur(3px); } to { opacity: 1; transform: none; filter: blur(0); } }
-        .py-sheet { animation: py-sheet-in 240ms var(--py-ease); }
-        @keyframes py-fade-in { from { opacity: 0; } to { opacity: 1; } }
-        .py-fade { animation: py-fade-in 180ms var(--py-ease); }
-        .py-thumb { transition: transform 220ms var(--py-ease); }
         .py-stack { display: grid; }
         .py-stack > * { grid-area: 1 / 1; }
-        @keyframes py-spin { to { transform: rotate(360deg); } }
-        .py-spin { animation: py-spin 0.85s linear infinite; }
         @media (prefers-reduced-motion: reduce) {
-          .py-enter, .py-swap, .py-pop, .py-sheet, .py-fade { animation-duration: 0ms; }
+          .py-enter, .py-swap { animation-duration: 0ms; }
           .py-press:active { transform: none; }
-          .py-thumb { transition: none; }
         }
       \`}</style>
     <div className="pointery-settings w-full flex-1">
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-10">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="py-enter">
-          <h1 className="text-2xl font-medium tracking-tight">Pointery Settings</h1>
+        <div>
+          <h1 className="text-2xl font-medium tracking-tight">Pointery status</h1>
           <p className="text-sm text-zinc-500">
-            Auto saves to <code className="font-mono">pointery.config.json</code> and updates the palette live.
+            Customize with <code className="font-mono">{"<Pointery/>"}</code> props in your layout — this page shows status and the snippet.
           </p>
         </div>
-        <span
-          data-pointery="pointery-settings-save"
-          className={\`rounded-full px-3 py-1 text-xs font-medium \${saveState === "saved" ? "py-ok" : saveState === "saving" ? "py-warn" : saveState === "error" ? "py-err" : "py-idle"}\`}
-        >
-          <span key={saveState} className="py-swap">{saveState === "saved" ? "Saved ✓" : saveState === "saving" ? "Saving…" : saveState === "error" ? "Save failed" : "Auto-save on"}</span>
-        </span>
       </div>
 
-      <p className="py-enter text-xs font-medium uppercase tracking-wider text-zinc-400" style={{ animationDelay: "60ms" }}>01 - System status</p>
+      <p className="py-enter text-xs font-medium uppercase tracking-wider text-zinc-400" style={{ animationDelay: "60ms" }}>System status</p>
       <div data-pointery="pointery-settings-status" className="py-enter flex flex-wrap gap-2 text-xs" style={{ animationDelay: "110ms" }}>
         <span className={\`rounded-full px-3 py-1 font-medium \${askOk ? "py-ok" : "py-idle"}\`}>
           /api/ask {askOk == null ? "…" : askOk ? "reachable ✓" : "unreachable"}
@@ -566,179 +262,6 @@ export default function PointerySettingsPage() {
           {errors.length > 3 && <li>+{errors.length - 3} more</li>}
         </ul>
       )}
-      <div className="py-enter border-t border-zinc-200 pt-6" style={{ animationDelay: "160ms" }}>
-        <p className="text-xs font-medium uppercase tracking-wider text-zinc-400">02 - Customize and preview</p>
-      </div>
-      <div className="py-enter grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-12" style={{ animationDelay: "210ms" }}>
-        <section data-pointery="pointery-settings-preview" className="self-start lg:order-2 lg:sticky lg:top-6">
-          <div className="flex flex-wrap items-center justify-end gap-3">
-            <div className="py-inset relative flex rounded-2xl p-1 text-sm font-medium" role="tablist" aria-label="Preview state">
-              <span aria-hidden className="py-thumb absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-xl border border-zinc-200 bg-white shadow-sm" style={{ transform: preview === "open" ? "translateX(100%)" : "translateX(0)" }} />
-              {(["closed", "open"] as const).map((s) => (
-                <button
-                  key={s}
-                  role="tab"
-                  aria-selected={preview === s}
-                  onClick={() => setPreview(s)}
-                  className={\`py-press relative z-10 rounded-xl px-3 py-1 capitalize \${preview === s ? "text-zinc-900" : "text-zinc-500 hover:text-zinc-800"}\`}
-                >
-                  {s === "closed" ? "Palette closed" : "Palette open"}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="mt-4 overflow-hidden rounded-[14px] border">
-            <div className="py-inset flex items-center gap-2 border-b px-4 py-2.5">
-              <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
-              <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
-              <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
-              <span className="ml-2 flex-1 truncate rounded-md bg-white px-3 py-1 font-mono text-xs text-zinc-500">yourapp.com/pipeline</span>
-            </div>
-            <div className="relative">
-              <div className="grid min-h-[280px] grid-cols-[110px_1fr]">
-                <div className="border-r bg-white p-3">
-                  <p className="flex items-center gap-2 text-xs font-semibold"><span className="h-4 w-4 rounded" style={{ background: cfg.theme.primary }} />Acme</p>
-                  <div className="mt-3 space-y-2 text-xs">
-                    <p className="rounded px-2 py-1 text-zinc-400">Dashboard</p>
-                    <p className="rounded px-2 py-1 font-medium" style={{ background: "color-mix(in srgb, var(--c) 12%, transparent)", ["--c" as string]: cfg.theme.primary }}><span style={{ color: cfg.theme.primary }}>● </span>Pipeline</p>
-                    <p className="rounded px-2 py-1 text-zinc-400">Contacts</p>
-                    <p className="rounded px-2 py-1 text-zinc-400">Settings</p>
-                  </div>
-                </div>
-                <div className="py-inset p-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold">Pipeline</p>
-                    <div className="flex gap-2">
-                      <span className="rounded-full border bg-white px-2.5 py-1 text-xs font-medium text-zinc-500">Export</span>
-                      <span className="px-2.5 py-1 text-xs font-medium text-white" style={{ background: cfg.theme.primary, borderRadius: cfg.theme.radius }}>+ Add deal</span>
-                    </div>
-                  </div>
-                  <div className="mt-3 space-y-2">
-                    {["Acme Corp · $8,000 · Negotiation", "Globex · $12,400 · Proposal"].map((r) => (
-                      <p key={r} className="rounded-lg border bg-white px-3 py-2 text-xs text-zinc-600">{r}</p>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <span className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center text-base font-semibold text-white shadow-lg" style={{ background: cfg.theme.primary, borderRadius: 999 }} title="Ask Pointery">?</span>
-              {preview === "open" && (
-                <div key={cfg.position} className={\`py-fade absolute inset-0 flex justify-center bg-black/25 px-4 \${cfg.position === "center" ? "items-center" : cfg.position === "bottom" ? "items-end pb-6" : "items-start pt-6"}\`}>
-                  <div className="py-sheet w-full max-w-[360px] bg-white p-2 shadow-2xl" style={{ borderRadius: cfg.theme.radius }} onClick={(e) => e.stopPropagation()}>
-                    <p className="rounded-md border px-3 py-2 text-xs text-zinc-700" style={{ borderRadius: Math.max(4, cfg.theme.radius - 4) }}>{cfg.labels?.placeholder || 'Ask "where is export?"…'}</p>
-                    <div className="flex flex-wrap gap-2 p-2">
-                      {(cfg.suggestions.filter(Boolean).length ? cfg.suggestions.filter(Boolean).slice(0, 3) : ["No suggestions yet — add some above"]).map((s, i) => (
-                        <span key={s + i} className={"rounded-full border px-2.5 py-1 text-xs " + (cfg.suggestions.filter(Boolean).length ? "py-inset" : "text-zinc-400")}>{s}</span>
-                      ))}
-                    </div>
-                    <p className="px-1 pt-1 text-xs text-zinc-400">{prettyShortcut(cfg.trigger)} toggles · ⌘K works too · Esc closes</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-
-        <div className="min-w-0 lg:order-1">
-          <section data-pointery="pointery-settings-shortcut" className="py-6 first:pt-0">
-            <div className="flex flex-wrap gap-4">
-            <div className="w-fit min-w-60 rounded-[14px] border border-zinc-200 px-2.5 py-1.5">
-              <p className="text-xs text-zinc-500">{recording ? "Recording — press keys…" : "Current shortcut"}</p>
-              <div className="mt-1 flex h-8 items-center gap-3">
-              <p className="max-w-48 truncate font-mono text-sm font-medium">{recording ? prettyShortcut(recordingPreview ?? "…") : prettyShortcut(cfg.trigger)}</p>
-              <button
-                onClick={() => { setRecording((r) => !r); setRecordingPreview(null); }}
-                aria-label={recording ? "Stop recording" : "Record new shortcut"}
-                title={recording ? "Stop (Esc)" : "Record new shortcut"}
-                className={recording ? "py-press grid h-8 w-8 shrink-0 place-items-center rounded-full bg-amber-500 text-white" : "py-press grid h-8 w-8 shrink-0 place-items-center rounded-full border border-zinc-200 text-zinc-600 hover:border-zinc-400"}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /></svg>
-              </button>
-              </div>
-            </div>
-            <div className="w-56 max-w-full rounded-[14px] border border-zinc-200 px-2.5 py-1.5">
-                <p id="py-position-label" className="text-xs text-zinc-500">Palette position</p>
-                <div className="relative mt-1.5 flex h-9 items-center gap-1 rounded-lg" role="radiogroup" aria-labelledby="py-position-label">
-                  <span aria-hidden className="py-thumb absolute inset-y-0 left-0 rounded-lg border border-zinc-200 bg-white shadow-sm" style={{ width: "calc(100% / 3)", transform: cfg.position === "top" ? "translateX(0%)" : cfg.position === "center" ? "translateX(100%)" : "translateX(200%)" }} />
-                  {(["top", "center", "bottom"] as const).map((o) => (
-                    <button
-                      key={o}
-                      type="button"
-                      role="radio"
-                      aria-checked={cfg.position === o}
-                      onClick={() => setCfg({ ...cfg, position: o })}
-                      className={cfg.position === o ? "py-press relative z-10 flex-1 rounded-lg px-3 py-1.5 text-xs font-medium text-zinc-900" : "py-press relative z-10 flex-1 rounded-lg px-3 py-1.5 text-xs font-medium text-zinc-500 hover:text-zinc-800"}
-                    >
-                      {o[0].toUpperCase() + o.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section data-pointery="pointery-settings-brand" className="py-6">
-            <div className="flex flex-wrap gap-4">
-              <ColorPicker value={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: v } })} />
-              <RadiusSlider value={cfg.theme.radius} primary={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: v } })} />
-            </div>
-          </section>
-
-                    <section data-pointery="pointery-settings-behavior" className="py-6">
-            <div className="text-sm">
-              <span className="font-medium">Suggestions</span>
-              <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                {(() => { const rows = [...cfg.suggestions]; while (rows.length < 3) rows.push(""); return rows; })().map((s, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <input
-                      value={s}
-                      onChange={(e) => { const v = e.target.value; setCfg((c) => { const next = [...c.suggestions]; while (next.length <= i) next.push(""); next[i] = v; return { ...c, suggestions: next }; }); }}
-                      placeholder={["Where is export?", "How do I invite a teammate?", "Try a third query…", "One more…"][i] ?? ("Suggestion " + (i + 1))}
-                      className="py-field w-full rounded-lg border px-2.5 py-1.5 font-mono text-xs"
-                    />
-                    {i < cfg.suggestions.length && (
-                      <button
-                        onClick={() => setCfg((c) => ({ ...c, suggestions: c.suggestions.filter((_, j) => j !== i) }))}
-                        aria-label={"Remove suggestion " + (i + 1)}
-                        className="py-press shrink-0 rounded-full border border-zinc-200 px-2 py-0.5 text-xs font-medium text-zinc-500 hover:border-zinc-400"
-                      >
-                        −
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-              {cfg.suggestions.length < 4 && (
-                <div className="mt-2">
-                  <button
-                    onClick={() => setCfg((c) => ({ ...c, suggestions: [...c.suggestions, ""].slice(0, 4) }))}
-                    className="py-press rounded-full border border-dashed border-zinc-300 px-2.5 py-0.5 text-xs font-medium text-zinc-500 hover:border-zinc-500"
-                  >
-                    + Add suggestion
-                  </button>
-                </div>
-              )}
-            </div>
-          </section>
-
-          <div className="flex items-center gap-3 py-6">
-            <button onClick={saveNow} disabled={saveState === "saving"} className="py-save py-press w-fit rounded-full px-5 py-2 text-sm font-medium disabled:opacity-70">
-              <span className="py-stack items-center text-center">
-                <span className={saveState === "saving" ? "invisible" : ""}>
-                  <span key={saveState} className="py-swap">{saveState === "saved" ? "Saved ✓" : "Save now"}</span>
-                </span>
-                {saveState === "saving" && (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="py-spin h-3.5 w-3.5" viewBox="0 0 12 12" fill="none" aria-hidden="true"><circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.3" /><path d="M10.5 6A4.5 4.5 0 0 0 6 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
-                    Saving…
-                  </span>
-                )}
-              </span>
-            </button>
-            <p className="text-xs text-zinc-500">Edits auto-save ~1s after you stop typing — no reload needed.</p>
-          </div>
-        </div>
-      </div>
-
       {ctx && (
         <div data-pointery="pointery-settings-context" className="border-t border-zinc-200 pt-8 text-sm">
           <h2 className="text-sm font-medium">Context <span className="font-normal text-zinc-500">(read-only — edit <code className="font-mono">pointery.context.json</code>)</span></h2>
@@ -762,6 +285,8 @@ export default function PointerySettingsPage() {
       )}
 
       <div data-pointery="pointery-settings-snippet" className="py-enter rounded-[14px] border border-zinc-200 bg-white p-5 text-sm text-zinc-800" style={{ animationDelay: "260ms" }}>
+        <h2 className="text-sm font-medium">Install snippet</h2>
+        <p className="mb-3 text-xs text-zinc-500">Paste in your layout and edit the props there — trigger, theme, position, suggestions.</p>
         <pre className="overflow-x-auto font-mono text-sm leading-6 text-zinc-800">{snippet}</pre>
         <button
           onClick={() => { navigator.clipboard.writeText(snippet); setCopied(true); if (copyTimer.current) clearTimeout(copyTimer.current); copyTimer.current = setTimeout(() => setCopied(false), 2000); }}
@@ -837,20 +362,18 @@ keyless mode). Re-run whenever your UI changes.
 >    verify with “where is export?”. Without all three, \`/api/ask\` fails closed (503). OpenAI defaults the model to \`gpt-4o-mini\` when unset; every other provider needs it. Never print or commit the key.
 > 7. Settings page (\`/pointery\`): \`init\` already dropped a starter
 >    (Next: \`app/pointery/page.tsx\` + \`app/api/admin/config/route.ts\`;
->    other stacks: build the equivalent). SaaS-style controls for shortcut
->    (trigger), brand (primary color + radius with live preview), and
->    behavior (position, suggestions, allowActions, palette copy). It loads
->    \`pointery.config.json\` via GET, auto-saves edits via PUT (debounced)
->    plus a Save button (PUT is dev-only and refuses in production — edit the
->    file directly and redeploy), applies theme vars live, and dispatches a
->    \`pointery:config\` CustomEvent with the new config so the mounted
->    \`<Pointery/>\` (whose client wrapper listens for it) updates without
->    reload. Personalize it on first run from the files you just wrote:
->    status probe and example suggestions must use real queries from the
+>    other stacks: build the equivalent). It is read-only by design:
+>    customization lives in the \`<Pointery/>\` props in code, so the page
+>    shows system status (ask health, brain, context validity), the
+>    context table, and the mount snippet to copy. It loads
+>    \`pointery.config.json\` via GET only (PUT stays dev-only and refuses
+>    in production — edit the file directly and redeploy). Personalize it
+>    on first run from the files you just wrote:
+>    status probe must use real queries from the
 >    context (a flow title, an entry label — never the "export"
 >    placeholder if the app has no export), and defaults (trigger, theme,
 >    position, allowActions) must mirror \`pointery.config.json\`. Tag its
->    controls with \`data-pointery\` ids and keep the matching
+>    sections with \`data-pointery\` ids and keep the matching
 >    \`pointery-settings-*\` entries on page \`/pointery\` in sync; re-run step 5.
 >
 > Then show me the wiring diff: mount \`<Pointery/>\` once in \`layout.tsx\`

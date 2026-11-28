@@ -53,20 +53,18 @@ keyless mode). Re-run whenever your UI changes.
 >    verify with “where is export?”. Without all three, `/api/ask` fails closed (503). OpenAI defaults the model to `gpt-4o-mini` when unset; every other provider needs it. Never print or commit the key.
 > 7. Settings page (`/pointery`): `init` already dropped a starter
 >    (Next: `app/pointery/page.tsx` + `app/api/admin/config/route.ts`;
->    other stacks: build the equivalent). SaaS-style controls for shortcut
->    (trigger), brand (primary color + radius with live preview), and
->    behavior (position, suggestions, allowActions, palette copy). It loads
->    `pointery.config.json` via GET, auto-saves edits via PUT (debounced)
->    plus a Save button (PUT is dev-only and refuses in production — edit the
->    file directly and redeploy), applies theme vars live, and dispatches a
->    `pointery:config` CustomEvent with the new config so the mounted
->    `<Pointery/>` (whose client wrapper listens for it) updates without
->    reload. Personalize it on first run from the files you just wrote:
->    status probe and example suggestions must use real queries from the
+>    other stacks: build the equivalent). It is read-only by design:
+>    customization lives in the `<Pointery/>` props in code, so the page
+>    shows system status (ask health, brain, context validity), the
+>    context table, and the mount snippet to copy. It loads
+>    `pointery.config.json` via GET only (PUT stays dev-only and refuses
+>    in production — edit the file directly and redeploy). Personalize it
+>    on first run from the files you just wrote:
+>    status probe must use real queries from the
 >    context (a flow title, an entry label — never the "export"
 >    placeholder if the app has no export), and defaults (trigger, theme,
 >    position, allowActions) must mirror `pointery.config.json`. Tag its
->    controls with `data-pointery` ids and keep the matching
+>    sections with `data-pointery` ids and keep the matching
 >    `pointery-settings-*` entries on page `/pointery` in sync; re-run step 5.
 >
 > Then show me the wiring diff: mount `<Pointery/>` once in `layout.tsx`

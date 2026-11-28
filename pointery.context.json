@@ -86,41 +86,6 @@
       "type": "section"
     },
     {
-      "id": "pointery-settings-shortcut",
-      "page": "/pointery",
-      "label": "Shortcut",
-      "for": "Keyboard trigger for the palette",
-      "type": "section"
-    },
-    {
-      "id": "pointery-settings-brand",
-      "page": "/pointery",
-      "label": "Brand",
-      "for": "Primary color and corner radius",
-      "type": "section"
-    },
-    {
-      "id": "pointery-settings-behavior",
-      "page": "/pointery",
-      "label": "Behavior",
-      "for": "Position, suggestions and actions",
-      "type": "section"
-    },
-    {
-      "id": "pointery-settings-preview",
-      "page": "/pointery",
-      "label": "Preview",
-      "for": "Palette open and closed states in a sample page",
-      "type": "section"
-    },
-    {
-      "id": "pointery-settings-save",
-      "page": "/pointery",
-      "label": "Save",
-      "for": "Writes pointery.config.json to disk",
-      "type": "button"
-    },
-    {
       "id": "pointery-settings-context",
       "page": "/pointery",
       "label": "Context",
