@@ -379,3 +379,9 @@ Shortcut line cleanup per page feedback.
 
 - `app/pointery/page.tsx` — removed the shortcut suggestion pills + "try it now" hint; palette position segmented control moved up onto the shortcut line (hugging flex row with the shortcut card); brand row back to color + radius.
 - Re-synced via `npm run pointery:sync-page`; lint + build clean.
+
+## Pass 52 (feat/basic-changes, 2026-11-28)
+Shortcut line alignment per page feedback.
+
+- `app/pointery/page.tsx` — shortcut + position cards share one anatomy (label on top, fixed `h-8` control row, same padding/radius); record button is now a 32px grid-centered target.
+- Re-synced via `npm run pointery:sync-page`; lint + build clean.

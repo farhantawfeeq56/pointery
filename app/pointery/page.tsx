@@ -529,23 +529,23 @@ export default function PointerySettingsPage() {
         <div className="min-w-0 lg:order-1">
           <section data-pointery="pointery-settings-shortcut" className="py-6 first:pt-0">
             <div className="flex flex-wrap gap-4">
-            <div className="flex w-fit min-w-60 items-center justify-between gap-6 rounded-[14px] border border-zinc-200 px-2.5 py-1.5">
-              <div className="min-w-0">
-                <p className="text-xs text-zinc-500">{recording ? "Recording — press keys…" : "Current shortcut"}</p>
-                <p className="truncate font-mono text-sm font-medium">{recording ? prettyShortcut(recordingPreview ?? "…") : prettyShortcut(cfg.trigger)}</p>
-              </div>
+            <div className="w-fit min-w-60 rounded-[14px] border border-zinc-200 px-2.5 py-1.5">
+              <p className="text-xs text-zinc-500">{recording ? "Recording — press keys…" : "Current shortcut"}</p>
+              <div className="mt-1 flex h-8 items-center gap-3">
+              <p className="max-w-48 truncate font-mono text-sm font-medium">{recording ? prettyShortcut(recordingPreview ?? "…") : prettyShortcut(cfg.trigger)}</p>
               <button
                 onClick={() => { setRecording((r) => !r); setRecordingPreview(null); }}
                 aria-label={recording ? "Stop recording" : "Record new shortcut"}
                 title={recording ? "Stop (Esc)" : "Record new shortcut"}
-                className={recording ? "rounded-full bg-amber-500 p-1.5 text-white" : "rounded-full border border-zinc-200 p-1.5 text-zinc-600 hover:border-zinc-400"}
+                className={recording ? "grid h-8 w-8 shrink-0 place-items-center rounded-full bg-amber-500 text-white" : "grid h-8 w-8 shrink-0 place-items-center rounded-full border border-zinc-200 text-zinc-600 hover:border-zinc-400"}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /></svg>
               </button>
+              </div>
             </div>
             <div className="w-fit min-w-36 rounded-[14px] border border-zinc-200 px-2.5 py-1.5">
                 <p id="py-position-label" className="text-xs text-zinc-500">Palette position</p>
-                <div className="mt-1 flex gap-1" role="radiogroup" aria-labelledby="py-position-label">
+                <div className="mt-1 flex h-8 items-center gap-1" role="radiogroup" aria-labelledby="py-position-label">
                   {(["top", "center", "bottom"] as const).map((o) => (
                     <button
                       key={o}
