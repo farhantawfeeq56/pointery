@@ -487,3 +487,11 @@ Removed the "1" loading-state test hook.
 
 - `app/api/ask/route.ts` — back to direct `export const POST = createAskHandler(...)`; no stall, no wrapper.
 - Verified: `tsc` + `lint` clean.
+
+## Pass 68 (feat/basic-changes, 2026-11-28)
+Guide card final polish (page feedback on /demo/contacts): close ✕ moved from action row to upper-right corner, Back/Next pinned right, width 300px → 260px.
+
+- `packages/pointery/src/Pointery.tsx` — close is now `.pointery-guide-close` as first child of the card (absolute-positioned).
+- `packages/pointery/src/styles.css` — close absolute top-right; title 0.95rem; row `justify-content: flex-end`; guide `width: 260px` + `max-width: calc(100vw - 2.5rem)` (confirm stays 300px).
+- Temp `1-7` palette hooks in `app/api/ask/route.ts` kept for feedback previews (delete before merge).
+- Verified: `kit:build` + `lint` clean.
