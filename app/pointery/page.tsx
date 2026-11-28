@@ -105,17 +105,17 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (v: string)
         onClick={() => { if (!open) setDraft(value); setOpen((o) => !o); }}
         aria-expanded={open}
         aria-label="Pick primary color"
-        className="flex h-full w-full items-center gap-3 rounded-xl border border-zinc-200 px-2.5 py-1.5 text-left hover:border-zinc-400"
+        className="flex h-full w-full items-center gap-2 rounded-[14px] border border-zinc-200 px-2.5 py-1.5 text-left hover:border-zinc-400"
       >
         <span className="h-8 w-8 shrink-0 rounded-lg border border-black/10 shadow-sm" style={{ background: value }} />
         <span className="min-w-0 flex-1">
           <span className="block text-xs text-zinc-500">Primary color</span>
-          <code className="block truncate font-mono text-sm font-semibold">{value}</code>
+          <code className="block truncate font-mono text-sm font-medium">{value}</code>
         </span>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 text-zinc-400 transition ${open ? "rotate-180" : ""}`}><path d="m6 9 6 6 6-6" /></svg>
       </button>
       {open && (
-        <div className="absolute z-20 mt-2 w-60 rounded-xl border border-zinc-200 bg-white p-3 shadow-lg">
+        <div className="absolute z-20 mt-2 w-60 rounded-[14px] border border-zinc-200 bg-white p-3 shadow-lg">
           <div
             role="slider"
             tabIndex={0}
@@ -195,10 +195,10 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (v: string)
 function RadiusSlider({ value, primary, onChange }: { value: number; primary: string; onChange: (v: number) => void }) {
   const pct = ((value - 4) / (24 - 4)) * 100;
   return (
-    <div className="w-56 max-w-full rounded-xl border border-zinc-200 px-2.5 py-1.5">
-      <div className="flex items-center justify-between gap-3">
+    <div className="w-56 max-w-full rounded-[14px] border border-zinc-200 px-2.5 py-1.5">
+      <div className="flex items-center justify-between gap-2">
         <p className="text-xs text-zinc-500">Corner radius</p>
-        <span className="py-inset rounded-full px-2.5 py-0.5 font-mono text-xs font-semibold text-zinc-700">{value}px</span>
+        <span className="py-inset rounded-full px-2.5 py-0.5 font-mono text-xs font-medium text-zinc-700">{value}px</span>
       </div>
       <input
         type="range"
@@ -414,7 +414,7 @@ export default function PointerySettingsPage() {
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-10">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Pointery Settings</h1>
+          <h1 className="text-2xl font-medium tracking-tight">Pointery Settings</h1>
           <p className="text-sm text-zinc-500">
             Auto saves to <code className="font-mono">pointery.config.json</code> and updates the palette live.
           </p>
@@ -427,7 +427,7 @@ export default function PointerySettingsPage() {
         </span>
       </div>
 
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">01 - System status</p>
+      <p className="text-xs font-medium uppercase tracking-wider text-zinc-400">01 - System status</p>
       <div data-pointery="pointery-settings-status" className="flex flex-wrap gap-2 text-xs">
         <span className={`rounded-full px-3 py-1 font-medium ${askOk ? "py-ok" : "py-idle"}`}>
           /api/ask {askOk == null ? "…" : askOk ? "reachable ✓" : "unreachable"}
@@ -442,9 +442,9 @@ export default function PointerySettingsPage() {
       </div>
       {llm && !llm.configured && (
           <div data-pointery="pointery-settings-brain" className="text-xs">
-              <p className="font-semibold" style={{ color: "var(--color-error)" }}>Brain setup needed</p>
+              <p className="font-medium" style={{ color: "var(--color-error)" }}>Brain setup needed</p>
               <p className="mt-1 text-zinc-500">Add all three to <code className="font-mono">.env.local</code> together, then restart. Without all three, /api/ask fails closed (503).</p>
-              <pre className="py-code mt-2 overflow-x-auto rounded-lg p-3 font-mono text-[11px] leading-5">{ENV_SNIPPET}</pre>
+              <pre className="py-code mt-2 overflow-x-auto rounded-lg p-3 font-mono text-xs leading-5">{ENV_SNIPPET}</pre>
             </div>
       )}
       {errors.length > 0 && (
@@ -456,69 +456,69 @@ export default function PointerySettingsPage() {
         </ul>
       )}
       <div className="border-t border-zinc-200 pt-6">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">02 - Customize and preview</p>
+        <p className="text-xs font-medium uppercase tracking-wider text-zinc-400">02 - Customize and preview</p>
       </div>
       <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-12">
         <section data-pointery="pointery-settings-preview" className="self-start lg:order-2 lg:sticky lg:top-6">
           <div className="flex flex-wrap items-center justify-end gap-3">
-            <div className="py-inset flex rounded-full p-1 text-xs font-semibold" role="tablist" aria-label="Preview state">
+            <div className="py-inset flex rounded-2xl p-1 text-sm font-medium" role="tablist" aria-label="Preview state">
               {(["closed", "open"] as const).map((s) => (
                 <button
                   key={s}
                   role="tab"
                   aria-selected={preview === s}
                   onClick={() => setPreview(s)}
-                  className={`rounded-full px-4 py-1.5 capitalize transition ${preview === s ? "bg-zinc-900 text-white shadow" : "text-zinc-500 hover:text-zinc-800"}`}
+                  className={`rounded-xl px-3 py-1 capitalize transition ${preview === s ? "border border-zinc-200 bg-white text-zinc-900 shadow-sm" : "border border-transparent text-zinc-500 hover:text-zinc-800"}`}
                 >
                   {s === "closed" ? "Palette closed" : "Palette open"}
                 </button>
               ))}
             </div>
           </div>
-          <div className="mt-4 overflow-hidden rounded-xl border">
+          <div className="mt-4 overflow-hidden rounded-[14px] border">
             <div className="py-inset flex items-center gap-2 border-b px-4 py-2.5">
               <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
               <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
               <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
-              <span className="ml-2 flex-1 truncate rounded-md bg-white px-3 py-1 font-mono text-[11px] text-zinc-500">yourapp.com/pipeline</span>
+              <span className="ml-2 flex-1 truncate rounded-md bg-white px-3 py-1 font-mono text-xs text-zinc-500">yourapp.com/pipeline</span>
             </div>
             <div className="relative">
               <div className="grid min-h-[280px] grid-cols-[110px_1fr]">
                 <div className="border-r bg-white p-3">
-                  <p className="flex items-center gap-1.5 text-xs font-bold"><span className="h-4 w-4 rounded" style={{ background: cfg.theme.primary }} />Acme</p>
-                  <div className="mt-3 space-y-1 text-[11px]">
+                  <p className="flex items-center gap-2 text-xs font-semibold"><span className="h-4 w-4 rounded" style={{ background: cfg.theme.primary }} />Acme</p>
+                  <div className="mt-3 space-y-2 text-xs">
                     <p className="rounded px-2 py-1 text-zinc-400">Dashboard</p>
-                    <p className="rounded px-2 py-1 font-semibold" style={{ background: "color-mix(in srgb, var(--c) 12%, transparent)", ["--c" as string]: cfg.theme.primary }}><span style={{ color: cfg.theme.primary }}>● </span>Pipeline</p>
+                    <p className="rounded px-2 py-1 font-medium" style={{ background: "color-mix(in srgb, var(--c) 12%, transparent)", ["--c" as string]: cfg.theme.primary }}><span style={{ color: cfg.theme.primary }}>● </span>Pipeline</p>
                     <p className="rounded px-2 py-1 text-zinc-400">Contacts</p>
                     <p className="rounded px-2 py-1 text-zinc-400">Settings</p>
                   </div>
                 </div>
                 <div className="py-inset p-4">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-bold">Pipeline</p>
-                    <div className="flex gap-1.5">
-                      <span className="rounded-full border bg-white px-2.5 py-1 text-[10px] font-medium text-zinc-500">Export</span>
-                      <span className="px-2.5 py-1 text-[10px] font-semibold text-white" style={{ background: cfg.theme.primary, borderRadius: cfg.theme.radius }}>+ Add deal</span>
+                    <p className="text-sm font-semibold">Pipeline</p>
+                    <div className="flex gap-2">
+                      <span className="rounded-full border bg-white px-2.5 py-1 text-xs font-medium text-zinc-500">Export</span>
+                      <span className="px-2.5 py-1 text-xs font-medium text-white" style={{ background: cfg.theme.primary, borderRadius: cfg.theme.radius }}>+ Add deal</span>
                     </div>
                   </div>
-                  <div className="mt-3 space-y-1.5">
+                  <div className="mt-3 space-y-2">
                     {["Acme Corp · $8,000 · Negotiation", "Globex · $12,400 · Proposal"].map((r) => (
-                      <p key={r} className="rounded-lg border bg-white px-3 py-2 text-[11px] text-zinc-600">{r}</p>
+                      <p key={r} className="rounded-lg border bg-white px-3 py-2 text-xs text-zinc-600">{r}</p>
                     ))}
                   </div>
                 </div>
               </div>
-              <span className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center text-base font-bold text-white shadow-lg" style={{ background: cfg.theme.primary, borderRadius: 999 }} title="Ask Pointery">?</span>
+              <span className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center text-base font-semibold text-white shadow-lg" style={{ background: cfg.theme.primary, borderRadius: 999 }} title="Ask Pointery">?</span>
               {preview === "open" && (
                 <div className={`absolute inset-0 flex justify-center bg-black/25 px-4 ${cfg.position === "center" ? "items-center" : cfg.position === "bottom" ? "items-end pb-6" : "items-start pt-6"}`}>
                   <div className="w-full max-w-[360px] bg-white p-2 shadow-2xl" style={{ borderRadius: cfg.theme.radius }} onClick={(e) => e.stopPropagation()}>
                     <p className="rounded-md border px-3 py-2 text-xs text-zinc-700" style={{ borderRadius: Math.max(4, cfg.theme.radius - 4) }}>{cfg.labels?.placeholder || 'Ask "where is export?"…'}</p>
-                    <div className="flex flex-wrap gap-1.5 px-1 pb-1 pt-2">
+                    <div className="flex flex-wrap gap-2 p-2">
                       {(cfg.suggestions.filter(Boolean).length ? cfg.suggestions.filter(Boolean).slice(0, 3) : ["No suggestions yet — add some above"]).map((s, i) => (
-                        <span key={s + i} className={"rounded-full border px-2.5 py-1 text-[10px] " + (cfg.suggestions.filter(Boolean).length ? "py-inset" : "text-zinc-400")}>{s}</span>
+                        <span key={s + i} className={"rounded-full border px-2.5 py-1 text-xs " + (cfg.suggestions.filter(Boolean).length ? "py-inset" : "text-zinc-400")}>{s}</span>
                       ))}
                     </div>
-                    <p className="px-1 pt-1 text-[10px] text-zinc-400">{prettyShortcut(cfg.trigger)} toggles · ⌘K works too · Esc closes</p>
+                    <p className="px-1 pt-1 text-xs text-zinc-400">{prettyShortcut(cfg.trigger)} toggles · ⌘K works too · Esc closes</p>
                   </div>
                 </div>
               )}
@@ -528,10 +528,10 @@ export default function PointerySettingsPage() {
 
         <div className="min-w-0 lg:order-1">
           <section data-pointery="pointery-settings-shortcut" className="py-6 first:pt-0">
-            <div className="flex w-fit min-w-60 items-center justify-between gap-6 rounded-xl border border-zinc-200 px-2.5 py-1.5">
+            <div className="flex w-fit min-w-60 items-center justify-between gap-6 rounded-[14px] border border-zinc-200 px-2.5 py-1.5">
               <div className="min-w-0">
                 <p className="text-xs text-zinc-500">{recording ? "Recording — press keys…" : "Current shortcut"}</p>
-                <p className="truncate font-mono text-sm font-semibold">{recording ? prettyShortcut(recordingPreview ?? "…") : prettyShortcut(cfg.trigger)}</p>
+                <p className="truncate font-mono text-sm font-medium">{recording ? prettyShortcut(recordingPreview ?? "…") : prettyShortcut(cfg.trigger)}</p>
               </div>
               <button
                 onClick={() => { setRecording((r) => !r); setRecordingPreview(null); }}
@@ -548,7 +548,7 @@ export default function PointerySettingsPage() {
                 <button
                   key={v}
                   onClick={() => setCfg({ ...cfg, trigger: v })}
-                  className={cfg.trigger === v && !recording ? "rounded-full border border-zinc-900 bg-zinc-900 px-2.5 py-0.5 font-mono font-semibold text-white" : "rounded-full border border-zinc-200 px-2.5 py-0.5 font-mono text-zinc-600 hover:border-zinc-400"}
+                  className={cfg.trigger === v && !recording ? "rounded-full border border-zinc-200 bg-white px-2.5 py-0.5 font-mono font-medium text-zinc-900 shadow-sm" : "rounded-full border border-transparent px-2.5 py-0.5 font-mono text-zinc-500 hover:text-zinc-800"}
                 >
                   {v === "shift+a" ? "Shift + A" : "⌘/Ctrl + K"}
                 </button>
@@ -562,13 +562,22 @@ export default function PointerySettingsPage() {
             <div className="flex flex-wrap gap-4">
               <ColorPicker value={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: v } })} />
               <RadiusSlider value={cfg.theme.radius} primary={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: v } })} />
-              <div className="w-fit min-w-36 rounded-xl border border-zinc-200 px-2.5 py-1.5">
-                <label htmlFor="py-position" className="block text-xs text-zinc-500">Palette position</label>
-                <select id="py-position" value={cfg.position} onChange={(e) => setCfg({ ...cfg, position: e.target.value as Config["position"] })} className="mt-1 w-full bg-transparent text-sm font-semibold outline-none">
-                  <option value="top">Top</option>
-                  <option value="center">Center</option>
-                  <option value="bottom">Bottom</option>
-                </select>
+              <div className="w-fit min-w-36 rounded-[14px] border border-zinc-200 px-2.5 py-1.5">
+                <p id="py-position-label" className="text-xs text-zinc-500">Palette position</p>
+                <div className="mt-1 flex gap-1" role="radiogroup" aria-labelledby="py-position-label">
+                  {(["top", "center", "bottom"] as const).map((o) => (
+                    <button
+                      key={o}
+                      type="button"
+                      role="radio"
+                      aria-checked={cfg.position === o}
+                      onClick={() => setCfg({ ...cfg, position: o })}
+                      className={cfg.position === o ? "rounded-lg border border-zinc-200 bg-white px-2.5 py-1 text-xs font-medium text-zinc-900 shadow-sm" : "rounded-lg border border-transparent px-2.5 py-1 text-xs font-medium text-zinc-500 hover:text-zinc-800"}
+                    >
+                      {o[0].toUpperCase() + o.slice(1)}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </section>
@@ -589,7 +598,7 @@ export default function PointerySettingsPage() {
                       <button
                         onClick={() => setCfg((c) => ({ ...c, suggestions: c.suggestions.filter((_, j) => j !== i) }))}
                         aria-label={"Remove suggestion " + (i + 1)}
-                        className="shrink-0 rounded-full border border-zinc-200 px-2 py-0.5 text-xs font-semibold text-zinc-500 hover:border-zinc-400"
+                        className="shrink-0 rounded-full border border-zinc-200 px-2 py-0.5 text-xs font-medium text-zinc-500 hover:border-zinc-400"
                       >
                         −
                       </button>
@@ -601,7 +610,7 @@ export default function PointerySettingsPage() {
                 <div className="mt-2">
                   <button
                     onClick={() => setCfg((c) => ({ ...c, suggestions: [...c.suggestions, ""].slice(0, 4) }))}
-                    className="rounded-full border border-dashed border-zinc-300 px-2.5 py-0.5 text-xs font-semibold text-zinc-500 hover:border-zinc-500"
+                    className="rounded-full border border-dashed border-zinc-300 px-2.5 py-0.5 text-xs font-medium text-zinc-500 hover:border-zinc-500"
                   >
                     + Add suggestion
                   </button>
@@ -611,7 +620,7 @@ export default function PointerySettingsPage() {
           </section>
 
           <div className="flex items-center gap-3 py-6">
-            <button onClick={saveNow} className="py-save w-fit rounded-full px-5 py-2 text-sm font-semibold">
+            <button onClick={saveNow} className="py-save w-fit rounded-full px-5 py-2 text-sm font-medium">
               {saveState === "saved" ? "Saved ✓" : "Save now"}
             </button>
             <p className="text-xs text-zinc-500">Edits auto-save ~1s after you stop typing — no reload needed.</p>
@@ -621,7 +630,7 @@ export default function PointerySettingsPage() {
 
       {ctx && (
         <div data-pointery="pointery-settings-context" className="border-t border-zinc-200 pt-8 text-sm">
-          <h2 className="text-sm font-semibold">Context <span className="font-normal text-zinc-500">(read-only — edit <code className="font-mono">pointery.context.json</code>)</span></h2>
+          <h2 className="text-sm font-medium">Context <span className="font-normal text-zinc-500">(read-only — edit <code className="font-mono">pointery.context.json</code>)</span></h2>
           <div className="mt-3 overflow-x-auto">
             <table className="w-full text-xs">
               <thead className="text-left uppercase tracking-wider text-zinc-400">
@@ -641,11 +650,11 @@ export default function PointerySettingsPage() {
         </div>
       )}
 
-      <div data-pointery="pointery-settings-snippet" className="rounded-xl border border-zinc-200 bg-white p-5 text-sm text-zinc-800">
-        <pre className="overflow-x-auto font-mono text-[13px] leading-6 text-zinc-800">{snippet}</pre>
+      <div data-pointery="pointery-settings-snippet" className="rounded-[14px] border border-zinc-200 bg-white p-5 text-sm text-zinc-800">
+        <pre className="overflow-x-auto font-mono text-sm leading-6 text-zinc-800">{snippet}</pre>
         <button
           onClick={() => { navigator.clipboard.writeText(snippet); }}
-          className="mt-3 rounded-full bg-zinc-900 px-4 py-1.5 text-xs font-semibold text-white"
+          className="mt-3 rounded-full bg-zinc-900 px-4 py-1.5 text-sm font-medium text-white"
         >
           Copy snippet
         </button>

@@ -366,3 +366,10 @@ Unified brand row per page feedback.
 
 - `app/pointery/page.tsx` — color, radius, and palette position now sit in one hugging flex row (`w-56` color/slider boxes, `w-fit` position card, equal height via stretch + `h-full` trigger button); slider stripped to label + value + track (no min/max captions, no preset pills); custom shade square + hue bar kept as the only picker, preset swatches removed.
 - Re-synced via `npm run pointery:sync-page`; lint + build clean.
+
+## Pass 50 (feat/basic-changes, 2026-11-28)
+Restyled /pointery in lintapple's design language (repo used as reference only, not installed).
+
+- Type: chrome semibold/bold → medium (h1 stays 24px tight); all rendered text ≥12px (10/11/13px bumps); snippet code 14px.
+- Controls: position select → light segmented radiogroup; preview toggle + shortcut pills → light active pill (surface + border + shadow); buttons 14px/medium; brand cards, shortcut card, popover, snippet box → 14px radius; 8px gap rhythm.
+- Re-synced via `npm run pointery:sync-page`; lint + build clean.
