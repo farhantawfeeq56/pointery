@@ -584,3 +584,10 @@ Brand tokens across harness (app-only, no kit change).
 - `app/globals.css` + `app/layout.tsx` - single brand source (`--color-primary`/`--color-surface`/`--color-muted-foreground`/`--color-border`/`--color-success`), body uses `bg-background text-foreground`.
 - `app/demo/**` + `app/page.tsx` - landing and demo CRM share the tokens (`bg-surface`, `text-muted-foreground`, `bg-primary`); blue `#235789` primary, red `#ED1C24` secondary; `pointery.config.json` theme primary matches.
 - Verified: `lint` + `npm run build` clean.
+
+## Pass 81 (feat/basic-changes, 2026-11-28)
+vartest-closed: 10 closed-state launcher ideas on one lab page.
+
+- `app/vartest-closed/page.tsx` - mock canvas (fake CRM) + 1 rule-switchable launchers: classic ?, ask pill, search stub, spark, nudge bubble, live dot, edge tab, helper online, ghost hint, command btn. Click previews a mock open palette; real kit fab hidden on this page via injected style.
+- Switcher: floating segmented 1..0 pill bottom-right + keys 1-9/0, arrows, prev/next.
+- Verified: `lint` + `tsc` clean. Not built (lab page, no kit change).
