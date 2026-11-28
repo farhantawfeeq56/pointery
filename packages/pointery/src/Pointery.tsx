@@ -15,11 +15,36 @@ const DEFAULTS = {
   animation: "slide" as const,
   suggestions: getSuggestions(),
   allowActions: [],
-  labels: { placeholder: 'Ask "where is export?" or "how do I invite?"', empty: "No match — try “export”, “invite”, or “pipeline”.", confirmTitle: "Run this action?" },
+  labels: {
+    placeholder: 'Ask "where is export?" or "how do I invite?"',
+    empty: "No match — try “export”, “invite”, or “pipeline”.",
+    confirmTitle: "Run this action?",
+    asking: "Asking…",
+    blocked: "“{action}” needs approval — taking you there instead.",
+    done: "Done — {action}.",
+    unreachable: "Pointery is unreachable — is {endpoint} mounted?",
+    pressEnter: "No match — press Enter to ask anyway.",
+    guideComplete: "Guide complete.",
+    ambiguous: "Several rows match — showing “{title}”.",
+    confirmBody: "“{action}” — destructive actions need your OK.",
+    back: "Back",
+    next: "Next",
+    doneBtn: "Done",
+    cancel: "Cancel",
+    confirmBtn: "Confirm",
+    fabLabel: "Ask Pointery",
+  },
   endpoint: "/api/ask",
+  timing: { toastMs: 4200, pulseMs: 2600, closeMs: 160, focusMs: 30, navigateMs: 450, navigateIdleMs: 50 },
+  fab: true as boolean | string,
+  hiddenRoutes: ["/"],
 };
 
-export function pulse(key: string, filter?: string) {
+// shortcut: {token} templates in labels — unknown tokens left as-is.
+const fmt = (t: string, vars: Record<string, string>) =>
+  t.replace(/\{(\w+)\}/g, (m, k) => vars[k] ?? m);
+
+export function pulse(key: string, filter?: string, ms = 2600) {
   // Toast-friendly row title: join cells, not raw textContent (which glues words).
   const rowTitle = (row: Element) => {
     const cells = Array.from(row.querySelectorAll("td, th"))
@@ -51,7 +76,7 @@ export function pulse(key: string, filter?: string) {
     // restart animation
     void (target as HTMLElement).offsetWidth;
     target.classList.add("pointery-pulse");
-    window.setTimeout(() => target.classList.remove("pointery-pulse"), 2600);
+    window.setTimeout(() => target.classList.remove("pointery-pulse"), ms);
   });
 }
 
@@ -81,7 +106,12 @@ function triggerMatches(e: KeyboardEvent, trigger: string) {
 }
 
 export default function Pointery(props: PointeryProps) {
-  const cfg = { ...DEFAULTS, ...props, theme: { ...DEFAULTS.theme, ...props.theme }, labels: { ...DEFAULTS.labels, ...props.labels } };
+  const cfg = {
+    ...DEFAULTS, ...props,
+    theme: { ...DEFAULTS.theme, ...props.theme },
+    labels: { ...DEFAULTS.labels, ...props.labels },
+    timing: { ...DEFAULTS.timing, ...props.timing },
+  };
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const [toast, setToast] = useState<Toast>(null);
@@ -98,8 +128,8 @@ export default function Pointery(props: PointeryProps) {
   const say = useCallback((text: string) => {
     if (toastTimer.current) window.clearTimeout(toastTimer.current);
     setToast({ id: Date.now(), text });
-    toastTimer.current = window.setTimeout(() => setToast(null), 4200);
-  }, []);
+    toastTimer.current = window.setTimeout(() => setToast(null), cfg.timing.toastMs);
+  }, [cfg.timing.toastMs]);
 
   // Animated close: plays the exit animation, then unmounts the palette.
   const close = useCallback(() => {
@@ -107,28 +137,36 @@ export default function Pointery(props: PointeryProps) {
     if (!cfg.animation || cfg.animation === "none" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) { setOpen(false); return; }
     setLeaving(true);
     if (closeTimer.current) window.clearTimeout(closeTimer.current);
-    closeTimer.current = window.setTimeout(() => { setOpen(false); setLeaving(false); }, 160);
-  }, [open, cfg.animation]);
+    closeTimer.current = window.setTimeout(() => { setOpen(false); setLeaving(false); }, cfg.timing.closeMs);
+  }, [open, cfg.animation, cfg.timing.closeMs]);
 
   // Drop a pending exit timer on unmount.
   useEffect(() => () => { if (closeTimer.current) window.clearTimeout(closeTimer.current); }, []);
 
-  // apply theme vars
+  // apply theme vars (+ white-label passthrough)
   useEffect(() => {
     const root = document.documentElement;
     if (cfg.theme.primary) root.style.setProperty("--pointery-primary", cfg.theme.primary);
+    if (cfg.theme.accent) root.style.setProperty("--pointery-accent", cfg.theme.accent);
+    if (cfg.theme.background) root.style.setProperty("--color-surface", cfg.theme.background);
+    if (cfg.theme.text) root.style.setProperty("--color-text-primary", cfg.theme.text);
+    if (cfg.theme.border) root.style.setProperty("--color-border", cfg.theme.border);
     if (cfg.theme.radius != null) root.style.setProperty("--pointery-radius", `${cfg.theme.radius}px`);
-  }, [cfg.theme.primary, cfg.theme.radius]);
+    if (cfg.zIndex != null) root.style.setProperty("--pointery-z", String(cfg.zIndex));
+    if (cfg.paletteWidth != null) root.style.setProperty("--pointery-width", `${cfg.paletteWidth}px`);
+    if (cfg.overlayBlur != null) root.style.setProperty("--pointery-overlay-blur", `${cfg.overlayBlur}px`);
+    if (cfg.cssVars) for (const [k, v] of Object.entries(cfg.cssVars)) root.style.setProperty(k.startsWith("--") ? k : `--pointery-${k}`, v);
+  }, [cfg.theme.primary, cfg.theme.accent, cfg.theme.background, cfg.theme.text, cfg.theme.border, cfg.theme.radius, cfg.zIndex, cfg.paletteWidth, cfg.overlayBlur, cfg.cssVars]);
 
   // Several rows matched the filter — toast which one is shown.
   useEffect(() => {
     const onAmbiguous = (e: Event) => {
       const title = (e as CustomEvent<string>).detail;
-      if (title) say(`Several rows match — showing “${title}”.`);
+      if (title) say(fmt(cfg.labels.ambiguous!, { title }));
     };
     window.addEventListener("pointery:ambiguous", onAmbiguous);
     return () => window.removeEventListener("pointery:ambiguous", onAmbiguous);
-  }, [say]);
+  }, [say, cfg.labels.ambiguous]);
 
   // Esc always closes; cfg.trigger toggles — even while typing in the palette.
   useEffect(() => {
@@ -149,7 +187,7 @@ export default function Pointery(props: PointeryProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [open, cfg.trigger, close]);
 
-  useEffect(() => { if (open) setTimeout(() => inputRef.current?.focus(), 30); }, [open ]);
+  useEffect(() => { if (open) setTimeout(() => inputRef.current?.focus(), cfg.timing.focusMs); }, [open, cfg.timing.focusMs]);
 
   // Default action behavior: log + event + toast. Consumers override
   // via onAction for real side-effects (their data stays theirs).
@@ -161,14 +199,14 @@ export default function Pointery(props: PointeryProps) {
       localStorage.setItem("pointery-actions", JSON.stringify(log));
     } catch { /* storage unavailable — event still fires */ }
     window.dispatchEvent(new CustomEvent("pointery:action", { detail: name }));
-    say(`Done — ${name}.`);
-  }, [props, say]);
+    say(fmt(cfg.labels.done!, { action: name }));
+  }, [props, say, cfg.labels.done]);
 
   const goSpot = useCallback((go?: string, spot?: string, hint?: string, filter?: string) => {
     if (go) router.push(go as never);
-    if (spot) setTimeout(() => pulse(spot, filter), go ? 450 : 50);
+    if (spot) setTimeout(() => pulse(spot, filter, cfg.timing.pulseMs), go ? cfg.timing.navigateMs : cfg.timing.navigateIdleMs);
     if (hint) say(hint);
-  }, [router, say]);
+  }, [router, say, cfg.timing.pulseMs, cfg.timing.navigateMs, cfg.timing.navigateIdleMs]);
 
   // Submit closes the palette at once; the answer surfaces as toast, guide
   // card, confirm dialog, navigation and pulse — nothing waits on a row click.
@@ -178,7 +216,7 @@ export default function Pointery(props: PointeryProps) {
     close();
     // Palette is gone, so pending state lives in the toast slot — every
     // outcome below replaces it (answer, hint, done, empty, unreachable).
-    say("Asking…");
+    say(cfg.labels.asking!);
     try {
       const r = await fetch(cfg.endpoint, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ query: queryText, page: window.location.pathname }) });
       const data = (await r.json()) as PointeryResult;
@@ -192,7 +230,7 @@ export default function Pointery(props: PointeryProps) {
       }
       // Blocked actions fall through to spot/go below — never execute.
       if (data.action && !cfg.allowActions.includes(data.action)) {
-        say(`“${data.action}” needs approval — taking you there instead.`);
+        say(fmt(cfg.labels.blocked!, { action: data.action }));
         data.action = undefined;
       }
       if (data.action) {
@@ -207,18 +245,20 @@ export default function Pointery(props: PointeryProps) {
       else if (data.go || data.spot) goSpot(data.go, data.spot, data.hint, data.filter);
       else if (!data.answer && !walkthrough) say(cfg.labels.empty!);
     } catch {
-      say(`Pointery is unreachable — is ${cfg.endpoint} mounted?`);
+      say(fmt(cfg.labels.unreachable!, { endpoint: cfg.endpoint }));
     }
-  }, [cfg.allowActions, cfg.labels.empty, cfg.endpoint, goSpot, runAction, say, close]);
+  }, [cfg.allowActions, cfg.labels, cfg.endpoint, goSpot, runAction, say, close]);
 
   if (!open && !guide && !toast && !pendingAction) {
+    if (cfg.fab === false) return null;
+    const glyph = typeof cfg.fab === "string" ? cfg.fab : "?";
     return (
       <button
         onClick={() => { setSel(0); setOpen(true); }}
-        aria-label="Ask Pointery"
+        aria-label={cfg.labels.fabLabel}
         className="pointery-fab"
-        title={`Ask Pointery (${cfg.trigger})`}
-      >?</button>
+        title={`${cfg.labels.fabLabel} (${cfg.trigger})`}
+      >{glyph}</button>
     );
   }
 
@@ -242,10 +282,10 @@ export default function Pointery(props: PointeryProps) {
           <div className="pointery-guide-title">{guide.title} <span>· {guideIdx + 1}/{guide.steps.length}</span></div>
           <p className="pointery-guide-step">{guide.steps[guideIdx]?.text}</p>
           <div className="pointery-guide-row">
-            <button disabled={guideIdx === 0} onClick={() => { const n = guideIdx - 1; setGuideIdx(n); const s = guide.steps[n]; goSpot(s.go, s.spot, undefined, s.filter); }}>Back</button>
+            <button disabled={guideIdx === 0} onClick={() => { const n = guideIdx - 1; setGuideIdx(n); const s = guide.steps[n]; goSpot(s.go, s.spot, undefined, s.filter); }}>{cfg.labels.back}</button>
             {guideIdx < guide.steps.length - 1
-              ? <button className="primary" onClick={() => { const n = guideIdx + 1; setGuideIdx(n); const s = guide.steps[n]; goSpot(s.go, s.spot, s.text, s.filter); }}>Next</button>
-              : <button className="primary" onClick={() => { setGuide(null); say("Guide complete."); }}>Done</button>}
+              ? <button className="primary" onClick={() => { const n = guideIdx + 1; setGuideIdx(n); const s = guide.steps[n]; goSpot(s.go, s.spot, s.text, s.filter); }}>{cfg.labels.next}</button>
+              : <button className="primary" onClick={() => { setGuide(null); say(cfg.labels.guideComplete!); }}>{cfg.labels.doneBtn}</button>}
             <button onClick={() => setGuide(null)} aria-label="Close guide">✕</button>
           </div>
         </div>
@@ -253,10 +293,10 @@ export default function Pointery(props: PointeryProps) {
 
       {pendingAction && (
         <div className="pointery-confirm" role="alertdialog" aria-label={cfg.labels.confirmTitle}>
-          <p><strong>{cfg.labels.confirmTitle}</strong><br />“{pendingAction}” — destructive actions need your OK.</p>
+          <p><strong>{cfg.labels.confirmTitle}</strong><br />{fmt(cfg.labels.confirmBody!, { action: pendingAction })}</p>
           <div className="pointery-guide-row">
-            <button onClick={() => setPendingAction(null)}>Cancel</button>
-            <button className="primary" onClick={async () => { const a = pendingAction; setPendingAction(null); close(); await runAction(a); }}>Confirm</button>
+            <button onClick={() => setPendingAction(null)}>{cfg.labels.cancel}</button>
+            <button className="primary" onClick={async () => { const a = pendingAction; setPendingAction(null); close(); await runAction(a); }}>{cfg.labels.confirmBtn}</button>
           </div>
         </div>
       )}
@@ -296,7 +336,7 @@ export default function Pointery(props: PointeryProps) {
               </ul>
             )}
             {rows.length === 0 && q.trim() && (
-              <p className="pointery-meta">No match — press Enter to ask anyway.</p>
+              <p className="pointery-meta">{cfg.labels.pressEnter}</p>
             )}
             </div>
           </div>

@@ -73,7 +73,11 @@
 
   /* Theme overrides (set live from config) */
   --pointery-primary: #00A878;
+  --pointery-accent: #00A878;
   --pointery-radius: 14px;
+  --pointery-z: 60;
+  --pointery-width: 560px;
+  --pointery-overlay-blur: 2px;
 }
 
 .pointery-overlay, .pointery-palette, .pointery-toast, .pointery-guide, .pointery-confirm, .pointery-fab {
@@ -97,11 +101,11 @@
 }
 
 /* palette — floats with a viewport gap, never flush to the app edge */
-.pointery-overlay { position: fixed; inset: 0; z-index: 60; display: flex; justify-content: center; background: rgb(11 5 0 / 0.25); backdrop-filter: blur(2px); padding: 0 1rem; }
+.pointery-overlay { position: fixed; inset: 0; z-index: var(--pointery-z); display: flex; justify-content: center; background: rgb(11 5 0 / 0.25); backdrop-filter: blur(var(--pointery-overlay-blur)); padding: 0 1rem; }
 .pointery-pos-top { align-items: flex-start; padding-top: min(12vh, 6rem); }
 .pointery-pos-center { align-items: center; padding-bottom: 5vh; }
 .pointery-pos-bottom { align-items: flex-end; padding-bottom: min(12vh, 6rem); }
-.pointery-palette { width: min(560px, 100%); height: fit-content; background: var(--color-surface); border-radius: var(--pointery-radius); box-shadow: var(--shadow-lg); padding: 0.75rem; margin-top: 0; }
+.pointery-palette { width: min(var(--pointery-width), 100%); height: fit-content; background: var(--color-surface); border-radius: var(--pointery-radius); box-shadow: var(--shadow-lg); padding: 0.75rem; margin-top: 0; }
 .pointery-palette input { width: 100%; border: 1px solid var(--color-border); border-radius: calc(var(--pointery-radius) - 4px); padding: 0.8rem 1rem; font-size: 0.95rem; outline: none; font-family: inherit; }
 .pointery-palette input:focus { border-color: var(--color-border-focus); box-shadow: 0 0 0 3px color-mix(in srgb, var(--pointery-primary) 18%, transparent); }
 .pointery-list { list-style: none; margin: 0.6rem 0 0; padding: 0; max-height: 320px; overflow: auto; }
@@ -153,8 +157,8 @@
 }
 
 /* toast / guide / confirm / fab */
-.pointery-toast { position: fixed; bottom: 1.25rem; left: 50%; transform: translateX(-50%); z-index: 70; background: var(--color-surface-inverse); color: var(--color-text-inverse); border-radius: 999px; padding: 0.7rem 1.2rem; font-size: 0.85rem; box-shadow: var(--shadow-lg); max-width: min(520px, 90vw); text-align: center; }
-.pointery-guide, .pointery-confirm { position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: 70; width: 300px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--pointery-radius); box-shadow: var(--shadow-lg); padding: 1rem; font-size: 0.85rem; }
+.pointery-toast { position: fixed; bottom: 1.25rem; left: 50%; transform: translateX(-50%); z-index: calc(var(--pointery-z) + 10); background: var(--color-surface-inverse); color: var(--color-text-inverse); border-radius: 999px; padding: 0.7rem 1.2rem; font-size: 0.85rem; box-shadow: var(--shadow-lg); max-width: min(520px, 90vw); text-align: center; }
+.pointery-guide, .pointery-confirm { position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: calc(var(--pointery-z) + 10); width: 300px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--pointery-radius); box-shadow: var(--shadow-lg); padding: 1rem; font-size: 0.85rem; }
 .pointery-guide-title { font-weight: 700; } .pointery-guide-title span { color: var(--color-text-tertiary); font-weight: 400; }
 .pointery-guide-step { margin: 0.4rem 0 0.7rem; color: var(--color-text-secondary); }
 .pointery-guide-row { display: flex; gap: 0.5rem; }
@@ -162,5 +166,5 @@
 .pointery-guide-row button:disabled { opacity: 0.4; }
 .pointery-guide-row button.primary, .pointery-confirm button.primary { background: var(--color-action-primary); border-color: transparent; color: var(--color-text-inverse); }
 .pointery-guide-row button.primary:hover, .pointery-confirm button.primary:hover { background: var(--color-action-primary-hover); }
-.pointery-fab { position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: 60; width: 2.75rem; height: 2.75rem; border-radius: 999px; background: var(--pointery-primary); color: #fff; font-size: 1.2rem; font-weight: 700; box-shadow: var(--shadow-md); border: none; cursor: pointer; }
+.pointery-fab { position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: var(--pointery-z); width: 2.75rem; height: 2.75rem; border-radius: 999px; background: var(--pointery-accent, var(--pointery-primary)); color: #fff; font-size: 1.2rem; font-weight: 700; box-shadow: var(--shadow-md); border: none; cursor: pointer; }
 .pointery-fab:hover { filter: brightness(1.1); }

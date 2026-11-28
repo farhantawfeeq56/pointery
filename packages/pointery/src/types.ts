@@ -77,15 +77,66 @@ export type PointeryResult = {
   hint?: string;
 };
 
-export type PointeryTheme = { primary?: string; radius?: number };
+export type PointeryTheme = { primary?: string; radius?: number; accent?: string; background?: string; text?: string; border?: string };
+
+export type PointeryTiming = {
+  /** Toast auto-dismiss. Defaults to 4200. */
+  toastMs?: number;
+  /** Pulse highlight duration. Defaults to 2600. */
+  pulseMs?: number;
+  /** Palette exit animation. Defaults to 160. */
+  closeMs?: number;
+  /** Input autofocus delay. Defaults to 30. */
+  focusMs?: number;
+  /** Pulse delay after navigation vs in place. Defaults to 450 / 50. */
+  navigateMs?: number;
+  navigateIdleMs?: number;
+};
 export type PointeryPosition = "top" | "center" | "bottom";
 /** Palette entrance. `slide` drifts in from the palette edge (down on top, up on bottom). */
 export type PointeryAnimation = "fade" | "slide" | "scale" | "none";
-export type PointeryLabels = { placeholder?: string; empty?: string; confirmTitle?: string };
+export type PointeryLabels = {
+  placeholder?: string;
+  empty?: string;
+  confirmTitle?: string;
+  /** "Asking…" busy toast. */
+  asking?: string;
+  /** Supports {action}. */
+  blocked?: string;
+  /** Supports {action}. */
+  done?: string;
+  /** Supports {endpoint}. */
+  unreachable?: string;
+  pressEnter?: string;
+  guideComplete?: string;
+  /** Supports {title}. */
+  ambiguous?: string;
+  /** Supports {action}. */
+  confirmBody?: string;
+  back?: string;
+  next?: string;
+  doneBtn?: string;
+  cancel?: string;
+  confirmBtn?: string;
+  fabLabel?: string;
+};
 
 export type PointeryProps = {
   trigger?: string; // any "+"-joined combo, e.g. "shift+a" (default) or "ctrl+shift+p" — ctrl/cmd treated the same, plus cmd/ctrl+k always on
   theme?: PointeryTheme;
+  /** Extra `--pointery-*` overrides (keys may include the prefix or not). */
+  cssVars?: Record<string, string>;
+  /** Overlay z-index. Defaults to 60 (toast/guide sit +10). */
+  zIndex?: number;
+  /** Palette width px. Defaults to 560. */
+  paletteWidth?: number;
+  /** Overlay blur px. Defaults to 2. */
+  overlayBlur?: number;
+  /** Idle "?" button: false hides it, string sets its glyph. Defaults to true. */
+  fab?: boolean | string;
+  /** Routes where the palette never mounts (mount checks this). Defaults to ["/"]. */
+  hiddenRoutes?: string[];
+  timing?: PointeryTiming;
   position?: PointeryPosition;
   /** Palette entrance animation. Defaults to "slide". */
   animation?: PointeryAnimation;
@@ -104,6 +155,10 @@ export type PointeryLLMAdapter = {
   key?: string;
   /** Exact model id as the provider spells it. Defaults to `gpt-4o-mini` on api.openai.com, otherwise required. */
   model?: string;
+  /** Sampling temperature. Defaults to 0. */
+  temperature?: number;
+  /** Max response tokens. Defaults to 300. */
+  maxTokens?: number;
 };
 
 export type AskHandlerOptions = {
@@ -112,6 +167,10 @@ export type AskHandlerOptions = {
   allowActions?: string[];
   /** Cap the candidates slice forwarded to the LLM (defaults 8/3/3). */
   retrieve?: { entries?: number; flows?: number; actions?: number };
+  /** Query/plan caps (defaults 200 chars / 4 steps). */
+  limits?: { queryMax?: number; planMax?: number };
+  /** LLM-response cache (defaults 5 min / 200 entries; ttlMs 0 disables). */
+  cache?: { ttlMs?: number; max?: number };
   /** Return a result to short-circuit (e.g. block demo routes in prod), or null to continue. */
   guard?: (query: string, local: PointeryResult) => PointeryResult | null;
 };

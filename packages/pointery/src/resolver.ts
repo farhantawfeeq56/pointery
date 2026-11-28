@@ -49,13 +49,13 @@ export type RetrieveOptions = {
 };
 
 /** Split a combo query into clauses so each intent contributes candidates. Max 4. */
-export function splitClauses(query: string): string[] {
+export function splitClauses(query: string, max = 4): string[] {
   const parts = norm(query)
     .split(/\b(?:and then|followed by|then|and|&|,|\+|;)+\b/)
     .map((s) => s.trim())
     .filter((s) => s.length > 2);
   if (parts.length <= 1) return [norm(query)].filter(Boolean);
-  return parts.slice(0, 4);
+  return parts.slice(0, max);
 }
 
 /**
@@ -139,11 +139,11 @@ export function matchPin(query: string, context: PointeryContext): PointeryResul
 }
 
 /** Build ad-hoc plan steps from anchor ids. Wording is templated like guides — the map holds no sentences. */
-export function buildPlan(ids: string[], entries: PointeryEntry[], title = "Your steps", filters?: Record<string, string>): PointeryPlan {
+export function buildPlan(ids: string[], entries: PointeryEntry[], title = "Your steps", filters?: Record<string, string>, max = 4): PointeryPlan {
   const steps = ids
     .map((id) => byId(entries, id))
     .filter((e): e is PointeryEntry => Boolean(e))
-    .slice(0, 4)
+    .slice(0, max)
     .map((e) => ({
       text: e.type === "button" ? `Click ${e.label}` : `Go to ${e.label}`,
       go: e.page,
@@ -154,8 +154,8 @@ export function buildPlan(ids: string[], entries: PointeryEntry[], title = "Your
 }
 
 /** Resolve each "and/then" clause locally; return a plan when >=2 clauses hit. Free combo path, no LLM. */
-export function resolveCombo(query: string, context: PointeryContext, page?: string): PointeryResult | null {
-  const clauses = splitClauses(query);
+export function resolveCombo(query: string, context: PointeryContext, page?: string, max = 4): PointeryResult | null {
+  const clauses = splitClauses(query, max);
   if (clauses.length < 2) return null;
   const seen = new Set<string>();
   const ids: string[] = [];
@@ -166,13 +166,13 @@ export function resolveCombo(query: string, context: PointeryContext, page?: str
     if (id && !seen.has(id)) { seen.add(id); ids.push(id); if (r.filter) filters[id] = r.filter; }
     else if (r.guide) {
       for (const s of r.guide.steps) {
-        if (!seen.has(s.spot)) { seen.add(s.spot); ids.push(s.spot); if (ids.length >= 4) break; }
+        if (!seen.has(s.spot)) { seen.add(s.spot); ids.push(s.spot); if (ids.length >= max) break; }
       }
     }
-    if (ids.length >= 4) break;
+    if (ids.length >= max) break;
   }
   if (ids.length < 2) return null;
-  const plan = buildPlan(ids, context.entries ?? [], "Your steps", filters);
+  const plan = buildPlan(ids, context.entries ?? [], "Your steps", filters, max);
   const first = plan.steps[0];
   return { plan, spot: first?.spot, go: first?.go, filter: first?.filter, hint: plan.title };
 }

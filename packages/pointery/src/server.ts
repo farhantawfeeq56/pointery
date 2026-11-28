@@ -2,7 +2,7 @@ import { buildGuide, resolveCombo, resolveQuery, retrieveCandidates, splitClause
 import type { AskHandlerOptions, PointeryContext, PointeryPlan, PointeryResult } from "./types.js";
 
 /** Drop plan steps that point outside the map; rebuild wording from labels. Needs >=2 valid steps. */
-function sanitizePlan(raw: unknown, context: PointeryContext): PointeryPlan | null {
+function sanitizePlan(raw: unknown, context: PointeryContext, planMax = 4): PointeryPlan | null {
   if (!raw || typeof raw !== "object") return null;
   const steps = (raw as { steps?: unknown }).steps;
   if (!Array.isArray(steps)) return null;
@@ -11,7 +11,7 @@ function sanitizePlan(raw: unknown, context: PointeryContext): PointeryPlan | nu
     ? ((raw as { title: string }).title.trim().slice(0, 80) || "Your steps")
     : "Your steps";
   // shortcut: plan steps are navigation-only; step actions collapse to "take me there".
-  const out = steps.slice(0, 4).flatMap((s) => {
+  const out = steps.slice(0, planMax).flatMap((s) => {
     if (!s || typeof s !== "object") return [];
     const spot = (s as { spot?: unknown }).spot;
     if (typeof spot !== "string" || !byId.has(spot)) return [];
@@ -32,7 +32,7 @@ function sanitizePlan(raw: unknown, context: PointeryContext): PointeryPlan | nu
 }
 
 /** Drop LLM fields that point outside the shipped map (LLM text is untrusted). Guide steps are rebuilt from the flow — the model picks anchors, never wording. */
-function sanitizeResult(r: PointeryResult, context: PointeryContext, allowed?: string[]): PointeryResult {
+function sanitizeResult(r: PointeryResult, context: PointeryContext, allowed?: string[], planMax = 4): PointeryResult {
   const out: PointeryResult = {};
   const ids = new Set((context.entries ?? []).map((e) => e.id));
   const byId = new Map((context.entries ?? []).map((e) => [e.id, e]));
@@ -46,7 +46,7 @@ function sanitizeResult(r: PointeryResult, context: PointeryContext, allowed?: s
     out.confirm = confirmOf(r.action);
   }
   if (r.guide && flows.has(r.guide.id)) out.guide = buildGuide(flows.get(r.guide.id)!, context.entries ?? []);
-  const plan = sanitizePlan((r as { plan?: unknown }).plan, context);
+  const plan = sanitizePlan((r as { plan?: unknown }).plan, context, planMax);
   if (plan) {
     out.plan = plan;
     const first = plan.steps[0];
@@ -135,18 +135,24 @@ function parseJsonText(text: unknown): unknown {
 }
 // Tiny LLM-response cache: normalized query + page + allowActions + model, 5 min TTL, max 200. Repeats cost 0 tokens.
 const llmCache = new Map<string, { at: number; result: PointeryResult }>();
-const LLM_CACHE_TTL = 5 * 60 * 1000;
-const LLM_CACHE_MAX = 200;
-const cacheKey = (q: string, page: string | undefined, allowed?: string[], model?: string) =>
-  `${q.trim().toLowerCase().slice(0, 200)}|${page ?? ""}|${(allowed ?? []).join(",")}|${model ?? ""}`;
+const DEFAULT_CACHE_TTL = 5 * 60 * 1000;
+const DEFAULT_CACHE_MAX = 200;
+const cacheKey = (q: string, page: string | undefined, allowed?: string[], model?: string, temperature?: number) =>
+  `${q.trim().toLowerCase().slice(0, 200)}|${page ?? ""}|${(allowed ?? []).join(",")}|${model ?? ""}|${temperature ?? 0}`;
 
 export function createAskHandler(context: PointeryContext, opts: AskHandlerOptions = {}) {
   return async function POST(req: Request): Promise<Response> {
     const body = await req.json().catch(() => ({} as Record<string, unknown>));
     const query = typeof body.query === "string" ? body.query : "";
     const page = typeof body.page === "string" ? body.page : undefined;
+    const queryMax = opts.limits?.queryMax ?? 200;
+    const planMax = opts.limits?.planMax ?? 4;
+    const cacheTtl = opts.cache?.ttlMs ?? DEFAULT_CACHE_TTL;
+    const cacheMax = opts.cache?.max ?? DEFAULT_CACHE_MAX;
+    const temperature = opts.llm?.temperature ?? 0;
+    const maxTokens = opts.llm?.maxTokens ?? 300;
     // Cap what we forward — long pastes cost tokens without helping retrieval.
-    const q = query.trim().slice(0, 200);
+    const q = query.trim().slice(0, queryMax);
 
     // Compulsory brain: fail closed instead of guessing from keywords alone.
     // URL + key + model are asked for together in `.env.local` (one step, one restart).
@@ -159,12 +165,12 @@ export function createAskHandler(context: PointeryContext, opts: AskHandlerOptio
     }
 
     // Free combo path: each "and/then" clause resolved locally into a plan.
-    const combo = sanitizeResult(resolveCombo(q, context, page) ?? {}, context, opts.allowActions);
+    const combo = sanitizeResult(resolveCombo(q, context, page, planMax) ?? {}, context, opts.allowActions, planMax);
     if (combo.plan) {
       const override: PointeryResult | null = opts.guard?.(query, combo) ?? null;
       return Response.json(override ?? combo);
     }
-    const local = sanitizeResult(resolveQuery(q, context, page), context, opts.allowActions);
+    const local = sanitizeResult(resolveQuery(q, context, page), context, opts.allowActions, planMax);
     // Confident local hit: skip the LLM entirely (fast, free) — unless the
     // query looks like a combo whose other half the single hit would hide.
     const looksCombo = splitClauses(q).length > 1;
@@ -174,9 +180,9 @@ export function createAskHandler(context: PointeryContext, opts: AskHandlerOptio
     }
 
     if (opts.llm?.url && q) {
-      const key = cacheKey(q, page, opts.allowActions, llmModel);
+      const key = cacheKey(q, page, opts.allowActions, llmModel, temperature);
       const hit = llmCache.get(key);
-      if (hit && Date.now() - hit.at < LLM_CACHE_TTL) {
+      if (cacheTtl > 0 && hit && Date.now() - hit.at < cacheTtl) {
         const override: PointeryResult | null = opts.guard?.(query, hit.result) ?? null;
         return Response.json(override ?? hit.result);
       }
@@ -206,13 +212,13 @@ export function createAskHandler(context: PointeryContext, opts: AskHandlerOptio
         // shortcut: Anthropic needs max_tokens; Bearer auth would 401 there, key header above.
         const llmBody: unknown =
           provider === "anthropic"
-            ? { model: llmModel, max_tokens: 300, temperature: 0, system: systemPrompt, messages: [{ role: "user", content: userPrompt }] }
+            ? { model: llmModel, max_tokens: maxTokens, temperature, system: systemPrompt, messages: [{ role: "user", content: userPrompt }] }
             : provider === "gemini"
-              ? { system_instruction: { parts: [{ text: systemPrompt }] }, contents: [{ role: "user", parts: [{ text: userPrompt }] }], generationConfig: { temperature: 0, maxOutputTokens: 300 } }
+              ? { system_instruction: { parts: [{ text: systemPrompt }] }, contents: [{ role: "user", parts: [{ text: userPrompt }] }], generationConfig: { temperature, maxOutputTokens: maxTokens } }
               : {
                 model: llmModel,
-                temperature: 0,
-                max_tokens: 300,
+                temperature,
+                max_tokens: maxTokens,
                 response_format: { type: "json_object" },
                 messages: [
                   { role: "system", content: systemPrompt },
@@ -240,13 +246,15 @@ export function createAskHandler(context: PointeryContext, opts: AskHandlerOptio
             const content = (data as { choices?: { message?: { content?: unknown } }[] })?.choices?.[0]?.message?.content;
             if (typeof content === "string" && content.trim()) payload = parseJsonText(content);
           }
-          const llm = sanitizeResult(payload as PointeryResult, context, opts.allowActions);
+          const llm = sanitizeResult(payload as PointeryResult, context, opts.allowActions, planMax);
           const override: PointeryResult | null = opts.guard?.(query, llm) ?? null;
           const final = override ?? llm;
           // LLM miss too: return the (empty) local result, guarded.
           if (final.spot || final.go || final.action || final.guide || final.plan || final.answer) {
-            llmCache.set(key, { at: Date.now(), result: final });
-            if (llmCache.size > LLM_CACHE_MAX) llmCache.delete(llmCache.keys().next().value!);
+            if (cacheTtl > 0) {
+              llmCache.set(key, { at: Date.now(), result: final });
+              if (llmCache.size > cacheMax) llmCache.delete(llmCache.keys().next().value!);
+            }
             return Response.json(final);
           }
         }

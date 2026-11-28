@@ -451,3 +451,15 @@ Palette content states animate: suggestions, loading, result, toast.
 - `packages/pointery/src/Pointery.tsx` — palette body wrapped in a keyed `.pointery-view` (`loading` / `result-<n>` / `suggest` / `empty`) so every state swap remounts and replays the enter animation; stale results hide while loading. New answers bump `resSeq` so result→result re-animates. Toast keyed by message id and carries the palette's anim class, so answers/errors/hints arriving as toasts animate too.
 - `packages/pointery/src/styles.css` — `pointery-view-in` rise for slide/scale modes, fade for fade mode; suggestion chips cascade with staggered delays; toast rises from its bottom anchor. All gated on the `animation` config (`none` = no motion) and zeroed under reduced-motion.
 - `kit:build` + lint + full `build` clean.
+
+## Pass 64 (feat/basic-changes, 2026-11-28)
+Config gaps 1-5: labels/timing/fab/hiddenRoutes/theme/brain all configurable via pointery.config.json.
+
+- `types.ts` — extended `PointeryLabels` (asking/blocked/done/unreachable/pressEnter/guideComplete/ambiguous/confirmBody/back/next/doneBtn/cancel/confirmBtn/fabLabel), `PointeryTheme` (+accent/background/text/border), new `PointeryTiming`, props (+cssVars/zIndex/paletteWidth/overlayBlur/fab/hiddenRoutes/timing/endpoint passthrough); `AskHandlerOptions` (+limits/cache) and `LLMAdapter` (+temperature/maxTokens).
+- `Pointery.tsx` — all copy via `fmt()` templates, all timeouts via `timing`, theme/cssVars/zIndex/width/blur applied as CSS vars, `pulse(ms)`, fab false|string, guide/confirm buttons from labels.
+- `server.ts`/`resolver.ts` — `queryMax/planMax` caps, temp/maxTokens wired to all three providers, cache ttl/max (0 disables), `splitClauses/buildPlan/resolveCombo/sanitizePlan` take max.
+- `styles.css` — `--pointery-accent/z/width/overlay-blur` vars; overlay/palette/toast/guide/fab use them.
+- `app/pointery-mount.tsx` — forwards endpoint/timing/fab/cssVars/zIndex/width/blur/labels; `hiddenRoutes` from config (default ["/"]).
+- `app/api/ask/route.ts` — reads `brain {retrieve,limits,cache,llm}` from pointery.config.json.
+- `pointery.config.json` + `bin/pointery.js` STARTER_CONFIG — new defaults shipped.
+- `kit:build` + lint + full `build` clean.

@@ -32,6 +32,24 @@ const STARTER_CONFIG = {
   animation: "slide",
   suggestions: ["Where is export?"],
   allowActions: ["export-report"],
+  labels: {
+    placeholder: 'Ask "where is export?" or "how do I invite?"',
+    empty: "No match — try “export”. ",
+    confirmTitle: "Run this action?",
+  },
+  endpoint: "/api/ask",
+  fab: true,
+  hiddenRoutes: ["/"],
+  timing: { toastMs: 4200, pulseMs: 2600, closeMs: 160, focusMs: 30, navigateMs: 450, navigateIdleMs: 50 },
+  zIndex: 60,
+  paletteWidth: 560,
+  overlayBlur: 2,
+  brain: {
+    retrieve: { entries: 8, flows: 3, actions: 3 },
+    limits: { queryMax: 200, planMax: 4 },
+    cache: { ttlMs: 300000, max: 200 },
+    llm: { temperature: 0, maxTokens: 300 },
+  },
 };
 
 // Minimal GET+PUT for pointery.config.json (disk is truth). The /pointery
