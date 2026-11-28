@@ -437,3 +437,10 @@ Single trigger: removed the hardcoded Cmd/Ctrl+K secondary shortcut.
 
 - `packages/pointery/src/Pointery.tsx` — only `cfg.trigger` toggles the palette now; meta copy drops "⌘K works too". `triggerMatches` already parses `ctrl+k`.
 - `pointery.config.json` — trigger `s` → `ctrl+k`. Package README updated. `kit:build` + lint + tsc clean.
+
+## Pass 62 (feat/basic-changes, 2026-11-28)
+Palette close: Esc always works, trigger toggles, exit animation, footer copy removed.
+
+- `packages/pointery/src/Pointery.tsx` — Esc now closes even while typing in the palette input (old guard swallowed it); `cfg.trigger` toggles closed from anywhere including the input. All palette closes route through a `close()` helper that plays a 160ms exit animation before unmount (`leaving` state); instant when `animation: "none"` or reduced-motion. Removed the "… toggles · Esc closes" footer line and dead `prettyTrigger`.
+- `packages/pointery/src/styles.css` — exit keyframes mirroring each entrance (`fade`/`slide`/`scale`, slide reuses the position-aware `--pointery-slide-from`) + overlay fade-out; reduced-motion covers the leaving classes.
+- `kit:build` + lint + full `build` clean.

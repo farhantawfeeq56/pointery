@@ -80,9 +80,6 @@ function triggerMatches(e: KeyboardEvent, trigger: string) {
   return true;
 }
 
-const prettyTrigger = (t: string) =>
-  t.split("+").map((p) => (p === "cmd" ? "⌘" : p === "ctrl" ? "Ctrl" : p === "alt" ? "Alt" : p === "shift" ? "Shift" : p.length === 1 ? p.toUpperCase() : p)).join(" + ");
-
 export default function Pointery(props: PointeryProps) {
   const cfg = { ...DEFAULTS, ...props, theme: { ...DEFAULTS.theme, ...props.theme }, labels: { ...DEFAULTS.labels, ...props.labels } };
   const [open, setOpen] = useState(false);
@@ -93,15 +90,29 @@ export default function Pointery(props: PointeryProps) {
   const [guide, setGuide] = useState<GuideState>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [guideIdx, setGuideIdx] = useState(0);
+  const [leaving, setLeaving] = useState(false);
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const toastTimer = useRef<number | null>(null);
+  const closeTimer = useRef<number | null>(null);
 
   const say = useCallback((text: string) => {
     if (toastTimer.current) window.clearTimeout(toastTimer.current);
     setToast({ id: Date.now(), text });
     toastTimer.current = window.setTimeout(() => setToast(null), 4200);
   }, []);
+
+  // Animated close: plays the exit animation, then unmounts the palette.
+  const close = useCallback(() => {
+    if (!open) return;
+    if (!cfg.animation || cfg.animation === "none" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) { setOpen(false); return; }
+    setLeaving(true);
+    if (closeTimer.current) window.clearTimeout(closeTimer.current);
+    closeTimer.current = window.setTimeout(() => { setOpen(false); setLeaving(false); }, 160);
+  }, [open, cfg.animation]);
+
+  // Drop a pending exit timer on unmount.
+  useEffect(() => () => { if (closeTimer.current) window.clearTimeout(closeTimer.current); }, []);
 
   // apply theme vars
   useEffect(() => {
@@ -120,17 +131,23 @@ export default function Pointery(props: PointeryProps) {
     return () => window.removeEventListener("pointery:ambiguous", onAmbiguous);
   }, [say]);
 
-  // trigger: only cfg.trigger toggles — no forced secondary shortcut.
+  // Esc always closes; cfg.trigger toggles — even while typing in the palette.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement)?.tagName;
-      if (tag === "INPUT" && open) return; // let them type
-      if (triggerMatches(e, cfg.trigger)) { e.preventDefault(); setOpen((v) => !v); }
-      if (e.key === "Escape") { setOpen(false); setGuide(null); setPendingAction(null); }
+      if (e.key === "Escape") { close(); setGuide(null); setPendingAction(null); return; }
+      if (triggerMatches(e, cfg.trigger)) {
+        e.preventDefault();
+        if (open) close();
+        else {
+          if (closeTimer.current) { window.clearTimeout(closeTimer.current); closeTimer.current = null; }
+          setLeaving(false);
+          setOpen(true);
+        }
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, cfg.trigger]);
+  }, [open, cfg.trigger, close]);
 
   useEffect(() => { if (open) setTimeout(() => inputRef.current?.focus(), 30); }, [open ]);
 
@@ -170,7 +187,7 @@ export default function Pointery(props: PointeryProps) {
         data.action = undefined;
       }
       if (data.action) {
-        if (data.confirm === false) { setOpen(false); await runAction(data.action); }
+        if (data.confirm === false) { close(); await runAction(data.action); }
         else setPendingAction(data.action);
       }
       else if (data.go || data.spot) goSpot(data.go, data.spot, data.hint, data.filter);
@@ -178,7 +195,7 @@ export default function Pointery(props: PointeryProps) {
     } catch {
       say(`Pointery is unreachable — is ${cfg.endpoint} mounted?`);
     } finally { setLoading(false); }
-  }, [cfg.allowActions, cfg.labels.empty, cfg.endpoint, goSpot, runAction, say]);
+  }, [cfg.allowActions, cfg.labels.empty, cfg.endpoint, goSpot, runAction, say, close]);
 
   const startGuide = (g: NonNullable<GuideState>) => {
     const s = g.steps[guideIdx];
@@ -224,14 +241,14 @@ export default function Pointery(props: PointeryProps) {
           <p><strong>{cfg.labels.confirmTitle}</strong><br />“{pendingAction}” — destructive actions need your OK.</p>
           <div className="pointery-guide-row">
             <button onClick={() => setPendingAction(null)}>Cancel</button>
-            <button className="primary" onClick={async () => { const a = pendingAction; setPendingAction(null); setOpen(false); await runAction(a); }}>Confirm</button>
+            <button className="primary" onClick={async () => { const a = pendingAction; setPendingAction(null); close(); await runAction(a); }}>Confirm</button>
           </div>
         </div>
       )}
 
-      {open && (
-        <div className={`pointery-overlay ${pos}`} onClick={() => setOpen(false)}>
-          <div className={`pointery-palette ${anim}`.trim()} onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Ask Pointery">
+      {(open || leaving) && (
+        <div className={`pointery-overlay ${pos}${leaving ? " pointery-leaving" : ""}`} onClick={close}>
+          <div className={["pointery-palette", anim, leaving && "pointery-leaving"].filter(Boolean).join(" ")} onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Ask Pointery">
             <form onSubmit={(e) => { e.preventDefault(); ask(q); }}>
               <input
                 ref={inputRef}
@@ -253,14 +270,13 @@ export default function Pointery(props: PointeryProps) {
               <div className="pointery-result">
                 {res.hint && <p><strong>{res.hint}</strong></p>}
                 <div className="pointery-guide-row">
-                  {(res.go || res.spot) && <button className="primary" onClick={() => { goSpot(res.go, res.spot, res.hint, res.filter); setOpen(false); }}>Take me there</button>}
-                  {res.plan && <button className="primary" onClick={() => { setGuideIdx(0); startGuide({ title: res.plan!.title, steps: res.plan!.steps, i: 0 }); setOpen(false); }}>Start steps ({res.plan!.steps.length})</button>}
-                  {res.guide && !res.plan && <button className="primary" onClick={() => { setGuideIdx(0); startGuide({ title: res.guide!.title, steps: res.guide!.steps, i: 0 }); setOpen(false); }}>Start guide</button>}
-                  {res.action && <button className="primary" onClick={async () => { const a = res.action!; if (res.confirm) { setOpen(false); setPendingAction(a); } else { setOpen(false); await runAction(a); } }}>Run action</button>}
+                  {(res.go || res.spot) && <button className="primary" onClick={() => { goSpot(res.go, res.spot, res.hint, res.filter); close(); }}>Take me there</button>}
+                  {res.plan && <button className="primary" onClick={() => { setGuideIdx(0); startGuide({ title: res.plan!.title, steps: res.plan!.steps, i: 0 }); close(); }}>Start steps ({res.plan!.steps.length})</button>}
+                  {res.guide && !res.plan && <button className="primary" onClick={() => { setGuideIdx(0); startGuide({ title: res.guide!.title, steps: res.guide!.steps, i: 0 }); close(); }}>Start guide</button>}
+                  {res.action && <button className="primary" onClick={async () => { const a = res.action!; if (res.confirm) { close(); setPendingAction(a); } else { close(); await runAction(a); } }}>Run action</button>}
                 </div>
               </div>
             )}
-            <p className="pointery-meta">{prettyTrigger(cfg.trigger)} toggles · Esc closes</p>
           </div>
         </div>
       )}

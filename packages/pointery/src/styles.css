@@ -120,8 +120,17 @@
 .pointery-anim-fade { animation: pointery-fade 180ms ease-out both; }
 .pointery-anim-slide { animation: pointery-slide 220ms cubic-bezier(0.23, 1, 0.32, 1) both; }
 .pointery-anim-scale { animation: pointery-scale 200ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+/* exit: reverse of entrance, played before unmount */
+@keyframes pointery-fade-out { to { opacity: 0; } }
+@keyframes pointery-slide-out { to { opacity: 0; transform: var(--pointery-slide-from, translateY(-12px)); } }
+@keyframes pointery-scale-out { to { opacity: 0; transform: scale(0.96); } }
+.pointery-anim-fade.pointery-leaving { animation: pointery-fade-out 150ms ease-in both; }
+.pointery-anim-slide.pointery-leaving { animation: pointery-slide-out 160ms ease-in both; }
+.pointery-anim-scale.pointery-leaving { animation: pointery-scale-out 150ms ease-in both; }
+.pointery-overlay.pointery-leaving { animation: pointery-fade-out 160ms ease-in both; }
 @media (prefers-reduced-motion: reduce) {
-  .pointery-anim-fade, .pointery-anim-slide, .pointery-anim-scale { animation-duration: 0ms; }
+  .pointery-anim-fade, .pointery-anim-slide, .pointery-anim-scale,
+  .pointery-overlay.pointery-leaving { animation-duration: 0ms; }
 }
 
 /* toast / guide / confirm / fab */
