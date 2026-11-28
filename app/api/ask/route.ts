@@ -30,7 +30,8 @@ async function tempEmptyDemo(q: string): Promise<Response | null> {
     case "6":
       return Response.json({ spot: "pipeline-table", go: "/demo/pipeline", filter: "e" });
     case "7":
-      return Response.json({ spot: "export-button" });
+      // Impossible anchor: fires the real missing path on ANY page, no navigating.
+      return Response.json({ spot: "temp-never-exists-xyz" });
     case "8":
       return Response.json({ guide: { id: "temp-broken", title: "Broken guide", steps: [] } });
     case "9":
