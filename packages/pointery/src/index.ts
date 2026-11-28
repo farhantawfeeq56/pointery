@@ -4,7 +4,7 @@ export type { RetrieveOptions } from "./resolver.js";
 export { createAskHandler } from "./server.js";
 export { validateContext, validateConfig } from "./validate.js";
 export type {
-  PointeryProps, PointeryTiming,
+  PointeryProps, PointeryTiming, PointeryRouteOverride,
   PointeryResult,
   PointeryContext,
   PointeryCandidates,

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { PointeryProps, PointeryResult } from "./types.js";
+import type { PointeryProps, PointeryResult, PointeryRouteOverride } from "./types.js";
 import { getSuggestions } from "./resolver.js";
 
 type Toast = { id: number; text: string } | null;
@@ -131,11 +131,21 @@ function triggerMatches(e: KeyboardEvent, trigger: string) {
 }
 
 export default function Pointery(props: PointeryProps) {
+  // Per-page override: exact path wins, `"/demo/*"` matches anything under it (longest first).
+  const here = props.route ?? (typeof window !== "undefined" ? window.location.pathname : undefined);
+  let over: PointeryRouteOverride = {};
+  if (here && props.routes) {
+    if (props.routes[here]) over = props.routes[here];
+    else for (const k of Object.keys(props.routes).sort((a, b) => b.length - a.length))
+      if (k.endsWith("/*") && here.startsWith(k.slice(0, -1))) { over = props.routes[k]; break; }
+  }
+  const base = { ...props, ...over };
   const cfg = {
-    ...DEFAULTS, ...props,
-    theme: { ...DEFAULTS.theme, ...props.theme },
-    labels: { ...DEFAULTS.labels, ...props.labels },
-    timing: { ...DEFAULTS.timing, ...props.timing },
+    ...DEFAULTS, ...base,
+    theme: { ...DEFAULTS.theme, ...props.theme, ...over.theme },
+    labels: { ...DEFAULTS.labels, ...props.labels, ...over.labels },
+    timing: { ...DEFAULTS.timing, ...props.timing, ...over.timing },
+    closed: { ...props.closed, ...over.closed },
   };
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");

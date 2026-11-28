@@ -615,3 +615,12 @@ Closed state is config: `closed` in pointery.config.json. Lab removed.
 - `POINTERY_PROMPT.md` (root) - same step 7 + closing-line rewrite.
 - Deleted `scripts/sync-starter-page.mjs` + `pointery:sync-page` npm script; `AGENTS.md` (app row, release rule) and `POINTERY_PARTS.md` (§8, §10) updated - harness `/pointery` never ships.
 - Verified: `node --check` bin, fresh `init` writes 3 files + `AGENTS.md` (no page), harness `init --check` ok, `lint` + `kit:build` + `tsc` + full `build` clean.
+
+## Pass 85 (feat/basic-changes, 2026-11-28)
+Per-page settings via `routes` in pointery.config.json.
+
+- Kit (`packages/pointery`): new `routes` key - `Record<path, override>` where override is every UI prop except the global/router ones (trigger/theme/cssVars/zIndex/paletteWidth/overlayBlur/closed/fab/timing/position/animation/suggestions/allowActions/labels/endpoint). Exact path wins, `"/demo/*"` matches anything under it (longest first). Merged over base props on the current route (theme/labels/timing/closed merge key-by-key, arrays replace). New `route` prop for the current path, defaults to `window.location.pathname` so buyers get it with zero wiring.
+- `schema.json` is truth (override refs the same definitions), `validate.ts` + CLI slim `validateConfigJson` enforce enums/unknown keys inside overrides.
+- `bin/pointery.js` STARTER_CONFIG ships `routes: {}` with a commented example.
+- Harness `app/pointery-mount.tsx` forwards `routes` + live `route={path}` (also fixed: `closed` is now forwarded, and route follows navigation instead of load-time only); `pointery.config.json` has a `/demo/pipeline` example with pipeline-specific suggestions.
+- Verified: `kit:build`, `tsc`, `lint`, `config --validate` clean.

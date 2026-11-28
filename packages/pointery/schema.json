@@ -82,6 +82,31 @@
       "additionalProperties": false
     },
     "endpoint": { "type": "string" },
+    "routes": {
+      "type": "object",
+      "description": "Per-page overrides, keyed by path (exact wins, \"/demo/*\" matches anything under it). Same keys as the top level except hiddenRoutes/brain/routes.",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "trigger": { "type": "string" },
+          "theme": { "$ref": "#/properties/theme" },
+          "cssVars": { "type": "object", "additionalProperties": { "type": "string" } },
+          "zIndex": { "type": "number" },
+          "paletteWidth": { "type": "number" },
+          "overlayBlur": { "type": "number" },
+          "closed": { "$ref": "#/properties/closed" },
+          "fab": { "type": ["boolean", "string"] },
+          "timing": { "$ref": "#/properties/timing" },
+          "position": { "$ref": "#/properties/position" },
+          "animation": { "$ref": "#/properties/animation" },
+          "suggestions": { "type": "array", "items": { "type": "string" } },
+          "allowActions": { "type": "array", "items": { "type": "string" } },
+          "labels": { "$ref": "#/properties/labels" },
+          "endpoint": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
     "brain": {
       "type": "object",
       "properties": {

@@ -23,6 +23,15 @@
     "confirmTitle": "Run this action?"
   },
   "endpoint": "/api/ask",
+  "routes": {
+    "/demo/pipeline": {
+      "suggestions": [
+        "Show me the pipeline table",
+        "Where is the Acme deal?",
+        "Walk me through closing a deal"
+      ]
+    }
+  },
   "closed": { "variant": "fab", "icon": "?", "label": "Ask" },
   "hiddenRoutes": ["/"],
   "timing": {

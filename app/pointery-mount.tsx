@@ -46,6 +46,7 @@ export default function PointeryMount() {
             paletteWidth: c.paletteWidth,
             overlayBlur: c.overlayBlur,
             fab: c.fab,
+            closed: c.closed,
             hiddenRoutes: c.hiddenRoutes,
             timing: c.timing,
             position: c.position,
@@ -54,11 +55,12 @@ export default function PointeryMount() {
             allowActions: c.allowActions,
             labels: c.labels,
             endpoint: c.endpoint,
+            routes: c.routes,
           });
         }
       })
       .catch(() => {});
   }, []);
 
-  return hidden.includes(path) ? null : <Pointery {...cfg} />;
+  return hidden.includes(path) ? null : <Pointery {...cfg} route={path} />;
 }

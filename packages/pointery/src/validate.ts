@@ -70,7 +70,7 @@ export function validateContext(ctx: PointeryContext): string[] {
 const CONFIG_KEYS = new Set([
   "$schema", "trigger", "theme", "cssVars", "zIndex", "paletteWidth", "overlayBlur",
   "closed", "fab", "hiddenRoutes", "timing", "position", "animation", "suggestions",
-  "allowActions", "labels", "endpoint", "brain",
+  "allowActions", "labels", "endpoint", "routes", "brain",
 ]);
 
 /**
@@ -88,19 +88,19 @@ export function validateConfig(cfg: unknown): string[] {
   if (c.animation !== undefined && !["fade", "slide", "scale", "none"].includes(c.animation as string))
     errors.push(`animation must be one of fade|slide|scale|none (got ${JSON.stringify(c.animation)})`);
   const closed = c.closed;
-  if (closed !== undefined) {
-    if (!closed || typeof closed !== "object" || Array.isArray(closed)) errors.push("closed must be an object");
-    else {
-      const o = closed as Record<string, unknown>;
-      for (const k of Object.keys(o)) if (!["variant", "icon", "label", "hint", "showHint"].includes(k)) errors.push(`closed: unknown key "${k}"`);
-      if (o.variant !== undefined && !["fab", "pill", "tab", "helper", "ghost"].includes(o.variant as string))
-        errors.push(`closed.variant must be one of fab|pill|tab|helper|ghost (got ${JSON.stringify(o.variant)})`);
-      for (const k of ["icon", "label", "hint"]) {
-        if (o[k] !== undefined && typeof o[k] !== "string") errors.push(`closed.${k} must be a string (got ${JSON.stringify(o[k])})`);
-      }
-      if (o.showHint !== undefined && typeof o.showHint !== "boolean") errors.push(`closed.showHint must be a boolean (got ${JSON.stringify(o.showHint)})`);
+  const checkClosed = (o: unknown, where: string) => {
+    if (o === undefined) return;
+    if (!o || typeof o !== "object" || Array.isArray(o)) { errors.push(`${where} must be an object`); return; }
+    const oo = o as Record<string, unknown>;
+    for (const k of Object.keys(oo)) if (!["variant", "icon", "label", "hint", "showHint"].includes(k)) errors.push(`${where}: unknown key "${k}"`);
+    if (oo.variant !== undefined && !["fab", "pill", "tab", "helper", "ghost"].includes(oo.variant as string))
+      errors.push(`${where}.variant must be one of fab|pill|tab|helper|ghost (got ${JSON.stringify(oo.variant)})`);
+    for (const k of ["icon", "label", "hint"]) {
+      if (oo[k] !== undefined && typeof oo[k] !== "string") errors.push(`${where}.${k} must be a string (got ${JSON.stringify(oo[k])})`);
     }
-  }
+    if (oo.showHint !== undefined && typeof oo.showHint !== "boolean") errors.push(`${where}.showHint must be a boolean (got ${JSON.stringify(oo.showHint)})`);
+  };
+  checkClosed(closed, "closed");
   // shortcut: numbers that arrive as strings ("14px") silently break CSS vars - flag them.
   for (const k of ["zIndex", "paletteWidth", "overlayBlur"]) {
     const v = (c[k] as unknown);
@@ -116,6 +116,21 @@ export function validateConfig(cfg: unknown): string[] {
     }
   };
   numObj("timing", ["toastMs", "pulseMs", "closeMs", "focusMs", "navigateMs", "navigateIdleMs", "askMs"]);
+  // Per-page overrides: same enums as top level, unknown keys rejected.
+  if (c.routes !== undefined) {
+    const r = c.routes;
+    if (!r || typeof r !== "object" || Array.isArray(r)) errors.push("routes must be an object keyed by path");
+    else for (const [rk, rv] of Object.entries(r as Record<string, unknown>)) {
+      if (!rv || typeof rv !== "object" || Array.isArray(rv)) { errors.push(`routes["${rk}"] must be an object`); continue; }
+      const o = rv as Record<string, unknown>;
+      for (const k of Object.keys(o)) if (!["trigger", "theme", "cssVars", "zIndex", "paletteWidth", "overlayBlur", "closed", "fab", "timing", "position", "animation", "suggestions", "allowActions", "labels", "endpoint"].includes(k)) errors.push(`routes["${rk}"]: unknown key "${k}"`);
+      if (o.position !== undefined && !["top", "center", "bottom"].includes(o.position as string))
+        errors.push(`routes["${rk}"].position must be one of top|center|bottom (got ${JSON.stringify(o.position)})`);
+      if (o.animation !== undefined && !["fade", "slide", "scale", "none"].includes(o.animation as string))
+        errors.push(`routes["${rk}"].animation must be one of fade|slide|scale|none (got ${JSON.stringify(o.animation)})`);
+      checkClosed(o.closed, `routes["${rk}"].closed`);
+    }
+  }
   const brain = c.brain;
   if (brain !== undefined) {
     if (!brain || typeof brain !== "object" || Array.isArray(brain)) errors.push("brain must be an object");

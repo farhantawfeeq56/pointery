@@ -184,9 +184,23 @@ export type PointeryProps = {
   labels?: PointeryLabels;
   /** POST endpoint for queries. Defaults to "/api/ask". */
   endpoint?: string;
+  /** Per-page overrides: exact path wins, `"/demo/*"` matches any route under it.
+   *  Merged over the base props on the current route (theme/labels/timing/closed
+   *  merge key-by-key, everything else replaces). */
+  routes?: Record<string, PointeryRouteOverride>;
+  /** Current route for `routes` matching. Defaults to `window.location.pathname`. */
+  route?: string;
   /** Override default action behavior (dispatches `pointery:action` + toast otherwise). */
   onAction?: (name: string) => void | Promise<void>;
 };
+
+/** Per-page override: every UI prop except the global/router ones. */
+export type PointeryRouteOverride = Pick<
+  PointeryProps,
+  | "trigger" | "theme" | "cssVars" | "zIndex" | "paletteWidth" | "overlayBlur"
+  | "closed" | "fab" | "timing" | "position" | "animation"
+  | "suggestions" | "allowActions" | "labels" | "endpoint"
+>;
 
 /** Customer's own LLM endpoint. Required at runtime - the handler 503s without it. OpenAI-compatible is the default wire (`{ model, messages }`); native Anthropic Messages / Gemini `generateContent` URLs are auto-detected from the host - same shape, no extra config. `model` passes through verbatim: copy the exact id from the provider dashboard (`gpt-4o-mini`, `claude-3-5-haiku-latest`, `gemini-2-flash`, `anthropic/claude-3-5-haiku` via OpenRouter, …). Key and cost are theirs. */
 export type PointeryLLMAdapter = {

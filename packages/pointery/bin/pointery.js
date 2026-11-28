@@ -40,6 +40,9 @@ const STARTER_CONFIG = {
   endpoint: "/api/ask",
   closed: { variant: "fab", icon: "?", label: "Ask" },
   hiddenRoutes: ["/"],
+  // Per-page overrides: exact path wins, "/demo/*" matches anything under it.
+  // e.g. "/demo/pipeline": { position: "bottom", suggestions: ["Show me the pipeline table"] }
+  routes: {},
   timing: { toastMs: 4200, pulseMs: 2600, closeMs: 160, focusMs: 30, navigateMs: 450, navigateIdleMs: 50 },
   zIndex: 60,
   paletteWidth: 560,
@@ -59,7 +62,7 @@ const STARTER_CONFIG = {
 function validateConfigJson(c) {
   const errs = [];
   if (!c || typeof c !== "object" || Array.isArray(c)) return ["config must be a JSON object"];
-  const known = new Set(["$schema", "trigger", "theme", "cssVars", "zIndex", "paletteWidth", "overlayBlur", "closed", "fab", "hiddenRoutes", "timing", "position", "animation", "suggestions", "allowActions", "labels", "endpoint", "brain"]);
+  const known = new Set(["$schema", "trigger", "theme", "cssVars", "zIndex", "paletteWidth", "overlayBlur", "closed", "fab", "hiddenRoutes", "timing", "position", "animation", "suggestions", "allowActions", "labels", "endpoint", "routes", "brain"]);
   for (const k of Object.keys(c)) if (!known.has(k)) errs.push(`unknown key "${k}" - see schema.json`);
   if (c.position !== undefined && !["top", "center", "bottom"].includes(c.position)) errs.push(`position must be one of top|center|bottom (got ${JSON.stringify(c.position)})`);
   if (c.animation !== undefined && !["fade", "slide", "scale", "none"].includes(c.animation)) errs.push(`animation must be one of fade|slide|scale|none (got ${JSON.stringify(c.animation)})`);
@@ -73,6 +76,14 @@ function validateConfigJson(c) {
   }
   for (const k of ["zIndex", "paletteWidth", "overlayBlur"]) {
     if (c[k] !== undefined && typeof c[k] !== "number") errs.push(`${k} must be a number (got ${JSON.stringify(c[k])})`);
+  }
+  if (c.routes !== undefined) {
+    if (!c.routes || typeof c.routes !== "object" || Array.isArray(c.routes)) errs.push("routes must be an object keyed by path");
+    else for (const [rk, rv] of Object.entries(c.routes)) {
+      if (!rv || typeof rv !== "object" || Array.isArray(rv)) { errs.push(`routes["${rk}"] must be an object`); continue; }
+      if (rv.position !== undefined && !["top", "center", "bottom"].includes(rv.position)) errs.push(`routes["${rk}"].position must be one of top|center|bottom`);
+      if (rv.animation !== undefined && !["fade", "slide", "scale", "none"].includes(rv.animation)) errs.push(`routes["${rk}"].animation must be one of fade|slide|scale|none`);
+    }
   }
   return errs;
 }
