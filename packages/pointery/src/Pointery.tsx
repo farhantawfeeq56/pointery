@@ -176,6 +176,9 @@ export default function Pointery(props: PointeryProps) {
     const queryText = query.trim();
     if (!queryText) return;
     close();
+    // Palette is gone, so pending state lives in the toast slot — every
+    // outcome below replaces it (answer, hint, done, empty, unreachable).
+    say("Asking…");
     try {
       const r = await fetch(cfg.endpoint, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ query: queryText, page: window.location.pathname }) });
       const data = (await r.json()) as PointeryResult;
@@ -194,7 +197,12 @@ export default function Pointery(props: PointeryProps) {
       }
       if (data.action) {
         if (data.confirm === false) await runAction(data.action);
-        else setPendingAction(data.action);
+        else {
+          // Confirm dialog speaks for itself — drop the pending toast.
+          if (toastTimer.current) window.clearTimeout(toastTimer.current);
+          setToast(null);
+          setPendingAction(data.action);
+        }
       }
       else if (data.go || data.spot) goSpot(data.go, data.spot, data.hint, data.filter);
       else if (!data.answer && !walkthrough) say(cfg.labels.empty!);
