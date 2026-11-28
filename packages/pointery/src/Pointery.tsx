@@ -227,6 +227,9 @@ export default function Pointery(props: PointeryProps) {
       if (walkthrough) {
         setGuide({ title: walkthrough.title, steps: walkthrough.steps, i: 0 });
         setGuideIdx(0);
+        // Card is the feedback — dismiss the Asking toast instead of leaving it stale.
+        if (toastTimer.current) window.clearTimeout(toastTimer.current);
+        setToast(null);
         const first = walkthrough.steps[0];
         // Single toast announcing the guide; top-level go/spot/hint below is skipped for walkthroughs.
         // Card shows the step — announce silently (navigate + pulse only).
