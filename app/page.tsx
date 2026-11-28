@@ -84,31 +84,34 @@ export default function Home() {
       <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
       <style>{`
         :root {
-          --color-primary: #00A878;
-          --color-primary-hover: #008F65;
-          --color-background: #FFFFFF;
-          --color-background-secondary: #F8FAF5;
-          --color-text-primary: #0B0500;
-          --color-text-secondary: #716D67;
-          --color-text-tertiary: #9B9892;
-          --color-border: #E8EAE5;
-          --color-error: #FE5E41;
-          --shadow-md: 0 4px 12px rgba(11, 5, 0, 0.08);
+          --color-primary: #ED1C24;
+          --color-primary-hover: #C9141B;
+          --color-secondary: #235789;
+          --color-accent: #F1D302;
+          --color-background: #FDFFFC;
+          --color-background-secondary: #F2F2EF;
+          --color-surface: #FDFFFC;
+          --color-text-primary: #020100;
+          --color-text-secondary: #666663;
+          --color-text-tertiary: #666663;
+          --color-border: #E5E5E2;
+          --color-error: #ED1C24;
+          --shadow-md: 0 4px 12px rgba(2, 1, 0, 0.08);
         }
         .pointery-landing { font-family: "Figtree", ui-sans-serif, system-ui, sans-serif; background: var(--color-background); color: var(--color-text-primary); }
         .py-inset { background: var(--color-background-secondary); color: var(--color-text-secondary); border: 1px solid var(--color-border); }
         .py-code { background: var(--color-background-secondary); border: 1px solid var(--color-border); color: var(--color-text-primary); }
         .py-save { background: var(--color-primary); color: #fff; }
         .py-save:hover { background: var(--color-primary-hover); }
-        .py-card { background: #fff; border: 1px solid var(--color-border); border-radius: 14px; }
+                .py-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 14px; }
       `}</style>
       <div className="pointery-landing w-full flex-1">
         <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6">
           <header className="flex items-center justify-between py-5">
             <span className="text-lg font-bold tracking-tight">◉ Pointery</span>
             <nav className="flex items-center gap-2 text-sm font-medium">
-              {demo && <Link href="/demo" className="rounded-full px-4 py-2 text-zinc-600 hover:bg-zinc-100">Live demo</Link>}
-              {demo && <Link href="/pointery" className="rounded-full px-4 py-2 text-zinc-600 hover:bg-zinc-100">Settings</Link>}
+              {demo && <Link href="/demo" className="rounded-full px-4 py-2 text-muted-foreground hover:bg-surface-muted">Live demo</Link>}
+              {demo && <Link href="/pointery" className="rounded-full px-4 py-2 text-muted-foreground hover:bg-surface-muted">Settings</Link>}
               {demo
                 ? <Link href="/demo/pipeline" className="py-save rounded-full px-4 py-2 text-white">Try it →</Link>
                 : <Link href="/pointery" className="py-save rounded-full px-4 py-2 text-white">Open settings →</Link>}
@@ -117,7 +120,7 @@ export default function Home() {
 
           <main className="flex flex-col items-center py-16 text-center">
             <p className="py-inset rounded-full px-4 py-1.5 text-xs font-medium shadow-sm">
-              Drop-in kit for any SaaS · the palette lives inside the app, not this page{demo && <> - open the demo and press <kbd className="rounded bg-white px-1.5 py-0.5 font-mono">Shift+A</kbd></>}
+              Drop-in kit for any SaaS · the palette lives inside the app, not this page{demo && <> - open the demo and press <kbd className="rounded bg-surface px-1.5 py-0.5 font-mono">Shift+A</kbd></>}
             </p>
             <h1 className="mt-6 max-w-2xl text-5xl font-bold leading-[1.05] tracking-tight">
               Users ask.<br />Pointery takes them there.
@@ -130,12 +133,12 @@ export default function Home() {
               {demo ? (
                 <>
                   <Link href="/demo" className="py-save rounded-full px-6 py-3 text-sm font-semibold text-white">Open the live demo</Link>
-                  <Link href="/pointery" className="rounded-full border bg-white px-6 py-3 text-sm font-semibold hover:bg-zinc-50" style={{ borderColor: "var(--color-border)" }}>Theme it in settings</Link>
+                  <Link href="/pointery" className="rounded-full border border-border bg-surface px-6 py-3 text-sm font-semibold hover:bg-surface-muted" style={{ borderColor: "var(--color-border)" }}>Theme it in settings</Link>
                 </>
               ) : (
                 <>
                   <Link href="/pointery" className="py-save rounded-full px-6 py-3 text-sm font-semibold text-white">Open settings</Link>
-                  <a href="#how" className="rounded-full border bg-white px-6 py-3 text-sm font-semibold hover:bg-zinc-50" style={{ borderColor: "var(--color-border)" }}>How it works ↓</a>
+                  <a href="#how" className="rounded-full border border-border bg-surface px-6 py-3 text-sm font-semibold hover:bg-surface-muted" style={{ borderColor: "var(--color-border)" }}>How it works ↓</a>
                 </>
               )}
             </div>
@@ -145,7 +148,7 @@ export default function Home() {
               ))}
             </div>
 
-            <p className="mt-14 w-full text-left text-xs font-medium uppercase tracking-wider text-zinc-400">01 - What it does</p>
+            <p className="mt-14 w-full text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">01 - What it does</p>
             <div className="mt-3 grid w-full gap-4 text-left sm:grid-cols-2 lg:grid-cols-3">
               {DOES.map((s) => (
                 <div key={s.t} className="py-card p-5">
@@ -155,7 +158,7 @@ export default function Home() {
               ))}
             </div>
 
-            <p id="how" className="mt-10 w-full text-left text-xs font-medium uppercase tracking-wider text-zinc-400">02 - How it works</p>
+            <p id="how" className="mt-10 w-full text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">02 - How it works</p>
             <div className="mt-3 grid w-full gap-4 text-left sm:grid-cols-3">
               {STEPS.map((s) => (
                 <div key={s.n} className="py-card p-5">
@@ -166,7 +169,7 @@ export default function Home() {
               ))}
             </div>
 
-            <p className="mt-10 w-full text-left text-xs font-medium uppercase tracking-wider text-zinc-400">03 - Wire up</p>
+            <p className="mt-10 w-full text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">03 - Wire up</p>
             <div className="py-code mt-3 w-full rounded-[14px] p-5 text-left">
               <pre className="overflow-x-auto whitespace-pre-wrap font-mono text-[13px] leading-6">{WIRE}</pre>
             </div>
@@ -205,7 +208,7 @@ export default function Home() {
             )}
           </main>
 
-          <footer className="flex items-center justify-between border-t py-6 text-xs text-zinc-400" style={{ borderColor: "var(--color-border)" }}>
+          <footer className="flex items-center justify-between border-t border-border py-6 text-xs text-muted-foreground" style={{ borderColor: "var(--color-border)" }}>
             <span>Pointery - self-hosted · BYOK · no data to us</span>
             <span>{demo && (<><Link href="/demo/settings" className="underline">Demo settings</Link> · </>)}<Link href="/pointery" className="underline">Settings</Link> · POINTERY_PROMPT.md ships on purchase</span>
           </footer>
