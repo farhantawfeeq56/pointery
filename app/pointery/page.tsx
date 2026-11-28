@@ -330,7 +330,7 @@ export default function PointerySettingsPage() {
 
         <div className="min-w-0 lg:order-1">
           <section data-pointery="pointery-settings-shortcut" className="py-6 first:pt-0">
-            <div className="flex items-center justify-between gap-2 rounded-xl border border-zinc-200 px-2.5 py-1.5">
+            <div className="flex max-w-md items-center justify-between gap-2 rounded-xl border border-zinc-200 px-2.5 py-1.5">
               <div className="min-w-0">
                 <p className="text-xs text-zinc-500">{recording ? "Recording — press keys…" : "Current shortcut"}</p>
                 <p className="truncate font-mono text-sm font-semibold">{recording ? prettyShortcut(recordingPreview ?? "…") : prettyShortcut(cfg.trigger)}</p>
@@ -387,7 +387,7 @@ export default function PointerySettingsPage() {
             </label>
             <div className="mt-3 text-sm">
               <span className="font-medium">Suggestions</span>
-              <div className="mt-2 space-y-2">
+              <div className="mt-2 grid gap-2 sm:grid-cols-2">
                 {(() => { const rows = [...cfg.suggestions]; while (rows.length < 3) rows.push(""); return rows; })().map((s, i) => (
                   <div key={i} className="flex items-center gap-2">
                     <input
@@ -407,15 +407,17 @@ export default function PointerySettingsPage() {
                     )}
                   </div>
                 ))}
-                {cfg.suggestions.length < 4 && (
+              </div>
+              {cfg.suggestions.length < 4 && (
+                <div className="mt-2">
                   <button
                     onClick={() => setCfg((c) => ({ ...c, suggestions: [...c.suggestions, ""].slice(0, 4) }))}
                     className="rounded-full border border-dashed border-zinc-300 px-2.5 py-0.5 text-xs font-semibold text-zinc-500 hover:border-zinc-500"
                   >
                     + Add suggestion
                   </button>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </section>
 

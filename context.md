@@ -336,3 +336,9 @@ Padding tightening per page feedback (2 items).
 
 - `app/pointery/page.tsx` — position select `w-40` → `w-fit` (hugs biggest option); sections + save row `py-8` → `py-6`; inputs/select `px-3 py-2` → `px-2.5 py-1.5`; color swatch `h-10 w-14` → `h-8 w-12`; shortcut card `px-3 py-2` → `px-2.5 py-1.5 gap-2`; + button and save button slimmed. Preview mock untouched.
 - Re-synced via `npm run pointery:sync-page`; `init --check` ok, `tsc` clean.
+
+## Pass 45 (feat/basic-changes, 2026-11-28)
+Narrowed boxes per page feedback.
+
+- `app/pointery/page.tsx` — suggestion boxes into 2-col grid (half-width each), + button on its own row; shortcut card capped at `max-w-md`.
+- Re-synced via `npm run pointery:sync-page`; `init --check` ok, `tsc` clean.
