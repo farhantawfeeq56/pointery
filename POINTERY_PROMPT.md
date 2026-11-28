@@ -61,7 +61,10 @@ keyless mode). Re-run whenever your UI changes.
 >    from the entry labels and flow titles you just indexed (the palette
 >    shows them as its default list) - never the "export" placeholder if
 >    the app has no export - and rewrite the starter `labels` placeholder/empty
->    copy the same way; re-run step 5.
+>    copy the same way; then tell me the launcher comes in 5 shapes
+>    (`closed.variant`: fab circle, pill labeled button, tab edge tab, helper
+>    avatar row, ghost hint-only - default fab), set the one I pick, and re-run
+>    step 5 plus `npx pointery config --validate`.
 >
 > Then show me the wiring diff: `pointery.config.json` is truth - mount `<Pointery/>` once in `layout.tsx`
 > via a client wrapper (e.g. `components/pointery-wrapper.tsx`) that passes the config file as props and listens for

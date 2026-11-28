@@ -637,3 +637,11 @@ AGENTS.md config-reminder rule: point users at config.json.
 
 - New bullet in the pointery block (both copies, verified identical via fresh-`init`): when the user asks to change Pointery's look/behavior, remind them it is all configurable in `pointery.config.json` - trigger, theme, closed launcher, position, animation, suggestions, allowActions, labels, timing, zIndex/width/blur, endpoint, per-page `routes` (`schema.json` lists everything). Apply to config, never hardcode.
 - Verified: `node --check` bin, fresh-`init` block identical.
+
+## Pass 88 (feat/basic-changes, 2026-11-28)
+Launcher-variant discoverability: prompt first-run + init message (options 2+3).
+
+- Step 7 (`POINTERY_PROMPT.md` + CLI `STARTER_PROMPT`, both copies): agent now tells the owner the launcher comes in 5 shapes (`closed.variant`: fab circle, pill labeled button, tab edge tab, helper avatar row, ghost hint-only - default fab), sets the one picked, re-runs `--check` + `config --validate`.
+- `init` success message: new `Launcher shapes: closed.variant = fab (circle, default) | pill | tab | helper | ghost (hint only).` line after the snippet.
+- Drive-by: two one-phrase prompt drifts fixed (config-errors dash, model-id examples) so the shipped prompt is byte-identical to root again (excluding the intentional root-only trailing docs).
+- Verified: `node --check` bin, shipped-prompt identical, `lint` clean.

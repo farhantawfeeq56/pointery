@@ -153,16 +153,19 @@ keyless mode). Re-run whenever your UI changes.
 >    code anchors with no map entry AND map entries with no rendered anchor,
 >    plus guide steps pointing at missing targets, live \`$\` data, bloated maps
 >    (max ~40 entries, ~10 flows), instruction-style \`for\` text,
->    or config errors (unknown keys, bad enums). \`node_modules/pointery/schema.json\` is truth
+>    or config errors - unknown keys, bad enums). \`node_modules/pointery/schema.json\` is truth
 >    for \`pointery.config.json\`: position is top|center|bottom, animation is
 >    fade|slide|scale|none. Run \`npx pointery config --validate\` after any config edit.
-> 6. Brain (my key, my bill, required - one step): walk me through it - add \`POINTERY_LLM_URL\` (my model endpoint: OpenAI-compatible chat-completions URL, or native Anthropic \`…/v1/messages\` / Gemini \`…:generateContent\` - auto-detected), \`POINTERY_LLM_KEY\`, AND \`POINTERY_LLM_MODEL\` (exact model id as the provider spells it) to \`.env.local\` together, restart dev, and
+> 6. Brain (my key, my bill, required - one step): walk me through it - add \`POINTERY_LLM_URL\` (my model endpoint: OpenAI-compatible chat-completions URL, or native Anthropic \`…/v1/messages\` / Gemini \`…:generateContent\` - auto-detected), \`POINTERY_LLM_KEY\`, AND \`POINTERY_LLM_MODEL\` (exact model id as the provider spells it: \`gpt-4o-mini\`, \`claude-3-5-haiku-latest\`, \`gemini-2-flash\`, …) to \`.env.local\` together, restart dev, and
 >    verify with a real question built from THIS map (a flow title or entry label you just indexed - never the "export" placeholder if the app has no export). Without all three, \`/api/ask\` fails closed (503). OpenAI defaults the model to \`gpt-4o-mini\` when unset; every other provider needs it. Never print or commit the key.
 > 7. First-run copy: set \`suggestions\` to 3-5 real questions for THIS app, built
 >    from the entry labels and flow titles you just indexed (the palette
 >    shows them as its default list) - never the "export" placeholder if
 >    the app has no export - and rewrite the starter \`labels\` placeholder/empty
->    copy the same way; re-run step 5.
+>    copy the same way; then tell me the launcher comes in 5 shapes
+>    (\`closed.variant\`: fab circle, pill labeled button, tab edge tab, helper
+>    avatar row, ghost hint-only - default fab), set the one I pick, and re-run
+>    step 5 plus \`npx pointery config --validate\`.
 >
 > Then show me the wiring diff: \`pointery.config.json\` is truth - mount \`<Pointery/>\` once in \`layout.tsx\`
 > via a client wrapper (e.g. \`components/pointery-wrapper.tsx\`) that passes the config file as props and listens for
@@ -253,6 +256,7 @@ if (cmd === "init") {
   upsertAgents();
   console.log("\nNext: paste POINTERY_PROMPT.md into your coding agent to map your UI,");
   console.log("then mount <Pointery/> once in layout.tsx:\n\n" + SNIPPET);
+  console.log("\nLauncher shapes: closed.variant = fab (circle, default) | pill (labeled button) | tab (edge tab) | helper (avatar row) | ghost (hint only).");
 
   if (check) {
     const ctx = JSON.parse(fs.readFileSync(path.join(cwd, "pointery.context.json"), "utf8"));
