@@ -591,3 +591,10 @@ vartest-closed: 10 closed-state launcher ideas on one lab page.
 - `app/vartest-closed/page.tsx` - mock canvas (fake CRM) + 1 rule-switchable launchers: classic ?, ask pill, search stub, spark, nudge bubble, live dot, edge tab, helper online, ghost hint, command btn. Click previews a mock open palette; real kit fab hidden on this page via injected style.
 - Switcher: floating segmented 1..0 pill bottom-right + keys 1-9/0, arrows, prev/next.
 - Verified: `lint` + `tsc` clean. Not built (lab page, no kit change).
+
+## Pass 82 (feat/basic-changes, 2026-11-28)
+Closed-state vartest moved into the real demo.
+
+- `app/demo/variant-switcher.tsx` (new, demo-only) - same 10 launchers as `/vartest-closed`, fixed-positioned above a floating 1..0 switcher (keys 1-9/0, choice persists in localStorage). Kit fab hidden on demo pages; variant 1 is its pixel-twin. Clicking any launcher dispatches the configured trigger (fetched from `/api/admin/config`) so the REAL palette opens.
+- `app/demo/layout.tsx` - mounts `<VariantSwitcher/>`.
+- Verified: `lint` + `tsc` clean, `/demo` 200 on dev with switcher in HTML. No kit change.
