@@ -514,3 +514,10 @@ Temp 1-15 palette hooks to preview each package empty state (delete before merge
 - `app/api/ask/route.ts` - `tempEmptyDemo()` bypass (dev-only): exact queries 1-15 return canned payloads; all else rebuilds the request into the real handler. 3 = non-JSON body (unreachable), 5 = 1.5s delayed (asking), 4/9 = blocked/confirm split.
 - `pointery.config.json` - `allowActions` temp-trimmed to `["mark-won"]` so hook 4 (invite-teammate) hits the blocked path.
 - Verified: `lint` + `tsc` clean; all hooks curled live on :3000, normal queries unaffected.
+
+## Pass 72 (feat/basic-changes, 2026-11-28)
+Removed the `pressEnter` ("No match - press Enter to ask anyway") line: Pointery is agent-style, free text always submits, so the message framed it wrongly as search-with-permission.
+
+- `packages/pointery/src/Pointery.tsx` - dropped the default + the `rows.length === 0 && q.trim()` render block; typed-but-unmatched input now shows a clean empty view.
+- `packages/pointery/src/types.ts` - `pressEnter` kept as `@deprecated` so existing buyer configs still validate (schema uses `additionalProperties: false`); `schema.json` + `.pointery-meta` CSS left untouched.
+- Verified: `lint` + `kit:build` + `tsc` clean. Temp hook 2 now previews the clean empty view.

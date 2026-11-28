@@ -23,7 +23,6 @@ const DEFAULTS = {
     blocked: "“{action}” needs approval - taking you there instead.",
     done: "Done - {action}.",
     unreachable: "Pointery is unreachable - is {endpoint} mounted?",
-    pressEnter: "No match - press Enter to ask anyway.",
     guideComplete: "Guide complete.",
     ambiguous: "Several rows match - showing “{title}”.",
     confirmBody: "“{action}” needs your confirmation.",
@@ -356,9 +355,6 @@ export default function Pointery(props: PointeryProps) {
                   </li>
                 ))}
               </ul>
-            )}
-            {rows.length === 0 && q.trim() && (
-              <p className="pointery-meta">{cfg.labels.pressEnter}</p>
             )}
             </div>
           </div>
