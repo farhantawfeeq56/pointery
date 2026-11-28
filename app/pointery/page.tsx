@@ -226,7 +226,7 @@ export default function PointerySettingsPage() {
   const [errors, setErrors] = useState<string[]>([]);
   const [llm, setLlm] = useState<{ configured: boolean; host: string; model: string } | null>(null);
   const [preview, setPreview] = useState<"closed" | "open">("open");
-  const [variant, setVariant] = useState(1);
+  const [pv, setPv] = useState(1);
   const [copied, setCopied] = useState(false);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -289,11 +289,11 @@ export default function PointerySettingsPage() {
     return () => window.removeEventListener("keydown", onKey, true);
   }, [recording]);
 
-  // vartest: keys 1-5 switch layout variants (temporary test harness).
+  // vartest: keys 1-5 switch preview designs (temporary test harness).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLElement && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.isContentEditable)) return;
-      if (e.key >= "1" && e.key <= "5") setVariant(Number(e.key));
+      if (e.key >= "1" && e.key <= "5") setPv(Number(e.key));
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -350,6 +350,20 @@ export default function PointerySettingsPage() {
   if (process.env.NODE_ENV === "production") notFound();
 
   const counts = ctx ? `${ctx.entries?.length ?? 0} entries · ${ctx.flows?.length ?? 0} flows · ${ctx.actions?.length ?? 0} actions` : null;
+
+  const posAlign = cfg.position === "center" ? "items-center" : cfg.position === "bottom" ? "items-end pb-8" : "items-start pt-8";
+
+  const paletteCard = (dark = false, large = false) => (
+    <div className={`py-sheet w-full ${large ? "max-w-[400px]" : "max-w-[360px]"} p-2 shadow-2xl ${dark ? "bg-zinc-900 text-zinc-100" : "bg-white"}`} style={{ borderRadius: cfg.theme.radius }} onClick={(e) => e.stopPropagation()}>
+      <p className={`rounded-md border px-3 ${large ? "py-3 text-sm" : "py-2 text-xs"} ${dark ? "border-zinc-700 text-zinc-200" : "text-zinc-700"}`} style={{ borderRadius: Math.max(4, cfg.theme.radius - 4) }}>{cfg.labels?.placeholder || 'Ask "where is export?"…'}</p>
+      <div className="flex flex-wrap gap-2 p-2">
+        {(cfg.suggestions.filter(Boolean).length ? cfg.suggestions.filter(Boolean).slice(0, 3) : ["No suggestions yet — add some above"]).map((s, i) => (
+          <span key={s + i} className={"rounded-full border px-2.5 py-1 text-xs " + (cfg.suggestions.filter(Boolean).length ? (dark ? "border-zinc-700 bg-zinc-800 text-zinc-300" : "py-inset") : "text-zinc-400")}>{s}</span>
+        ))}
+      </div>
+      <p className={`px-1 pt-1 text-xs ${dark ? "text-zinc-500" : "text-zinc-400"}`}>{prettyShortcut(cfg.trigger)} toggles · ⌘K works too · Esc closes</p>
+    </div>
+  );
 
   const snippet = `<Pointery\n  trigger="${cfg.trigger}"\n  theme={{ primary: "${cfg.theme.primary}", radius: ${cfg.theme.radius} }}\n  position="${cfg.position}"\n/>`;
 
@@ -497,8 +511,8 @@ export default function PointerySettingsPage() {
       <div className="py-enter border-t border-zinc-200 pt-6" style={{ animationDelay: "160ms" }}>
         <p className="text-xs font-medium uppercase tracking-wider text-zinc-400">02 - Customize and preview</p>
       </div>
-      <div className={variant === 4 ? "py-enter grid items-start gap-6" : variant === 5 ? "py-enter mx-auto grid w-full max-w-2xl items-start gap-6" : "py-enter grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-12"} style={{ animationDelay: "210ms" }}> 
-        <section data-pointery="pointery-settings-preview" className={variant === 2 ? "self-start lg:order-1 lg:sticky lg:top-6" : variant === 4 || variant === 5 ? "min-w-0" : "self-start lg:order-2 lg:sticky lg:top-6"}>
+      <div className="py-enter grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_480px] lg:gap-12" style={{ animationDelay: "210ms" }}>
+        <section data-pointery="pointery-settings-preview" className="self-start lg:order-2 lg:sticky lg:top-6">
           <div className="flex flex-wrap items-center justify-end gap-3">
             <div className="py-inset relative flex rounded-2xl p-1 text-sm font-medium" role="tablist" aria-label="Preview state">
               <span aria-hidden className="py-thumb absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-xl border border-zinc-200 bg-white shadow-sm" style={{ transform: preview === "open" ? "translateX(100%)" : "translateX(0)" }} />
@@ -515,6 +529,7 @@ export default function PointerySettingsPage() {
               ))}
             </div>
           </div>
+          {pv === 1 && (
           <div className="mt-4 overflow-hidden rounded-[14px] border">
             <div className="py-inset flex items-center gap-2 border-b px-4 py-2.5">
               <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
@@ -523,7 +538,7 @@ export default function PointerySettingsPage() {
               <span className="ml-2 flex-1 truncate rounded-md bg-white px-3 py-1 font-mono text-xs text-zinc-500">yourapp.com/pipeline</span>
             </div>
             <div className="relative">
-              <div className="grid min-h-[280px] grid-cols-[110px_1fr]">
+              <div className="grid min-h-[340px] grid-cols-[132px_1fr]">
                 <div className="border-r bg-white p-3">
                   <p className="flex items-center gap-2 text-xs font-semibold"><span className="h-4 w-4 rounded" style={{ background: cfg.theme.primary }} />Acme</p>
                   <div className="mt-3 space-y-2 text-xs">
@@ -542,7 +557,7 @@ export default function PointerySettingsPage() {
                     </div>
                   </div>
                   <div className="mt-3 space-y-2">
-                    {["Acme Corp · $8,000 · Negotiation", "Globex · $12,400 · Proposal"].map((r) => (
+                    {["Acme Corp · $8,000 · Negotiation", "Globex · $12,400 · Proposal", "Initech · $3,200 · Discovery"].map((r) => (
                       <p key={r} className="rounded-lg border bg-white px-3 py-2 text-xs text-zinc-600">{r}</p>
                     ))}
                   </div>
@@ -564,12 +579,95 @@ export default function PointerySettingsPage() {
               )}
             </div>
           </div>
+          )}
+          {pv === 2 && (
+          <div className="mt-4 overflow-hidden rounded-[14px] border border-zinc-800">
+            <div className="flex items-center gap-2 border-b border-zinc-800 bg-zinc-950 px-4 py-2.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-zinc-700" />
+              <span className="h-2.5 w-2.5 rounded-full bg-zinc-700" />
+              <span className="h-2.5 w-2.5 rounded-full bg-zinc-700" />
+              <span className="ml-2 flex-1 truncate rounded-md bg-zinc-900 px-3 py-1 font-mono text-xs text-zinc-400">yourapp.com/pipeline</span>
+            </div>
+            <div className="relative">
+              <div className="grid min-h-[340px] grid-cols-[132px_1fr] bg-zinc-950">
+                <div className="border-r border-zinc-800 p-4">
+                  <p className="flex items-center gap-2 text-xs font-semibold text-zinc-100"><span className="h-4 w-4 rounded" style={{ background: cfg.theme.primary }} />Acme</p>
+                  <div className="mt-3 space-y-2 text-xs">
+                    <p className="rounded px-2 py-1 text-zinc-500">Dashboard</p>
+                    <p className="rounded bg-white/10 px-2 py-1 font-medium text-zinc-100"><span style={{ color: cfg.theme.primary }}>● </span>Pipeline</p>
+                    <p className="rounded px-2 py-1 text-zinc-500">Contacts</p>
+                    <p className="rounded px-2 py-1 text-zinc-500">Settings</p>
+                  </div>
+                </div>
+                <div className="bg-zinc-900 p-5">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-zinc-50">Pipeline</p>
+                    <div className="flex gap-2">
+                      <span className="rounded-full border border-zinc-700 px-2.5 py-1 text-xs font-medium text-zinc-300">Export</span>
+                      <span className="px-2.5 py-1 text-xs font-medium text-white" style={{ background: cfg.theme.primary, borderRadius: cfg.theme.radius }}>+ Add deal</span>
+                    </div>
+                  </div>
+                  <div className="mt-3 space-y-2">
+                    {["Acme Corp · $8,000 · Negotiation", "Globex · $12,400 · Proposal", "Initech · $3,200 · Discovery"].map((r) => (
+                      <p key={r} className="rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-zinc-300">{r}</p>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <span className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center text-base font-semibold text-white shadow-lg" style={{ background: cfg.theme.primary, borderRadius: 999 }} title="Ask Pointery">?</span>
+              {preview === "open" && (
+                <div key={cfg.position} className={`py-fade absolute inset-0 flex justify-center bg-black/60 px-4 ${posAlign}`}>{paletteCard(true)}</div>
+              )}
+            </div>
+          </div>
+          )}
+          {pv === 3 && (
+          <div className="relative mt-4 min-h-[340px] overflow-hidden rounded-[14px] border border-zinc-200 bg-zinc-50 p-6">
+            <div className="h-7 w-40 rounded-md bg-zinc-200" />
+            <div className="mt-5 grid grid-cols-3 gap-3">
+              <div className="h-24 rounded-lg bg-zinc-200" />
+              <div className="h-24 rounded-lg" style={{ background: "color-mix(in srgb, var(--c) 25%, #e4e4e7)", ["--c" as string]: cfg.theme.primary }} />
+              <div className="h-24 rounded-lg bg-zinc-200" />
+            </div>
+            <div className="mt-4 space-y-2">
+              <div className="h-3 rounded bg-zinc-200" />
+              <div className="h-3 w-5/6 rounded bg-zinc-200" />
+              <div className="h-3 w-4/6 rounded bg-zinc-200" />
+            </div>
+            {preview === "open" && (
+              <div key={cfg.position} className={`absolute inset-0 flex justify-center px-4 ${posAlign}`}>{paletteCard()}</div>
+            )}
+          </div>
+          )}
+          {pv === 4 && (
+          <div className="relative mt-4 min-h-[340px] overflow-hidden rounded-[14px] border border-zinc-200" style={{ backgroundColor: "#fafafa", backgroundImage: "radial-gradient(circle, #d4d4d8 1.2px, transparent 1.2px)", backgroundSize: "18px 18px" }}>
+            {preview === "open" ? (
+              <div key={cfg.position} className={`absolute inset-0 flex justify-center px-6 ${posAlign}`}>{paletteCard()}</div>
+            ) : (
+              <p className="absolute inset-0 flex items-center justify-center text-xs text-zinc-400">Palette closed — flip the toggle above to preview</p>
+            )}
+          </div>
+          )}
+          {pv === 5 && (
+          <div className="relative mt-4 min-h-[340px] overflow-hidden rounded-[14px] border border-zinc-200 p-6" style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${cfg.theme.primary} 26%, #ffffff), color-mix(in srgb, ${cfg.theme.primary} 6%, #ffffff))` }}>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Acme · Pipeline</p>
+            <p className="mt-1 text-2xl font-semibold tracking-tight">Deals this quarter</p>
+            <div className="mt-4 space-y-2">
+              {["Acme Corp · $8,000 · Negotiation", "Globex · $12,400 · Proposal", "Initech · $3,200 · Discovery"].map((r) => (
+                <p key={r} className="rounded-xl border border-white/60 bg-white/80 px-4 py-3 text-sm font-medium text-zinc-700 shadow-sm backdrop-blur">{r}</p>
+              ))}
+            </div>
+            <span className="absolute bottom-4 right-4 flex h-11 w-11 items-center justify-center text-lg font-semibold text-white shadow-lg" style={{ background: cfg.theme.primary, borderRadius: 999 }} title="Ask Pointery">?</span>
+            {preview === "open" && (
+              <div key={cfg.position} className={`py-fade absolute inset-0 flex justify-center bg-black/15 px-4 ${posAlign}`}>{paletteCard(false, true)}</div>
+            )}
+          </div>
+          )}
         </section>
 
-        <div className={variant === 2 ? "min-w-0 lg:order-2" : variant === 4 ? "grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-4" : variant === 5 ? "w-full min-w-0 space-y-6" : variant === 3 ? "min-w-0 space-y-4 lg:order-1" : "min-w-0 lg:order-1"}>
-          <section data-pointery="pointery-settings-shortcut" className={variant === 4 ? "contents" : variant === 3 ? "border-t border-zinc-200 pt-5 first:border-0 first:pt-0" : variant === 5 ? "" : "py-6 first:pt-0"}>
-            {variant === 3 && <p className="mb-3 text-xs font-medium uppercase tracking-wider text-zinc-400">Trigger</p>}
-            <div className={variant === 4 ? "contents" : variant === 5 ? "grid items-stretch gap-4" : "grid items-stretch gap-4 sm:grid-cols-2"}>
+        <div className="min-w-0 lg:order-1">
+          <section data-pointery="pointery-settings-shortcut" className="py-6 first:pt-0">
+            <div className="grid items-stretch gap-4 sm:grid-cols-2">
             <div className="flex w-full flex-col py-1">
               <p className="text-xs text-zinc-500">{recording ? "Recording — press keys…" : "Current shortcut"}</p>
               <div className="mt-1 flex h-8 items-center gap-3">
@@ -605,16 +703,14 @@ export default function PointerySettingsPage() {
             </div>
           </section>
 
-          <section data-pointery="pointery-settings-brand" className={variant === 4 ? "contents" : variant === 3 ? "border-t border-zinc-200 pt-5" : variant === 5 ? "" : "py-6"}>
-            {variant === 3 && <p className="mb-3 text-xs font-medium uppercase tracking-wider text-zinc-400">Appearance</p>}
-            <div className={variant === 4 ? "contents" : variant === 5 ? "grid items-stretch gap-4" : "grid items-stretch gap-4 sm:grid-cols-2"}>
+          <section data-pointery="pointery-settings-brand" className="py-6">
+            <div className="grid items-stretch gap-4 sm:grid-cols-2">
               <ColorPicker value={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: v } })} />
               <RadiusSlider value={cfg.theme.radius} primary={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: v } })} />
             </div>
           </section>
 
-                    <section data-pointery="pointery-settings-behavior" className={variant === 4 ? "sm:col-span-2 lg:col-span-4" : variant === 3 ? "border-t border-zinc-200 pt-5" : variant === 5 ? "" : "py-6"}>
-            {variant === 3 && <p className="mb-3 text-xs font-medium uppercase tracking-wider text-zinc-400">Suggestions</p>}
+                    <section data-pointery="pointery-settings-behavior" className="py-6">
             <div className="text-sm">
               <span className="font-medium">Suggestions</span>
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
@@ -651,7 +747,7 @@ export default function PointerySettingsPage() {
             </div>
           </section>
 
-          <div className={variant === 4 ? "flex items-center gap-3 sm:col-span-2 lg:col-span-4" : "flex items-center gap-3 py-6"}>
+          <div className="flex items-center gap-3 py-6">
             <button onClick={saveNow} disabled={saveState === "saving"} className="py-save py-press w-fit rounded-full px-5 py-2 text-sm font-medium disabled:opacity-70">
               <span className="py-stack items-center text-center">
                 <span className={saveState === "saving" ? "invisible" : ""}>
@@ -707,16 +803,16 @@ export default function PointerySettingsPage() {
     </div>
     </div>
       {/* vartest toolbar — temporary, remove after variant pick */}
-      <div className="fixed bottom-4 right-4 z-50 flex items-center gap-1 rounded-full border border-zinc-200 bg-white/95 p-1 shadow-lg backdrop-blur" role="tablist" aria-label="Layout variants">
-        <span className="px-2 text-xs font-medium text-zinc-500">{["", "Split", "Swapped", "Divided", "Top + 4-up", "Narrow"][variant]}</span>
+      <div className="fixed bottom-4 right-4 z-50 flex items-center gap-1 rounded-full border border-zinc-200 bg-white/95 p-1 shadow-lg backdrop-blur" role="tablist" aria-label="Preview designs">
+        <span className="px-2 text-xs font-medium text-zinc-500">{["", "Browser", "Dark", "Wireframe", "Minimal", "Bold"][pv]}</span>
         {[1, 2, 3, 4, 5].map((n) => (
           <button
             key={n}
             role="tab"
-            aria-selected={variant === n}
-            title={["", "Split: controls left, preview right", "Swapped: preview left, controls right", "Divided: hairline sections, no boxes", "Top preview + 4-up controls", "Narrow stacked"][n]}
-            onClick={() => setVariant(n)}
-            className={variant === n ? "h-8 w-8 rounded-full bg-zinc-900 text-xs font-semibold text-white" : "h-8 w-8 rounded-full text-xs font-medium text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"}
+            aria-selected={pv === n}
+            title={["", "Browser: light app mock", "Dark: dark app mock", "Wireframe: skeleton blocks", "Minimal: palette on dots", "Bold: gradient hero"][n]}
+            onClick={() => setPv(n)}
+            className={pv === n ? "h-8 w-8 rounded-full bg-zinc-900 text-xs font-semibold text-white" : "h-8 w-8 rounded-full text-xs font-medium text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"}
           >
             {n}
           </button>
