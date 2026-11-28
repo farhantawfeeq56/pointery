@@ -159,11 +159,11 @@
 /* toast / guide / confirm / fab */
 .pointery-toast { position: fixed; bottom: 1.25rem; left: 50%; transform: translateX(-50%); z-index: calc(var(--pointery-z) + 10); background: var(--color-surface-inverse); color: var(--color-text-inverse); border-radius: 999px; padding: 0.7rem 1.2rem; font-size: 0.85rem; box-shadow: var(--shadow-lg); max-width: min(520px, 90vw); text-align: center; }
 .pointery-guide, .pointery-confirm { position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: calc(var(--pointery-z) + 10); width: 300px; max-width: calc(100vw - 2.5rem); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--pointery-radius); box-shadow: var(--shadow-lg); padding: 1rem; font-size: 0.85rem; }
-.pointery-guide { position: fixed; width: 260px; padding-right: 3rem; }
+.pointery-guide { position: fixed; width: 260px; padding: 0.75rem 3rem 0.75rem 1rem; }
 .pointery-guide-close { position: absolute; top: 0.8rem; right: 0.8rem; width: 1.75rem; height: 1.75rem; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); color: var(--color-text-secondary); font-size: 0.8rem; font-weight: 600; cursor: pointer; padding: 0; }
 .pointery-guide-close:hover { background: var(--color-background-secondary); color: var(--color-text-primary); }
 .pointery-guide-title { font-weight: 700; font-size: 0.95rem; } .pointery-guide-title span { color: var(--color-text-tertiary); font-weight: 400; }
-.pointery-guide-step { margin: 0.4rem 0 0.7rem; color: var(--color-text-secondary); }
+.pointery-guide-step { margin: 0.3rem 0 0.55rem; color: var(--color-text-secondary); }
 /* Action row sits in the card's right corner: starts 53px in, ends 12px from the edge. */
 .pointery-guide-row { display: flex; gap: 0.5rem; justify-content: flex-end; margin-left: 36px; margin-right: -36px; }
 .pointery-guide-row button { border: 1px solid var(--color-border); border-radius: 999px; padding: 0.4rem 0.9rem; font-size: 0.8rem; font-weight: 600; background: var(--color-surface); color: var(--color-text-primary); }
