@@ -25,6 +25,214 @@ type SaveState = "idle" | "saving" | "saved" | "error";
 
 const ENV_SNIPPET = "POINTERY_LLM_URL=https://api.openai.com/v1/chat/completions\nPOINTERY_LLM_KEY=sk-...\nPOINTERY_LLM_MODEL=gpt-4o-mini";
 
+const RADIUS_PRESETS = [{ label: "Soft", value: 8 }, { label: "Round", value: 14 }, { label: "Pill", value: 20 }];
+
+const normalizeHex = (v: string) => {
+  const t = v.trim().replace(/^#/, "");
+  return /^[0-9a-fA-F]{6}$/.test(t) ? ("#" + t.toUpperCase()) : null;
+};
+
+const hexToHsv = (hex: string) => {
+  const n = parseInt(hex.slice(1), 16);
+  const r = ((n >> 16) & 255) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+  const raw = d === 0 ? 0 : max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return { h: (raw * 60 + 360) % 360, s: max === 0 ? 0 : (d / max) * 100, v: max * 100 };
+};
+
+const hsvToHex = (h: number, s: number, v: number) => {
+  s /= 100;
+  v /= 100;
+  const k = (n: number) => (n + h / 60) % 6;
+  const f = (n: number) => v - v * s * Math.max(0, Math.min(k(n), 4 - k(n), 1));
+  const to = (x: number) => Math.round(x * 255).toString(16).padStart(2, "0");
+  return ("#" + to(f(5)) + to(f(3)) + to(f(1))).toUpperCase();
+};
+
+const HUE_BAR = "linear-gradient(to right,hsl(0,100%,50%),hsl(60,100%,50%),hsl(120,100%,50%),hsl(180,100%,50%),hsl(240,100%,50%),hsl(300,100%,50%),hsl(360,100%,50%))";
+
+function ColorPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const boxRef = useRef<HTMLDivElement>(null);
+  const current = normalizeHex(value) ?? "#00A878";
+  const { h, s, v } = hexToHsv(current);
+  // Fully custom picker: shade square + hue bar + hex field. No native <input type="color" /> anywhere.
+  const pick = (hex: string) => {
+    onChange(hex);
+    setDraft(hex);
+  };
+  const shadeFromPointer = (e: React.PointerEvent<HTMLDivElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const ns = Math.min(100, Math.max(0, ((e.clientX - r.left) / r.width) * 100));
+    const nv = Math.min(100, Math.max(0, 100 - ((e.clientY - r.top) / r.height) * 100));
+    pick(hsvToHex(h, ns, nv));
+  };
+  const hueFromPointer = (e: React.PointerEvent<HTMLDivElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const nh = Math.min(360, Math.max(0, ((e.clientX - r.left) / r.width) * 360));
+    pick(hsvToHex(nh, s, v));
+  };
+  const grab = (e: React.PointerEvent<HTMLDivElement>, fn: (e: React.PointerEvent<HTMLDivElement>) => void) => {
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    fn(e);
+  };
+  const move = (e: React.PointerEvent<HTMLDivElement>, fn: (e: React.PointerEvent<HTMLDivElement>) => void) => {
+    if (e.buttons) fn(e);
+  };
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (boxRef.current && !boxRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open ]);
+  const commit = (raw: string) => {
+    const hex = normalizeHex(raw);
+    if (hex) pick(hex);
+    else setDraft(value);
+  };
+  return (
+    <div ref={boxRef} className="relative">
+      <button
+        type="button"
+        onClick={() => { if (!open) setDraft(value); setOpen((o) => !o); }}
+        aria-expanded={open}
+        aria-label="Pick primary color"
+        className="flex w-full items-center gap-3 rounded-xl border border-zinc-200 px-2.5 py-1.5 text-left hover:border-zinc-400"
+      >
+        <span className="h-8 w-8 shrink-0 rounded-lg border border-black/10 shadow-sm" style={{ background: value }} />
+        <span className="min-w-0 flex-1">
+          <span className="block text-xs text-zinc-500">Primary color</span>
+          <code className="block truncate font-mono text-sm font-semibold">{value}</code>
+        </span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 text-zinc-400 transition ${open ? "rotate-180" : ""}`}><path d="m6 9 6 6 6-6" /></svg>
+      </button>
+      {open && (
+        <div className="absolute z-20 mt-2 w-60 rounded-xl border border-zinc-200 bg-white p-3 shadow-lg">
+          <div
+            role="slider"
+            tabIndex={0}
+            aria-label="Shade"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(v)}
+            aria-valuetext={current}
+            onPointerDown={(e) => grab(e, shadeFromPointer)}
+            onPointerMove={(e) => move(e, shadeFromPointer)}
+            onKeyDown={(e) => {
+              const step = 4;
+              if (e.key === "ArrowLeft") pick(hsvToHex(h, Math.max(0, s - step), v));
+              else if (e.key === "ArrowRight") pick(hsvToHex(h, Math.min(100, s + step), v));
+              else if (e.key === "ArrowUp") pick(hsvToHex(h, s, Math.min(100, v + step)));
+              else if (e.key === "ArrowDown") pick(hsvToHex(h, s, Math.max(0, v - step)));
+              else return;
+              e.preventDefault();
+            }}
+            className="relative h-36 w-full cursor-crosshair touch-none rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2"
+            style={{ backgroundColor: `hsl(${Math.round(h)},100%,50%)` }}
+          >
+            <div className="absolute inset-0 rounded-lg" style={{ background: "linear-gradient(to right,#fff,transparent)" }} />
+            <div className="absolute inset-0 rounded-lg" style={{ background: "linear-gradient(to top,#000,transparent)" }} />
+            <span
+              className="absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-md"
+              style={{ left: `${s}%`, top: `${100 - v}%`, background: current }}
+            />
+          </div>
+          <div
+            role="slider"
+            tabIndex={0}
+            aria-label="Hue"
+            aria-valuemin={0}
+            aria-valuemax={360}
+            aria-valuenow={Math.round(h)}
+            onPointerDown={(e) => grab(e, hueFromPointer)}
+            onPointerMove={(e) => move(e, hueFromPointer)}
+            onKeyDown={(e) => {
+              if (e.key === "ArrowLeft") pick(hsvToHex((h + 355) % 360, s, v));
+              else if (e.key === "ArrowRight") pick(hsvToHex((h + 5) % 360, s, v));
+              else return;
+              e.preventDefault();
+            }}
+            className="relative mt-2 h-2.5 w-full cursor-pointer touch-none rounded-full outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2"
+            style={{ background: HUE_BAR }}
+          >
+            <span
+              className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-md"
+              style={{ left: `${(h / 360) * 100}%`, background: `hsl(${Math.round(h)},100%,50%)` }}
+            />
+          </div>
+          <div className="mt-3 flex items-center gap-2">
+            <span className="flex flex-1 items-center rounded-lg border border-zinc-200 px-2 py-1 font-mono text-xs focus-within:border-zinc-900">
+              <span className="text-zinc-400">#</span>
+              <input
+                value={draft.replace(/^#/, "")}
+                onChange={(e) => setDraft("#" + e.target.value)}
+                onBlur={() => commit(draft)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") commit(draft);
+                }}
+                maxLength={6}
+                spellCheck={false}
+                aria-label="Hex color code"
+                className="w-full bg-transparent uppercase outline-none"
+              />
+            </span>
+            <span className="h-8 w-8 shrink-0 rounded-lg border border-black/10" style={{ background: normalizeHex(draft) ?? value }} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RadiusSlider({ value, primary, onChange }: { value: number; primary: string; onChange: (v: number) => void }) {
+  const pct = ((value - 4) / (24 - 4)) * 100;
+  return (
+    <div className="rounded-xl border border-zinc-200 px-2.5 py-1.5">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs text-zinc-500">Corner radius</p>
+        <span className="py-inset rounded-full px-2.5 py-0.5 font-mono text-xs font-semibold text-zinc-700">{value}px</span>
+      </div>
+      <input
+        type="range"
+        min={4}
+        max={24}
+        step={1}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        aria-label="Corner radius"
+        className="py-slider mt-3 w-full"
+        style={{ ["--pct" as string]: `${pct}%`, ["--fill" as string]: primary }}
+      />
+      <div className="mt-1 flex items-center justify-between text-[11px] text-zinc-400">
+        <span>4px sharp</span>
+        <span>24px round</span>
+      </div>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {RADIUS_PRESETS.map((p) => (
+          <button
+            key={p.label}
+            type="button"
+            onClick={() => onChange(p.value)}
+            className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${value === p.value ? "py-pill-active" : "py-pill"}`}
+          >
+            {p.label} · {p.value}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function PointerySettingsPage() {
   const [cfg, setCfg] = useState<Config>(DEFAULTS);
   const [loaded, setLoaded] = useState(false);
@@ -75,7 +283,6 @@ export default function PointerySettingsPage() {
   // Custom shortcut recorder: display updates live; next full combo (not bare modifiers) becomes the trigger.
   useEffect(() => {
     if (!recording) return;
-    setRecordingPreview(null);
     const onKey = (e: KeyboardEvent) => {
       e.preventDefault();
       e.stopPropagation();
@@ -211,6 +418,18 @@ export default function PointerySettingsPage() {
         .py-code { background: var(--color-background-secondary); border: 1px solid var(--color-border); color: var(--color-text-primary); }
         .py-save { background: var(--color-action-primary); color: #fff; }
         .py-save:hover { background: var(--color-action-primary-hover); }
+        .py-pill { border: 1px solid var(--color-border); color: var(--color-text-secondary); }
+        .py-pill:hover { border-color: var(--color-border-strong); color: var(--color-text-primary); }
+        .py-pill-active { background: var(--color-surface-inverse); border-color: var(--color-surface-inverse); color: #fff; }
+        input.py-slider { -webkit-appearance: none; appearance: none; height: 8px; border-radius: 999px; outline: none;
+          background: linear-gradient(to right, var(--fill, #00A878) 0%, var(--fill, #00A878) var(--pct, 50%), var(--color-border) var(--pct, 50%), var(--color-border) 100%); }
+        input.py-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; height: 20px; width: 20px; border-radius: 999px;
+          background: #fff; border: 2px solid var(--fill, #00A878); box-shadow: var(--shadow-md); cursor: pointer; }
+        input.py-slider::-moz-range-thumb { height: 20px; width: 20px; border-radius: 999px;
+          background: #fff; border: 2px solid var(--fill, #00A878); box-shadow: var(--shadow-md); cursor: pointer; }
+        input.py-slider::-moz-range-track { height: 8px; border-radius: 999px; background: var(--color-border); }
+        input.py-slider::-moz-range-progress { height: 8px; border-radius: 999px; background: var(--fill, #00A878); }
+        input.py-slider:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--color-border-focus); outline-offset: 2px; }
       `}</style>
     <div className="pointery-settings w-full flex-1">
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-10">
@@ -362,17 +581,8 @@ export default function PointerySettingsPage() {
 
           <section data-pointery="pointery-settings-brand" className="py-6">
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="text-sm">
-                <span className="font-medium">Primary color</span>
-                <span className="mt-2 flex items-center gap-3">
-                  <input type="color" value={cfg.theme.primary} onChange={(e) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: e.target.value } })} className="h-8 w-12 cursor-pointer rounded" />
-                  <code className="font-mono text-xs">{cfg.theme.primary}</code>
-                </span>
-              </label>
-              <label className="text-sm">
-                <span className="font-medium">Corner radius — {cfg.theme.radius}px</span>
-                <input type="range" min={4} max={24} value={cfg.theme.radius} onChange={(e) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: Number(e.target.value) } })} className="mt-3 w-full" />
-              </label>
+              <ColorPicker value={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: v } })} />
+              <RadiusSlider value={cfg.theme.radius} primary={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: v } })} />
             </div>
           </section>
 

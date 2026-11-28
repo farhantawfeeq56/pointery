@@ -354,3 +354,9 @@ Fixed stuck label/control pairs per page feedback.
 
 - `app/pointery/page.tsx` — the `w-fit` position select fit on the same line as its inline label title; title is now `mb-2 block` so the dropdown sits on its own line with an 8px gap (select's own `mt-2` removed to avoid doubling). Audited the rest: every other title is already followed by a block-level control, so no other stickers.
 - Re-synced via `npm run pointery:sync-page`; `init --check` ok, `tsc` clean.
+
+## Pass 48 (feat/basic-changes, 2026-11-28)
+Custom brand controls per page feedback.
+
+- `app/pointery/page.tsx` — replaced native color/range inputs with `ColorPicker` (custom shade square + hue bar, pointer + arrow-key support, hex field; zero native color UI) and `RadiusSlider` (primary-filled track, Soft/Round/Pill presets), styled to the page's card/pill language.
+- Fixed a `set-state-in-effect` lint error in the shortcut recorder (moved reset into the toggle handler). Re-synced via `npm run pointery:sync-page`; lint + build clean.
