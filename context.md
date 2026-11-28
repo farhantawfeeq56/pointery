@@ -546,3 +546,10 @@ Extended temp hooks 1-19 so every changed behavior is previewable (delete before
 - Hooks 16/17/18 return the new `{ error, answer }` payloads verbatim (LLM_UNAUTHORIZED / LLM_RATE_LIMITED / LLM_UPSTREAM_ERROR).
 - Hook 19 sleeps 35s so the client-side 30s abort fires ASK_TIMEOUT first; the late reply is ignored.
 - Verified: `lint` clean; 16-18 + 19 curled live on :3000 (19 returned at ~35s as designed).
+
+## Pass 76 (feat/basic-changes, 2026-11-28)
+Blocked-first + fixed multi-row pulse. No hook changes (payloads already drive the paths).
+
+- `packages/pointery/src/Pointery.tsx` - allowlist enforced at the top of `ask()`: blocked action toasts, navigates if a destination exists, else returns immediately (no guide card, no further processing). `subjectOf` untouched, just runs earlier.
+- Same file - multi-row pulse: contiguous sibling run pulses the container once (box-shadow/outline don't paint on `<tr>`); scattered matches still pulse individually. Hook 6 now shows one clean ring around the pipeline table.
+- Verified: `lint` + `kit:build` + `tsc` clean. No live visual check (no browser here) - retest 4 + 6 in the app.

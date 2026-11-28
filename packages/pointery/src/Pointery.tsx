@@ -70,21 +70,29 @@ export function pulse(key: string, filter?: string, ms = 2600) {
       const pool: Element[] = rows.length ? Array.from(rows) : Array.from(el.children);
       const hits = pool.filter((n) => (n.textContent ?? "").toLowerCase().includes(needle));
       if (hits.length > 1) {
-        // Show every match, not just the first.
-        const first = hits[0];
-        first.scrollIntoView({ behavior: "smooth", block: "center" });
-        for (const h of hits) h.classList.remove("pointery-pulse");
-        // restart animation
-        void document.body.offsetWidth;
-        for (const h of hits) h.classList.add("pointery-pulse");
-        window.setTimeout(() => {
-          for (const h of hits) h.classList.remove("pointery-pulse");
-        }, ms);
-        const title = rowTitle(first);
+        // Close together (one unbroken run): a single ring around the group -
+        // box-shadow/outline don't paint reliably on individual table rows.
+        const parent = hits[0].parentElement;
+        const order = parent ? Array.from(parent.children) : [];
+        const at = hits.map((h) => order.indexOf(h));
+        const run = parent !== null && at.every((i) => i >= 0) && Math.max(...at) - Math.min(...at) + 1 === hits.length;
+        const title = rowTitle(hits[0]);
         if (title) window.dispatchEvent(new CustomEvent("pointery:ambiguous", { detail: title }));
-        return;
-      }
-      if (hits[0]) target = hits[0];
+        if (!run) {
+          // Scattered matches: pulse each one where it stands.
+          const first = hits[0];
+          first.scrollIntoView({ behavior: "smooth", block: "center" });
+          for (const h of hits) h.classList.remove("pointery-pulse");
+          // restart animation
+          void document.body.offsetWidth;
+          for (const h of hits) h.classList.add("pointery-pulse");
+          window.setTimeout(() => {
+            for (const h of hits) h.classList.remove("pointery-pulse");
+          }, ms);
+          return;
+        }
+        // run: target stays the container - one ring around the whole group.
+      } else if (hits[0]) target = hits[0];
     }
     target.scrollIntoView({ behavior: "smooth", block: "center" });
     target.classList.remove("pointery-pulse");
@@ -267,7 +275,7 @@ export default function Pointery(props: PointeryProps) {
         if (first) goSpot(first.go, first.spot, undefined, "filter" in first ? first.filter : undefined);
         announced = true;
       }
-      // Blocked actions fall through to spot/go below - never execute.
+      // Allowlist is enforced up front - blocked actions never execute.
       // Full action sentence: the row record reads inside the label ("Mark deal Acme as Won"), then the anchor ("on Pipeline table").
       const subjectOf = () => {
         const label = data.actionLabel ?? data.hint ?? data.action ?? "";
@@ -277,10 +285,11 @@ export default function Pointery(props: PointeryProps) {
           : label;
         return named + (data.actionTarget ? ` on ${data.actionTarget}` : "");
       };
+      // Not allowlisted: tell the user, navigate if there's a destination - otherwise stop right here.
       if (data.action && !cfg.allowActions.includes(data.action)) {
         say(fmt(cfg.labels.blocked!, { action: subjectOf() }));
-        announced = true;
-        data.action = undefined;
+        if (data.go || data.spot) goSpot(data.go, data.spot, undefined, data.filter);
+        return;
       }
       if (data.action) {
         const subject = subjectOf();
