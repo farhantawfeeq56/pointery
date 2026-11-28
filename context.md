@@ -501,3 +501,9 @@ Single-toast rule: one ask fires at most one toast; guide Next/Back are silent (
 
 - `packages/pointery/src/Pointery.tsx` - `announced` flag in `ask()`; first message (answer / guide step-1 / blocked) wins, trailing `hint` suppressed when something already said; walkthroughs skip the redundant top-level `goSpot` (was double-navigating + double-toasting); Next passes no hint like Back; blocked-without-target no longer overwritten by empty text.
 - Verified: `kit:build` + `lint` clean.
+
+## Pass 70 (feat/basic-changes, 2026-11-28)
+Fixed `useEffect` deps-size crash (theme effect): HEAD added `theme.fontFamily` (10 -> 11 deps), dev server held the old module across HMR so React saw the size change. Effect now deps on a single `themeKey` JSON string - future theme keys change the key, never the deps size.
+
+- `packages/pointery/src/Pointery.tsx` - `themeKey` + `}, [themeKey]);` with exhaustive-deps disable.
+- Verified: `kit:build` + `lint` clean. Needs a full page reload to clear the thrown HMR error.

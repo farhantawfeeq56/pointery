@@ -143,6 +143,8 @@ export default function Pointery(props: PointeryProps) {
   // Drop a pending exit timer on unmount.
   useEffect(() => () => { if (closeTimer.current) window.clearTimeout(closeTimer.current); }, []);
 
+  // Single string dep: adding future theme keys changes the key, never the deps size (HMR-safe).
+  const themeKey = JSON.stringify([cfg.theme.primary, cfg.theme.accent, cfg.theme.background, cfg.theme.text, cfg.theme.border, cfg.theme.radius, cfg.theme.fontFamily, cfg.zIndex, cfg.paletteWidth, cfg.overlayBlur, cfg.cssVars]);
   // apply theme vars (+ white-label passthrough)
   useEffect(() => {
     const root = document.documentElement;
@@ -157,7 +159,8 @@ export default function Pointery(props: PointeryProps) {
     if (cfg.paletteWidth != null) root.style.setProperty("--pointery-width", `${cfg.paletteWidth}px`);
     if (cfg.overlayBlur != null) root.style.setProperty("--pointery-overlay-blur", `${cfg.overlayBlur}px`);
     if (cfg.cssVars) for (const [k, v] of Object.entries(cfg.cssVars)) root.style.setProperty(k.startsWith("--") ? k : `--pointery-${k}`, v);
-  }, [cfg.theme.primary, cfg.theme.accent, cfg.theme.background, cfg.theme.text, cfg.theme.border, cfg.theme.radius, cfg.theme.fontFamily, cfg.zIndex, cfg.paletteWidth, cfg.overlayBlur, cfg.cssVars]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- themeKey covers every value read above
+  }, [themeKey]);
 
   // Several rows matched the filter - toast which one is shown.
   useEffect(() => {
