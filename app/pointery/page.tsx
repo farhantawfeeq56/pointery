@@ -49,7 +49,7 @@ const hsvToHex = (h: number, s: number, v: number) => {
 
 const HUE_BAR = "linear-gradient(to right,hsl(0,100%,50%),hsl(60,100%,50%),hsl(120,100%,50%),hsl(180,100%,50%),hsl(240,100%,50%),hsl(300,100%,50%),hsl(360,100%,50%))";
 
-const VARIANT_NAMES = ["Current", "Cards", "Rows", "Stacked", "Big touch", "Compact", "Appearance first", "Suggestions first", "Action bar", "Descriptive"] as const;
+const VARIANT_NAMES = ["Current", "Cards", "Rows", "Stacked", "Big touch", "Compact", "Appearance first", "Suggestions first", "Action bar", "Split"] as const;
 
 function ColorPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false);
@@ -372,11 +372,8 @@ export default function PointerySettingsPage() {
   const snippet = `<Pointery\n  trigger="${cfg.trigger}"\n  theme={{ primary: "${cfg.theme.primary}", radius: ${cfg.theme.radius} }}\n  position="${cfg.position}"\n/>`;
 
   // ---- vartest: shared control pieces (same state, new layouts in V2-V10) ----
-  const secHead = (t: string, d?: string) => (
-    <div className="mb-3">
-      <h3 className="py-sec-title">{t}</h3>
-      {d && <p className="py-sec-desc">{d}</p>}
-    </div>
+  const secHead = (t: string) => (
+    <h3 className="py-sec-title mb-3">{t}</h3>
   );
   const recordBtn = (
     <button
@@ -446,18 +443,18 @@ export default function PointerySettingsPage() {
       case 2: return (
         <div className="py-enter grid min-w-0 gap-4 lg:order-1">
           <section data-pointery="pointery-settings-shortcut" className="py-card p-5">
-            {secHead("Trigger", "Shortcut opens the palette · position sets where it lands")}
+            {secHead("Trigger")}
             <div className="grid gap-5 sm:grid-cols-2">{triggerInner}{positionInner}</div>
           </section>
           <section data-pointery="pointery-settings-brand" className="py-card p-5">
-            {secHead("Appearance", "Matches your brand inside the palette")}
+            {secHead("Appearance")}
             <div className="grid gap-5 sm:grid-cols-2">
               <ColorPicker value={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: v } })} />
               <RadiusSlider value={cfg.theme.radius} primary={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: v } })} />
             </div>
           </section>
           <section data-pointery="pointery-settings-behavior" className="py-card p-5">
-            {secHead("Suggestions", "Starter prompts shown in the palette")}
+            {secHead("Suggestions")}
             {suggInner}
           </section>
           {saveInner}
@@ -467,15 +464,15 @@ export default function PointerySettingsPage() {
         <div className="py-enter min-w-0 lg:order-1">
           <div className="py-card py-row-divide">
             <section data-pointery="pointery-settings-shortcut" className="grid gap-5 p-5 sm:grid-cols-2">
-              <div>{secHead("Trigger", "Opens the palette")}{triggerInner}</div>
-              <div>{secHead("Position", "Where it lands")}{positionInner}</div>
+              <div>{secHead("Trigger")}{triggerInner}</div>
+              <div>{secHead("Position")}{positionInner}</div>
             </section>
             <section data-pointery="pointery-settings-brand" className="grid gap-5 p-5 sm:grid-cols-2">
               <div>{secHead("Primary color")}<ColorPicker value={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: v } })} /></div>
               <div>{secHead("Corner radius")}<RadiusSlider value={cfg.theme.radius} primary={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: v } })} /></div>
             </section>
             <section data-pointery="pointery-settings-behavior" className="p-5">
-              {secHead("Suggestions", "Starter prompts")}{suggInner}
+              {secHead("Suggestions")}{suggInner}
             </section>
           </div>
           <div className="mt-4">{saveInner}</div>
@@ -484,16 +481,16 @@ export default function PointerySettingsPage() {
       case 4: return (
         <div className="py-enter mx-auto grid w-full max-w-xl min-w-0 gap-8 lg:order-1">
           <section data-pointery="pointery-settings-shortcut">
-            {secHead("Trigger", "How the palette opens and where it lands")}
+            {secHead("Trigger")}
             <div className="grid gap-4">{triggerInner}{positionInner}</div>
           </section>
           <section data-pointery="pointery-settings-brand">
-            {secHead("Appearance", "Your brand inside the palette")}
+            {secHead("Appearance")}
             <div className="grid gap-4"><ColorPicker value={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: v } })} />
             <RadiusSlider value={cfg.theme.radius} primary={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: v } })} /></div>
           </section>
           <section data-pointery="pointery-settings-behavior">
-            {secHead("Suggestions", "Starter prompts")}{suggInner}
+            {secHead("Suggestions")}{suggInner}
           </section>
           {saveInner}
         </div>
@@ -501,7 +498,7 @@ export default function PointerySettingsPage() {
       case 5: return (
         <div className="py-enter grid min-w-0 gap-4 lg:order-1">
           <section data-pointery="pointery-settings-shortcut" className="py-card p-6">
-            {secHead("Trigger", "Big targets, hard to miss")}
+            {secHead("Trigger")}
             <div className="grid gap-4">
               <div className="flex h-14 items-center justify-between gap-3 rounded-2xl border border-zinc-200 px-4">
                 <p className="truncate text-base font-medium">{recording ? prettyShortcut(recordingPreview ?? "…") : prettyShortcut(cfg.trigger)}</p>
@@ -552,7 +549,7 @@ export default function PointerySettingsPage() {
       case 7: return (
         <div className="py-enter grid min-w-0 gap-4 lg:order-1">
           <section data-pointery="pointery-settings-brand" className="py-card border-2 p-5" style={{ borderColor: cfg.theme.primary }}>
-            {secHead("Appearance", "Start with the look — it drives the preview")}
+            {secHead("Appearance")}
             <div className="grid gap-5 sm:grid-cols-2"><ColorPicker value={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: v } })} />
             <RadiusSlider value={cfg.theme.radius} primary={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: v } })} /></div>
           </section>
@@ -569,7 +566,7 @@ export default function PointerySettingsPage() {
       case 8: return (
         <div className="py-enter grid min-w-0 gap-4 lg:order-1">
           <section data-pointery="pointery-settings-behavior" className="py-card p-5">
-            {secHead("Suggestions", "What people see first in the palette")}
+            {secHead("Suggestions")}
             {suggInner}
           </section>
           <section data-pointery="pointery-settings-shortcut" className="py-card p-5">
@@ -612,22 +609,19 @@ export default function PointerySettingsPage() {
         </div>
       );
       default: return (
-        <div className="py-enter grid min-w-0 gap-6 lg:order-1">
-          <section data-pointery="pointery-settings-shortcut" className="grid gap-6 border-b border-zinc-200 pb-6 sm:grid-cols-[220px_minmax(0,1fr)]">
-            <div>{secHead("Keyboard shortcut", "The key combo that opens the palette anywhere.")}</div>
-            <div className="grid gap-6 sm:grid-cols-2">
+        <div className="py-enter grid min-w-0 gap-4 lg:order-1">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <section data-pointery="pointery-settings-shortcut" className="py-card grid gap-5 p-5">
               <div>{triggerInner}</div>
               <div>{positionInner}</div>
-            </div>
-          </section>
-          <section data-pointery="pointery-settings-brand" className="grid gap-6 border-b border-zinc-200 pb-6 sm:grid-cols-[220px_minmax(0,1fr)]">
-            <div>{secHead("Brand", "Primary color and corner radius used across the palette.")}</div>
-            <div className="grid gap-6 sm:grid-cols-2"><ColorPicker value={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: v } })} />
-            <RadiusSlider value={cfg.theme.radius} primary={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: v } })} /></div>
-          </section>
-          <section data-pointery="pointery-settings-behavior" className="grid gap-6 sm:grid-cols-[220px_minmax(0,1fr)]">
-            <div>{secHead("Suggestions", "Up to four starter prompts, saved with the config.")}</div>
-            <div>{suggInner}</div>
+            </section>
+            <section data-pointery="pointery-settings-brand" className="py-card grid content-start gap-5 p-5">
+              <div><ColorPicker value={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: v } })} /></div>
+              <div><RadiusSlider value={cfg.theme.radius} primary={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: v } })} /></div>
+            </section>
+          </div>
+          <section data-pointery="pointery-settings-behavior" className="py-card p-5">
+            {suggInner}
           </section>
           {saveInner}
         </div>
