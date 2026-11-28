@@ -41,7 +41,7 @@ async function tempEmptyDemo(q: string): Promise<Response | null> {
     case "12":
       return Response.json({ plan: { title: "Half plan", steps: [{ text: "Go to Dashboard", go: "/demo", spot: "nav-dashboard" }] }, spot: "nav-dashboard", go: "/demo", hint: "Half plan" });
     case "13":
-      return Response.json({ answer: "Empty-slice demo: a blank query sends { entries: [], flows: [], actions: [] } to the LLM - no UI of its own.", spot: "nav-dashboard", go: "/demo" });
+      return Response.json({ answer: "I had nothing to work with there - try asking differently. (Support: empty candidate slice, nothing was sent to the LLM.)", spot: "nav-dashboard", go: "/demo" });
     case "15":
       return Response.json({ error: "LLM_NOT_CONFIGURED", answer: "Something's wrong on our end - setup isn't finished. Report error code LLM_NOT_CONFIGURED to the site owner." }, { status: 503 });
     case "16":

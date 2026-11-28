@@ -129,7 +129,7 @@ Security: unauthenticated admin PUT closed in production.
 Real LLM adapter wiring test, POINTERY_PROMPT per-stack versions, row editing of context tables in Studio.
 
 ## Pass 15 (feat/basic-changes, 2026-11-26)
-Fixes 1–5: map holds stable UI anchors only, retriever sends candidates, admin writes dev-only.
+Fixes 1-5: map holds stable UI anchors only, retriever sends candidates, admin writes dev-only.
 
 - **Fix 1 - no live data in the map:** `pointery.context.json` drops `deal-acme` (+`$8,000` hint), `$20,400` answer, `answers[]` → `[]`. New stable `pipeline-table` anchor (`/demo/pipeline`); `pipeline-value` hint/counts generalized; `close-deal` guide steps point at `nav-pipeline`/`pipeline-table`; `mark-won` is generic "Mark deal as Won". Demo `pipeline/page.tsx` adds `data-pointery="pipeline-table"`, drops the per-row `deal-acme` conditional (won-state now keys off `DEALS[0].id`, not a UI id). Suggestions (`resolver.getSuggestions`, `pointery.config.json`, landing `TRIES`) say "Show me the pipeline table", not "pipeline worth" / Acme.
 - **Fix 2 - resolver:** `retrieveCandidates()` ranks top-K (8/3/3) with same-page boost; `resolveQuery` takes `page`, "where…" goes target-first ("where is export?" now navigates instead of firing the action), target threshold `>=3` kills single-word noise, action anchoring scores targets instead of first-hint-contains-word. `Pointery.tsx` POSTs `{ query, page }`.
@@ -553,3 +553,11 @@ Blocked-first + fixed multi-row pulse. No hook changes (payloads already drive t
 - `packages/pointery/src/Pointery.tsx` - allowlist enforced at the top of `ask()`: blocked action toasts, navigates if a destination exists, else returns immediately (no guide card, no further processing). `subjectOf` untouched, just runs earlier.
 - Same file - multi-row pulse: contiguous sibling run pulses the container once (box-shadow/outline don't paint on `<tr>`); scattered matches still pulse individually. Hook 6 now shows one clean ring around the pipeline table.
 - Verified: `lint` + `kit:build` + `tsc` clean. No live visual check (no browser here) - retest 4 + 6 in the app.
+
+## Pass 77 (feat/basic-changes, 2026-11-28)
+Past-tense completions, plain-words hook 13, zero dashes.
+
+- `packages/pointery/src/Pointery.tsx` - `labels.done` is now past-tense framed ("Completed ..."), `labels.guideComplete` is "Guide completed." (Also fixed two commas my earlier edit dropped, which had broken the build.)
+- Temp hook 13 answer rewritten for non-technical users with the buyer detail parenthesized: user sentence first, "(Support: empty candidate slice...)" second. Audited every other default/server string - all already plain.
+- Removed every em/en dash in product files ("3-5" in `POINTERY_PROMPT.md` + embedded CLI copy, "1-5" in `context.md`).
+- Verified: `lint` + `kit:build` + `tsc` clean; hook 13 curled live.

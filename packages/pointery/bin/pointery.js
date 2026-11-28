@@ -367,7 +367,7 @@ keyless mode). Re-run whenever your UI changes.
 >    context (a flow title, an entry label - never the "export"
 >    placeholder if the app has no export), and defaults (trigger, theme,
 >    position, suggestions, allowActions) must mirror \`pointery.config.json\`.
->    Set \`suggestions\` to 3–5 real first-run questions for THIS app, built
+>    Set \`suggestions\` to 3-5 real first-run questions for THIS app, built
 >    from the entry labels and flow titles you just indexed (the palette
 >    shows them as its default list) - never the "export" placeholder if
 >    the app has no export. Tag its
