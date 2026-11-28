@@ -91,6 +91,7 @@ export default function Pointery(props: PointeryProps) {
   const [guide, setGuide] = useState<GuideState>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [guideIdx, setGuideIdx] = useState(0);
+  const [sel, setSel] = useState(0);
   const [leaving, setLeaving] = useState(false);
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -142,6 +143,7 @@ export default function Pointery(props: PointeryProps) {
         else {
           if (closeTimer.current) { window.clearTimeout(closeTimer.current); closeTimer.current = null; }
           setLeaving(false);
+          setSel(0);
           setOpen(true);
         }
       }
@@ -206,7 +208,7 @@ export default function Pointery(props: PointeryProps) {
   if (!open && !guide && !toast && !pendingAction) {
     return (
       <button
-        onClick={() => setOpen(true)}
+        onClick={() => { setSel(0); setOpen(true); }}
         aria-label="Ask Pointery"
         className="pointery-fab"
         title={`Ask Pointery (${cfg.trigger})`}
@@ -219,6 +221,41 @@ export default function Pointery(props: PointeryProps) {
   // Keyed wrapper remounts (replaying the enter animation) on every state swap.
   const hasRes = Boolean(res && (res.go || res.spot || res.action || res.guide || res.plan));
   const viewKey = loading ? "loading" : hasRes ? `result-${resSeq}` : !q ? "suggest" : "empty";
+  // Classic list: result actions on top, config suggestions below, filtered as you type.
+  // Everything here resolves through the same ask() — answer/hint/guide/plan/action
+  // outputs are unchanged, only the rendering is rows.
+  const needle = q.trim().toLowerCase();
+  const filtered = (cfg.suggestions ?? []).filter((s) => s.trim() && (!needle || s.toLowerCase().includes(needle)));
+  // Result actions render as list rows; text outputs (answer toast, guide,
+  // confirm) flow through the same handlers as before — only rows are new.
+  // Render stays pure data; clicks run through activateRow (event context).
+  type Row = { id: string; title: string; sub?: string; kind: "take" | "steps" | "action" | "suggest" };
+  const head: Row[] = [];
+  if (!loading && res && (res.go || res.spot)) {
+    head.push({ id: "take-me-there", title: res.hint ?? "Take me there", kind: "take" });
+  }
+  if (!loading && res && (res.plan || res.guide)) {
+    const g = res.plan ?? res.guide!;
+    head.push({ id: "start-steps", title: res.plan ? `Start steps (${res.plan.steps.length})` : "Start guide", sub: g.title, kind: "steps" });
+  }
+  if (!loading && res?.action) {
+    head.push({ id: "run-action", title: res.confirm ? `Run “${res.action}” — needs confirm` : `Run “${res.action}”`, kind: "action" });
+  }
+  const rows: Row[] = loading
+    ? []
+    : [...head, ...filtered.map((s): Row => ({ id: `suggest:${s}`, title: s, kind: "suggest" }))];
+  const active = rows.length ? Math.min(sel, rows.length - 1) : 0;
+  const activateRow = (row: Row) => {
+    if (row.kind === "suggest") { setQ(row.title); setSel(0); void ask(row.title); }
+    else if (row.kind === "take" && res) { goSpot(res.go, res.spot, res.hint, res.filter); close(); }
+    else if (row.kind === "steps" && res && (res.plan || res.guide)) {
+      const g = res.plan ?? res.guide!;
+      setGuideIdx(0); startGuide({ title: g.title, steps: g.steps, i: 0 }); close();
+    } else if (row.kind === "action" && res?.action) {
+      const a = res.action;
+      if (res.confirm) { close(); setPendingAction(a); } else { close(); void runAction(a); }
+    }
+  };
 
   return (
     <>
@@ -253,34 +290,40 @@ export default function Pointery(props: PointeryProps) {
       {(open || leaving) && (
         <div className={`pointery-overlay ${pos}${leaving ? " pointery-leaving" : ""}`} onClick={close}>
           <div className={["pointery-palette", anim, leaving && "pointery-leaving"].filter(Boolean).join(" ")} onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Ask Pointery">
-            <form onSubmit={(e) => { e.preventDefault(); ask(q); }}>
+            <form onSubmit={(e) => { e.preventDefault(); const hit = rows[active]; if (hit) activateRow(hit); else void ask(q); }}>
               <input
                 ref={inputRef}
                 value={q}
-                onChange={(e) => { setQ(e.target.value); setRes(null); setPendingAction(null); }}
+                onChange={(e) => { setQ(e.target.value); setRes(null); setPendingAction(null); setSel(0); }}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowDown") { e.preventDefault(); setSel((s) => Math.min(s + 1, Math.max(rows.length - 1, 0))); }
+                  if (e.key === "ArrowUp") { e.preventDefault(); setSel((s) => Math.max(s - 1, 0)); }
+                }}
                 placeholder={cfg.labels.placeholder}
                 aria-label="Ask Pointery"
+                role="combobox"
+                aria-controls="pointery-list"
+                aria-expanded={rows.length > 0}
+                aria-activedescendant={rows[active]?.id}
               />
             </form>
             <div key={viewKey} className="pointery-view">
             {loading && <p className="pointery-meta">Thinking…</p>}
-            {!q && (
-              <div className="pointery-suggest">
-                {(cfg.suggestions ?? []).map((s, i) => (
-                  s.trim() ? <button key={i} onClick={() => { setQ(s); ask(s); }}>{s}</button> : null
+            {!loading && rows.length > 0 && (
+              <ul id="pointery-list" className="pointery-list" role="listbox" aria-label="Suggestions">
+                {rows.map((r, i) => (
+                  <li key={r.id} id={r.id} role="option" aria-selected={i === active}>
+                    <button className="pointery-row" data-active={i === active} onMouseEnter={() => setSel(i)} onClick={() => activateRow(r)}>
+                      <span className="pointery-row-dot" aria-hidden />
+                      <span className="pointery-row-text"><span>{r.title}</span>{r.sub ? <span className="pointery-row-sub">{r.sub}</span> : null}</span>
+                      <kbd>↵</kbd>
+                    </button>
+                  </li>
                 ))}
-              </div>
+              </ul>
             )}
-            {!loading && res && (res.go || res.spot || res.action || res.guide || res.plan) && (
-              <div className="pointery-result">
-                {res.hint && <p><strong>{res.hint}</strong></p>}
-                <div className="pointery-guide-row">
-                  {(res.go || res.spot) && <button className="primary" onClick={() => { goSpot(res.go, res.spot, res.hint, res.filter); close(); }}>Take me there</button>}
-                  {res.plan && <button className="primary" onClick={() => { setGuideIdx(0); startGuide({ title: res.plan!.title, steps: res.plan!.steps, i: 0 }); close(); }}>Start steps ({res.plan!.steps.length})</button>}
-                  {res.guide && !res.plan && <button className="primary" onClick={() => { setGuideIdx(0); startGuide({ title: res.guide!.title, steps: res.guide!.steps, i: 0 }); close(); }}>Start guide</button>}
-                  {res.action && <button className="primary" onClick={async () => { const a = res.action!; if (res.confirm) { close(); setPendingAction(a); } else { close(); await runAction(a); } }}>Run action</button>}
-                </div>
-              </div>
+            {!loading && rows.length === 0 && q.trim() && (
+              <p className="pointery-meta">No match — press Enter to ask anyway.</p>
             )}
             </div>
           </div>

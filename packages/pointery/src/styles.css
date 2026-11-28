@@ -104,10 +104,14 @@
 .pointery-palette { width: min(560px, 100%); height: fit-content; background: var(--color-surface); border-radius: var(--pointery-radius); box-shadow: var(--shadow-lg); padding: 0.75rem; margin-top: 0; }
 .pointery-palette input { width: 100%; border: 1px solid var(--color-border); border-radius: calc(var(--pointery-radius) - 4px); padding: 0.8rem 1rem; font-size: 0.95rem; outline: none; font-family: inherit; }
 .pointery-palette input:focus { border-color: var(--color-border-focus); box-shadow: 0 0 0 3px color-mix(in srgb, var(--pointery-primary) 18%, transparent); }
-.pointery-suggest { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.7rem 0.2rem 0.3rem; }
-.pointery-suggest button { border: 1px solid var(--color-border); border-radius: 999px; padding: 0.35rem 0.8rem; font-size: 0.8rem; background: var(--color-background-secondary); color: var(--color-text-secondary); }
-.pointery-suggest button:hover { border-color: var(--pointery-primary); color: var(--pointery-primary); }
-.pointery-result { border-top: 1px solid var(--color-border); margin-top: 0.6rem; padding: 0.7rem 0.2rem 0.2rem; font-size: 0.9rem; }
+.pointery-list { list-style: none; margin: 0.6rem 0 0; padding: 0; border-top: 1px solid var(--color-border); max-height: 320px; overflow: auto; }
+.pointery-row { display: flex; width: 100%; align-items: center; gap: 0.6rem; padding: 0.6rem; font-size: 0.88rem; text-align: left; background: none; border: none; border-bottom: 1px solid var(--color-border); cursor: pointer; color: var(--color-text-primary); font-family: inherit; }
+.pointery-list li:last-child .pointery-row { border-bottom: none; }
+.pointery-row:hover, .pointery-row[data-active="true"] { background: var(--color-background-secondary); }
+.pointery-row-dot { flex: none; width: 6px; height: 6px; border-radius: 999px; background: var(--pointery-primary); }
+.pointery-row-text { flex: 1; min-width: 0; }
+.pointery-row-sub { display: block; font-size: 0.75rem; color: var(--color-text-tertiary); }
+.pointery-row kbd { flex: none; border: 1px solid var(--color-border); border-radius: 6px; padding: 0.1rem 0.4rem; font-size: 0.65rem; color: var(--color-text-tertiary); font-family: inherit; }
 .pointery-meta { padding: 0.5rem 0.2rem 0; font-size: 0.72rem; color: var(--color-text-tertiary); }
 
 /* palette entrance — picked via `animation` in pointery.config.json ("fade" | "slide" | "scale" | "none") */
@@ -134,19 +138,19 @@
 @keyframes pointery-view-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .pointery-anim-fade .pointery-view { animation: pointery-fade 160ms ease-out both; }
 .pointery-anim-slide .pointery-view, .pointery-anim-scale .pointery-view { animation: pointery-view-in 180ms cubic-bezier(0.23, 1, 0.32, 1) both; }
-.pointery-anim-fade .pointery-suggest button { animation: pointery-fade 160ms ease-out both; }
-.pointery-anim-slide .pointery-suggest button, .pointery-anim-scale .pointery-suggest button { animation: pointery-view-in 180ms cubic-bezier(0.23, 1, 0.32, 1) both; }
-.pointery-palette[class*="pointery-anim-"] .pointery-suggest button:nth-child(2) { animation-delay: 35ms; }
-.pointery-palette[class*="pointery-anim-"] .pointery-suggest button:nth-child(3) { animation-delay: 70ms; }
-.pointery-palette[class*="pointery-anim-"] .pointery-suggest button:nth-child(4) { animation-delay: 105ms; }
-.pointery-palette[class*="pointery-anim-"] .pointery-suggest button:nth-child(n+5) { animation-delay: 140ms; }
+.pointery-anim-fade .pointery-list li { animation: pointery-fade 160ms ease-out both; }
+.pointery-anim-slide .pointery-list li, .pointery-anim-scale .pointery-list li { animation: pointery-view-in 180ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+.pointery-palette[class*="pointery-anim-"] .pointery-list li:nth-child(2) { animation-delay: 35ms; }
+.pointery-palette[class*="pointery-anim-"] .pointery-list li:nth-child(3) { animation-delay: 70ms; }
+.pointery-palette[class*="pointery-anim-"] .pointery-list li:nth-child(4) { animation-delay: 105ms; }
+.pointery-palette[class*="pointery-anim-"] .pointery-list li:nth-child(n+5) { animation-delay: 140ms; }
 /* toast carries the same anim class — rise from its bottom anchor (fade needs no override) */
 @keyframes pointery-toast-in { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
 .pointery-anim-slide.pointery-toast, .pointery-anim-scale.pointery-toast { animation: pointery-toast-in 200ms cubic-bezier(0.23, 1, 0.32, 1) both; }
 @media (prefers-reduced-motion: reduce) {
   .pointery-anim-fade, .pointery-anim-slide, .pointery-anim-scale,
   .pointery-overlay.pointery-leaving,
-  .pointery-view, .pointery-toast, .pointery-suggest button { animation-duration: 0ms; }
+  .pointery-view, .pointery-toast, .pointery-list li { animation-duration: 0ms; }
 }
 
 /* toast / guide / confirm / fab */

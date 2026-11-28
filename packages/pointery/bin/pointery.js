@@ -312,7 +312,11 @@ keyless mode). Re-run whenever your UI changes.
 >    status probe must use real queries from the
 >    context (a flow title, an entry label — never the "export"
 >    placeholder if the app has no export), and defaults (trigger, theme,
->    position, allowActions) must mirror \`pointery.config.json\`. Tag its
+>    position, suggestions, allowActions) must mirror \`pointery.config.json\`.
+>    Set \`suggestions\` to 3–5 real first-run questions for THIS app, built
+>    from the entry labels and flow titles you just indexed (the palette
+>    shows them as its default list) — never the "export" placeholder if
+>    the app has no export. Tag its
 >    sections with \`data-pointery\` ids and keep the matching
 >    \`pointery-settings-*\` entries on page \`/pointery\` in sync; re-run step 5.
 >
