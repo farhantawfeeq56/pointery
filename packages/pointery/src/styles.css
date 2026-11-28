@@ -164,7 +164,8 @@
 .pointery-guide-close:hover { background: var(--color-background-secondary); color: var(--color-text-primary); }
 .pointery-guide-title { font-weight: 700; font-size: 0.95rem; } .pointery-guide-title span { color: var(--color-text-tertiary); font-weight: 400; }
 .pointery-guide-step { margin: 0.4rem 0 0.7rem; color: var(--color-text-secondary); }
-.pointery-guide-row { display: flex; gap: 0.5rem; justify-content: flex-end; }
+/* Action row sits in the card's right corner: starts 53px in, ends 12px from the edge. */
+.pointery-guide-row { display: flex; gap: 0.5rem; justify-content: flex-end; margin-left: 36px; margin-right: -36px; }
 .pointery-guide-row button { border: 1px solid var(--color-border); border-radius: 999px; padding: 0.4rem 0.9rem; font-size: 0.8rem; font-weight: 600; background: var(--color-surface); color: var(--color-text-primary); }
 .pointery-guide-row button:disabled { opacity: 0.4; }
 .pointery-guide-row button.primary, .pointery-confirm button.primary { background: var(--color-action-primary); border-color: transparent; color: var(--color-text-inverse); }
