@@ -391,3 +391,8 @@ vartest10: 10 controls variants on /pointery (dev-only test chrome).
 
 - `app/pointery/page.tsx` — V1 keeps the current controls untouched; V2-V10 recompose the same state (shortcut, position, color, radius, suggestions, save) in new layouts: Cards, Rows, Stacked, Big touch, Compact, Appearance first, Suggestions first, Action bar, Descriptive. Same Figtree/colors, preview mock untouched, single subtle enter per variant. Floating toolbar bottom-right + keys 1-9/0 switch variants. All data-pointery ids preserved in every variant.
 - tsc + eslint clean. Deliberately NOT running `pointery:sync-page` — test chrome must not ship in the CLI starter.
+
+## Pass 54 (feat/basic-changes, 2026-11-28)
+Removed all vartest scaffolding from /pointery.
+
+- `app/pointery/page.tsx` — deleted variant state/keys, floating toolbar, header badge, variant CSS, shared pieces + renderControls. File is byte-identical to pre-vartest (diff vs fbd8009^ is empty). tsc + eslint clean.
