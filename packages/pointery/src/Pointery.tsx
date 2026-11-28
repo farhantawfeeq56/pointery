@@ -26,7 +26,7 @@ const DEFAULTS = {
     pressEnter: "No match — press Enter to ask anyway.",
     guideComplete: "Guide complete.",
     ambiguous: "Several rows match — showing “{title}”.",
-    confirmBody: "“{action}” — destructive actions need your OK.",
+    confirmBody: "“{action}” needs your confirmation.",
     back: "Back",
     next: "Next",
     doneBtn: "Done",
