@@ -655,9 +655,9 @@ export default function PointerySettingsPage() {
               </button>
               </div>
             </div>
-            <div className="w-fit min-w-36 rounded-[14px] border border-zinc-200 px-2.5 py-1.5">
+            <div className="w-56 max-w-full rounded-[14px] border border-zinc-200 px-2.5 py-1.5">
                 <p id="py-position-label" className="text-xs text-zinc-500">Palette position</p>
-                <div className="relative mt-1 flex h-8 items-center gap-1 rounded-lg" role="radiogroup" aria-labelledby="py-position-label">
+                <div className="relative mt-1.5 flex h-9 items-center gap-1 rounded-lg" role="radiogroup" aria-labelledby="py-position-label">
                   <span aria-hidden className="py-thumb absolute inset-y-0 left-0 rounded-lg border border-zinc-200 bg-white shadow-sm" style={{ width: "calc(100% / 3)", transform: cfg.position === "top" ? "translateX(0%)" : cfg.position === "center" ? "translateX(100%)" : "translateX(200%)" }} />
                   {(["top", "center", "bottom"] as const).map((o) => (
                     <button
@@ -666,7 +666,7 @@ export default function PointerySettingsPage() {
                       role="radio"
                       aria-checked={cfg.position === o}
                       onClick={() => setCfg({ ...cfg, position: o })}
-                      className={cfg.position === o ? "py-press relative z-10 flex-1 rounded-lg px-2.5 py-1 text-xs font-medium text-zinc-900" : "py-press relative z-10 flex-1 rounded-lg px-2.5 py-1 text-xs font-medium text-zinc-500 hover:text-zinc-800"}
+                      className={cfg.position === o ? "py-press relative z-10 flex-1 rounded-lg px-3 py-1.5 text-xs font-medium text-zinc-900" : "py-press relative z-10 flex-1 rounded-lg px-3 py-1.5 text-xs font-medium text-zinc-500 hover:text-zinc-800"}
                     >
                       {o[0].toUpperCase() + o.slice(1)}
                     </button>
