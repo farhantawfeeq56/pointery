@@ -23,6 +23,7 @@ const DEFAULTS = {
     blocked: "“{action}” needs approval - taking you there instead.",
     done: "Done - {action}.",
     unreachable: "Pointery is unreachable - is {endpoint} mounted?",
+    missing: "Sorry - we can't locate that on this page.",
     guideComplete: "Guide complete.",
     ambiguous: "Several rows match - showing “{title}”.",
     confirmBody: "“{action}” needs your confirmation.",
@@ -54,7 +55,10 @@ export function pulse(key: string, filter?: string, ms = 2600) {
   };
   requestAnimationFrame(() => {
     const el = document.querySelector(`[data-pointery="${key}"]`);
-    if (!el) return;
+    if (!el) {
+      window.dispatchEvent(new CustomEvent("pointery:missing", { detail: key }));
+      return;
+    }
     // rows:true container + filter: pulse the matching row, else the container.
     let target: Element = el;
     const needle = filter?.trim().toLowerCase();
@@ -62,13 +66,22 @@ export function pulse(key: string, filter?: string, ms = 2600) {
       const rows = el.querySelectorAll("tr, li, [role=row]");
       const pool: Element[] = rows.length ? Array.from(rows) : Array.from(el.children);
       const hits = pool.filter((n) => (n.textContent ?? "").toLowerCase().includes(needle));
-      if (hits[0]) {
-        target = hits[0];
-        if (hits.length > 1) {
-          const title = rowTitle(hits[0]);
-          if (title) window.dispatchEvent(new CustomEvent("pointery:ambiguous", { detail: title }));
-        }
+      if (hits.length > 1) {
+        // Show every match, not just the first.
+        const first = hits[0];
+        first.scrollIntoView({ behavior: "smooth", block: "center" });
+        for (const h of hits) h.classList.remove("pointery-pulse");
+        // restart animation
+        void document.body.offsetWidth;
+        for (const h of hits) h.classList.add("pointery-pulse");
+        window.setTimeout(() => {
+          for (const h of hits) h.classList.remove("pointery-pulse");
+        }, ms);
+        const title = rowTitle(first);
+        if (title) window.dispatchEvent(new CustomEvent("pointery:ambiguous", { detail: title }));
+        return;
       }
+      if (hits[0]) target = hits[0];
     }
     target.scrollIntoView({ behavior: "smooth", block: "center" });
     target.classList.remove("pointery-pulse");
@@ -171,6 +184,13 @@ export default function Pointery(props: PointeryProps) {
     return () => window.removeEventListener("pointery:ambiguous", onAmbiguous);
   }, [say, cfg.labels.ambiguous]);
 
+  // Anchor isn't in the DOM - say so instead of failing silently.
+  useEffect(() => {
+    const onMissing = () => { say(cfg.labels.missing!); };
+    window.addEventListener("pointery:missing", onMissing);
+    return () => window.removeEventListener("pointery:missing", onMissing);
+  }, [say, cfg.labels.missing]);
+
   // Esc always closes; cfg.trigger toggles - even while typing in the palette.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -226,7 +246,9 @@ export default function Pointery(props: PointeryProps) {
       // One toast per ask: the first message wins, the rest stay silent.
       let announced = false;
       if (data.answer) { say(data.answer); announced = true; }
-      const walkthrough = data.plan ?? data.guide;
+      // Degenerate walkthroughs (no steps) would render a broken card - drop them so the miss path handles it.
+      const rawWalkthrough = data.plan ?? data.guide;
+      const walkthrough = rawWalkthrough && Array.isArray(rawWalkthrough.steps) && rawWalkthrough.steps.length > 0 ? rawWalkthrough : undefined;
       if (walkthrough) {
         setGuide({ title: walkthrough.title, steps: walkthrough.steps, i: 0 });
         setGuideIdx(0);

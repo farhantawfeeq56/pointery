@@ -111,6 +111,8 @@ export type PointeryLabels = {
   done?: string;
   /** Supports {endpoint}. */
   unreachable?: string;
+  /** Anchor missing from the DOM. */
+  missing?: string;
   /** @deprecated Unused - free text always submits. Kept so existing configs still validate. */
   pressEnter?: string;
   guideComplete?: string;

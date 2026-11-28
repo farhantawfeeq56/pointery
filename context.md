@@ -521,3 +521,11 @@ Removed the `pressEnter` ("No match - press Enter to ask anyway") line: Pointery
 - `packages/pointery/src/Pointery.tsx` - dropped the default + the `rows.length === 0 && q.trim()` render block; typed-but-unmatched input now shows a clean empty view.
 - `packages/pointery/src/types.ts` - `pressEnter` kept as `@deprecated` so existing buyer configs still validate (schema uses `additionalProperties: false`); `schema.json` + `.pointery-meta` CSS left untouched.
 - Verified: `lint` + `kit:build` + `tsc` clean. Temp hook 2 now previews the clean empty view.
+
+## Pass 73 (feat/basic-changes, 2026-11-28)
+Three empty-state fixes in the kit (all buyer-facing, harness untouched).
+
+- Multi-row matches now pulse every matching row, not just the first (`pulse()` in `packages/pointery/src/Pointery.tsx`); ambiguous toast unchanged. Temp hook 6 shows it.
+- Missing anchor now toasts instead of failing silently: `pulse()` dispatches `pointery:missing`, new `labels.missing` ("Sorry - we can't locate that on this page.") + `types.ts` + `schema.json`. Temp hook 7 shows it.
+- Zero-step guide/plan walkthroughs are dropped client-side and fall through to the miss path (empty toast) - the broken "1/0" card can no longer render. Temp hook 8 now proves it (empty toast, no card).
+- Verified: `lint` + `kit:build` + `tsc` clean.

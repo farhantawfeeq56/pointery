@@ -51,6 +51,7 @@
         "blocked": { "type": "string" },
         "done": { "type": "string" },
         "unreachable": { "type": "string" },
+        "missing": { "type": "string" },
         "pressEnter": { "type": "string" },
         "guideComplete": { "type": "string" },
         "ambiguous": { "type": "string" },
