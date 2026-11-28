@@ -396,3 +396,8 @@ vartest10: 10 controls variants on /pointery (dev-only test chrome).
 Removed all vartest scaffolding from /pointery.
 
 - `app/pointery/page.tsx` — deleted variant state/keys, floating toolbar, header badge, variant CSS, shared pieces + renderControls. File is byte-identical to pre-vartest (diff vs fbd8009^ is empty). tsc + eslint clean.
+
+## Pass 55 (feat/basic-changes, 2026-11-28)
+vartest5: click-to-edit preview variants on /pointery (dev-only test chrome).
+
+- `app/pointery/page.tsx` — V1 current layout untouched; V2 popover, V3 inspector, V4 dock, V5 inline-direct. Shared cfg/autosave/broadcast, clickPalette + editorBody reused. Floating toolbar bottom-right, keys 1-5. tsc + eslint clean, no sync-page (test chrome stays out of CLI starter).
