@@ -150,6 +150,16 @@ const DEFAULT_CACHE_MAX = 200;
 const cacheKey = (q: string, page: string | undefined, allowed?: string[], model?: string, temperature?: number) =>
   `${q.trim().toLowerCase().slice(0, 200)}|${page ?? ""}|${(allowed ?? []).join(",")}|${model ?? ""}|${temperature ?? 0}`;
 
+// Stable support codes: the user-facing sentence rides in `answer`, the code
+// lets support look the cause + fix up in the README table.
+const LLM_ERROR_COPY: Record<string, string> = {
+  LLM_NOT_CONFIGURED: "Something's wrong on our end - setup isn't finished. Report error code LLM_NOT_CONFIGURED to the site owner.",
+  LLM_UNAUTHORIZED: "Something's wrong on our end - the helper was refused. Report error code LLM_UNAUTHORIZED to the site owner.",
+  LLM_RATE_LIMITED: "The helper is busy - try again in a bit. Error code: LLM_RATE_LIMITED.",
+  LLM_UPSTREAM_ERROR: "Something's wrong on our end - the helper failed. Report error code LLM_UPSTREAM_ERROR to the site owner.",
+  LLM_REQUEST_FAILED: "Something's wrong on our end - couldn't get an answer. Report error code LLM_REQUEST_FAILED to the site owner.",
+};
+
 export function createAskHandler(context: PointeryContext, opts: AskHandlerOptions = {}) {
   return async function POST(req: Request): Promise<Response> {
     const body = await req.json().catch(() => ({} as Record<string, unknown>));
@@ -169,7 +179,7 @@ export function createAskHandler(context: PointeryContext, opts: AskHandlerOptio
     const llmModel = opts.llm?.model?.trim() || defaultModelFor(opts.llm?.url ?? "");
     if (!opts.llm?.url || !opts.llm?.key || !llmModel) {
       return Response.json(
-        { answer: "LLM not configured. Set POINTERY_LLM_URL, POINTERY_LLM_KEY and POINTERY_LLM_MODEL in .env.local and restart." },
+        { error: "LLM_NOT_CONFIGURED", answer: LLM_ERROR_COPY.LLM_NOT_CONFIGURED },
         { status: 503 },
       );
     }
@@ -189,6 +199,7 @@ export function createAskHandler(context: PointeryContext, opts: AskHandlerOptio
       return Response.json(override ?? local);
     }
 
+    let llmError: string | null = null;
     if (opts.llm?.url && q) {
       const key = cacheKey(q, page, opts.allowActions, llmModel, temperature);
       const hit = llmCache.get(key);
@@ -240,6 +251,11 @@ export function createAskHandler(context: PointeryContext, opts: AskHandlerOptio
           headers,
           body: JSON.stringify(llmBody),
         });
+        if (!r.ok) {
+          if (r.status === 401 || r.status === 403) llmError = "LLM_UNAUTHORIZED";
+          else if (r.status === 429) llmError = "LLM_RATE_LIMITED";
+          else llmError = "LLM_UPSTREAM_ERROR";
+        }
         if (r.ok) {
           const data = await r.json();
           // Native shapes: Anthropic `content[].text`, Gemini `candidates[0].content.parts[].text`.
@@ -269,11 +285,18 @@ export function createAskHandler(context: PointeryContext, opts: AskHandlerOptio
           }
         }
       } catch {
-        // fall through to local miss below
+        if (!llmError) llmError = "LLM_REQUEST_FAILED";
+        // fall through to the error payload below
       }
     }
 
     const override: PointeryResult | null = opts.guard?.(query, local) ?? null;
-    return Response.json(override ?? local);
+    if (override) return Response.json(override);
+    // Local miss + brain failure: say what's wrong (with a support code), not "no match".
+    const emptyLocal = !local.spot && !local.go && !local.action && !local.guide && !local.plan && !local.answer;
+    if (emptyLocal && llmError) {
+      return Response.json({ error: llmError, answer: LLM_ERROR_COPY[llmError] ?? LLM_ERROR_COPY.LLM_REQUEST_FAILED });
+    }
+    return Response.json(local);
   };
 }

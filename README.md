@@ -24,6 +24,21 @@ All via props, no hosted dashboard:
 `<Pointery trigger="shift+a" theme={{primary,radius,fontFamily}} position animation suggestions allowActions labels />` + CSS vars `--pointery-*` for white-label.
 Options UI = `<PointeryStudio/>` in same package, mounted at `/pointery` - color pickers, shortcut recorder, toggles → writes `pointery.config.json` locally. Same as static playground on docs site. Separate import so no bundle bloat.
 
+## Error codes - support lookup
+
+Every failure shows the user a plain sentence plus a stable code. User reports the code, support looks it up here:
+
+| Code | User sees | Support fix |
+|---|---|---|
+| LLM_NOT_CONFIGURED | setup isn't finished | set `POINTERY_LLM_URL` + `POINTERY_LLM_KEY` + `POINTERY_LLM_MODEL` in `.env.local`, restart |
+| LLM_UNAUTHORIZED | the helper was refused | key invalid or no model access - check provider dashboard, rotate key |
+| LLM_RATE_LIMITED | the helper is busy | quota / rate limit - wait, retry, check plan |
+| LLM_UPSTREAM_ERROR | the helper failed | provider 5xx - check provider status, retry |
+| LLM_REQUEST_FAILED | couldn't get an answer | server can't reach the LLM endpoint - check URL, egress, DNS |
+| ASK_UNREACHABLE | can't reach the helper | `/api/ask` down or offline - check endpoint mounted, connection |
+| ASK_BAD_RESPONSE | unexpected reply | endpoint returned non-JSON - custom handler must return JSON |
+| ASK_TIMEOUT | taking too long | over `timing.askMs` (30s) - retry, or raise the timeout |
+
 ## Business model
 
 Self-hosted, BYOK. Private npm / repo / zip.

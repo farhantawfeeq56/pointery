@@ -92,7 +92,7 @@ export function validateConfig(cfg: unknown): string[] {
       if (n !== undefined && typeof n !== "number") errors.push(`${key}.${f} must be a number (got ${JSON.stringify(n)})`);
     }
   };
-  numObj("timing", ["toastMs", "pulseMs", "closeMs", "focusMs", "navigateMs", "navigateIdleMs"]);
+  numObj("timing", ["toastMs", "pulseMs", "closeMs", "focusMs", "navigateMs", "navigateIdleMs", "askMs"]);
   const brain = c.brain;
   if (brain !== undefined) {
     if (!brain || typeof brain !== "object" || Array.isArray(brain)) errors.push("brain must be an object");

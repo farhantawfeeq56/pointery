@@ -33,7 +33,8 @@
         "closeMs": { "type": "number" },
         "focusMs": { "type": "number" },
         "navigateMs": { "type": "number" },
-        "navigateIdleMs": { "type": "number" }
+        "navigateIdleMs": { "type": "number" },
+        "askMs": { "type": "number" }
       },
       "additionalProperties": false
     },
@@ -52,6 +53,9 @@
         "done": { "type": "string" },
         "unreachable": { "type": "string" },
         "missing": { "type": "string" },
+        "timeout": { "type": "string" },
+        "badResponse": { "type": "string" },
+        "emptyQuery": { "type": "string" },
         "pressEnter": { "type": "string" },
         "guideComplete": { "type": "string" },
         "ambiguous": { "type": "string" },

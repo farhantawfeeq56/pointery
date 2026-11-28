@@ -64,6 +64,8 @@ export type PointeryContext = {
 export type PointeryCandidates = Pick<PointeryContext, "entries" | "flows" | "actions">;
 
 export type PointeryResult = {
+  /** Stable support code (e.g. LLM_NOT_CONFIGURED) - the human sentence rides in `answer`. */
+  error?: string;
   spot?: string;
   go?: string;
   action?: string;
@@ -95,6 +97,8 @@ export type PointeryTiming = {
   /** Pulse delay after navigation vs in place. Defaults to 450 / 50. */
   navigateMs?: number;
   navigateIdleMs?: number;
+  /** Ask fetch timeout. Defaults to 30000. */
+  askMs?: number;
 };
 export type PointeryPosition = "top" | "center" | "bottom";
 /** Palette entrance. `slide` drifts in from the palette edge (down on top, up on bottom). */
@@ -113,6 +117,12 @@ export type PointeryLabels = {
   unreachable?: string;
   /** Anchor missing from the DOM. */
   missing?: string;
+  /** Ask timed out (over timing.askMs). */
+  timeout?: string;
+  /** Endpoint reply wasn't JSON. */
+  badResponse?: string;
+  /** Blank submit - guidance, not an error. */
+  emptyQuery?: string;
   /** @deprecated Unused - free text always submits. Kept so existing configs still validate. */
   pressEnter?: string;
   guideComplete?: string;

@@ -529,3 +529,13 @@ Three empty-state fixes in the kit (all buyer-facing, harness untouched).
 - Missing anchor now toasts instead of failing silently: `pulse()` dispatches `pointery:missing`, new `labels.missing` ("Sorry - we can't locate that on this page.") + `types.ts` + `schema.json`. Temp hook 7 shows it.
 - Zero-step guide/plan walkthroughs are dropped client-side and fall through to the miss path (empty toast) - the broken "1/0" card can no longer render. Temp hook 8 now proves it (empty toast, no card).
 - Verified: `lint` + `kit:build` + `tsc` clean.
+
+## Pass 74 (feat/basic-changes, 2026-11-28)
+No-stranding + support-referable error codes. Every failure now shows a plain user sentence plus a stable code; README has the code -> cause -> fix table for support.
+
+- `packages/pointery/src/Pointery.tsx` - blank submit toasts new `labels.emptyQuery` ("Type anything to ask...") instead of silence; ask fetch wrapped in AbortController (`timing.askMs`, 30s) -> `labels.timeout` (ASK_TIMEOUT); non-JSON body -> `labels.badResponse` (ASK_BAD_RESPONSE); `unreachable` reworded for users (ASK_UNREACHABLE, endpoint token dropped from default).
+- `packages/pointery/src/server.ts` - `{ error, answer }` contract (`PointeryResult.error`); 503 LLM_NOT_CONFIGURED with friendly copy; provider 401/403 -> LLM_UNAUTHORIZED, 429 -> LLM_RATE_LIMITED, other non-ok -> LLM_UPSTREAM_ERROR, throw -> LLM_REQUEST_FAILED; local-miss + llmError returns the error payload instead of a lying "no match".
+- `types.ts` + `schema.json` + `validate.ts` - new labels (`timeout`, `badResponse`, `emptyQuery`) and `timing.askMs`.
+- `README.md` - "Error codes - support lookup" table.
+- Temp hook 15 copy synced to the new 503 text.
+- Verified: `lint` + `kit:build` + `tsc` clean; live 503 payload curled on :3000.

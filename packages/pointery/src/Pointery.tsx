@@ -22,8 +22,11 @@ const DEFAULTS = {
     asking: "Asking…",
     blocked: "“{action}” needs approval - taking you there instead.",
     done: "Done - {action}.",
-    unreachable: "Pointery is unreachable - is {endpoint} mounted?",
+    unreachable: "Can't reach the helper - check your connection and try again. Error code: ASK_UNREACHABLE.",
     missing: "Sorry - we can't locate that on this page.",
+    timeout: "That's taking too long - try again. Error code: ASK_TIMEOUT.",
+    badResponse: "Something's wrong on our end - unexpected reply. Error code: ASK_BAD_RESPONSE.",
+    emptyQuery: "Type anything to ask - I'll take it from there.",
     guideComplete: "Guide complete.",
     ambiguous: "Several rows match - showing “{title}”.",
     confirmBody: "“{action}” needs your confirmation.",
@@ -35,7 +38,7 @@ const DEFAULTS = {
     fabLabel: "Ask Pointery",
   },
   endpoint: "/api/ask",
-  timing: { toastMs: 4200, pulseMs: 2600, closeMs: 160, focusMs: 30, navigateMs: 450, navigateIdleMs: 50 },
+  timing: { toastMs: 4200, pulseMs: 2600, closeMs: 160, focusMs: 30, navigateMs: 450, navigateIdleMs: 50, askMs: 30000 },
   fab: true as boolean | string,
   hiddenRoutes: ["/"],
 };
@@ -235,14 +238,18 @@ export default function Pointery(props: PointeryProps) {
   // card, confirm dialog, navigation and pulse - nothing waits on a row click.
   const ask = useCallback(async (query: string) => {
     const queryText = query.trim();
-    if (!queryText) return;
+    if (!queryText) { say(cfg.labels.emptyQuery!); return; }
     close();
     // Palette is gone, so pending state lives in the toast slot - every
     // outcome below replaces it (answer, hint, done, empty, unreachable).
     say(cfg.labels.asking!);
+    // A hanging ask strands the user - time out instead of spinning forever.
+    const ctrl = new AbortController();
+    const timer = window.setTimeout(() => ctrl.abort(), cfg.timing.askMs);
     try {
-      const r = await fetch(cfg.endpoint, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ query: queryText, page: window.location.pathname }) });
-      const data = (await r.json()) as PointeryResult;
+      const r = await fetch(cfg.endpoint, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ query: queryText, page: window.location.pathname }), signal: ctrl.signal });
+      const data = (await r.json().catch(() => null)) as PointeryResult | null;
+      if (!data) { say(cfg.labels.badResponse!); return; }
       // One toast per ask: the first message wins, the rest stay silent.
       let announced = false;
       if (data.answer) { say(data.answer); announced = true; }
@@ -288,9 +295,11 @@ export default function Pointery(props: PointeryProps) {
       else if (!walkthrough && (data.go || data.spot)) goSpot(data.go, data.spot, announced ? undefined : data.hint, data.filter);
       else if (!announced) say(cfg.labels.empty!);
     } catch {
-      say(fmt(cfg.labels.unreachable!, { endpoint: cfg.endpoint }));
+      say(ctrl.signal.aborted ? cfg.labels.timeout! : fmt(cfg.labels.unreachable!, { endpoint: cfg.endpoint }));
+    } finally {
+      window.clearTimeout(timer);
     }
-  }, [cfg.allowActions, cfg.labels, cfg.endpoint, goSpot, runAction, say, close]);
+  }, [cfg.allowActions, cfg.labels, cfg.endpoint, cfg.timing.askMs, goSpot, runAction, say, close]);
 
   if (!open && !guide && !toast && !pendingAction) {
     if (cfg.fab === false) return null;

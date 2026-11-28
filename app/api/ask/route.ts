@@ -42,7 +42,7 @@ async function tempEmptyDemo(q: string): Promise<Response | null> {
     case "13":
       return Response.json({ answer: "Empty-slice demo: a blank query sends { entries: [], flows: [], actions: [] } to the LLM - no UI of its own.", spot: "nav-dashboard", go: "/demo" });
     case "15":
-      return Response.json({ answer: "LLM not configured. Set POINTERY_LLM_URL, POINTERY_LLM_KEY and POINTERY_LLM_MODEL in .env.local and restart." }, { status: 503 });
+      return Response.json({ error: "LLM_NOT_CONFIGURED", answer: "Something's wrong on our end - setup isn't finished. Report error code LLM_NOT_CONFIGURED to the site owner." }, { status: 503 });
     default:
       // 1, 2, 10, 14 -> {} collapses to the empty toast.
       return Response.json({});
