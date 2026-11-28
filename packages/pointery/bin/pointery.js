@@ -339,11 +339,7 @@ export default function PointerySettingsPage() {
       </div>
       <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-12">
         <section data-pointery="pointery-settings-preview" className="self-start lg:order-2 lg:sticky lg:top-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="text-sm font-semibold">Preview</h2>
-              <p className="mt-0.5 text-xs text-zinc-500">How the palette looks in your app. Updates as you edit.</p>
-            </div>
+          <div className="flex flex-wrap items-center justify-end gap-3">
             <div className="py-inset flex rounded-full p-1 text-xs font-semibold" role="tablist" aria-label="Preview state">
               {(["closed", "open"] as const).map((s) => (
                 <button
@@ -411,8 +407,6 @@ export default function PointerySettingsPage() {
 
         <div className="min-w-0 divide-y divide-zinc-200 lg:order-1">
           <section data-pointery="pointery-settings-shortcut" className="py-8 first:pt-0">
-            <h2 className="text-sm font-semibold">Keyboard shortcut</h2>
-            <p className="mt-0.5 text-xs text-zinc-500">Recommended presets, or record your own. ⌘/Ctrl+K always works as a secondary.</p>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               {(["shift+a", "cmd+k"] as const).map((v) => (
                 <button
@@ -442,8 +436,6 @@ export default function PointerySettingsPage() {
           </section>
 
           <section data-pointery="pointery-settings-brand" className="py-8">
-            <h2 className="text-sm font-semibold">Brand</h2>
-            <p className="mt-0.5 text-xs text-zinc-500">Primary color + corner radius. Preview updates live.</p>
             <div className="mt-3 grid gap-4 sm:grid-cols-2">
               <label className="text-sm">
                 <span className="font-medium">Primary color</span>
@@ -460,8 +452,6 @@ export default function PointerySettingsPage() {
           </section>
 
           <section data-pointery="pointery-settings-behavior" className="py-8">
-            <h2 className="text-sm font-semibold">Behavior</h2>
-            <p className="mt-0.5 text-xs text-zinc-500">Position, suggestions, allowlisted actions, palette copy.</p>
             <label className="mt-3 block text-sm">
               <span className="font-medium">Palette position</span>
               <select value={cfg.position} onChange={(e) => setCfg({ ...cfg, position: e.target.value as Config["position"] })} className="mt-2 w-full rounded-lg border px-3 py-2">
