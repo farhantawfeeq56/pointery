@@ -360,3 +360,9 @@ Custom brand controls per page feedback.
 
 - `app/pointery/page.tsx` — replaced native color/range inputs with `ColorPicker` (custom shade square + hue bar, pointer + arrow-key support, hex field; zero native color UI) and `RadiusSlider` (primary-filled track, Soft/Round/Pill presets), styled to the page's card/pill language.
 - Fixed a `set-state-in-effect` lint error in the shortcut recorder (moved reset into the toggle handler). Re-synced via `npm run pointery:sync-page`; lint + build clean.
+
+## Pass 49 (feat/basic-changes, 2026-11-28)
+Unified brand row per page feedback.
+
+- `app/pointery/page.tsx` — color, radius, and palette position now sit in one hugging flex row (`w-56` color/slider boxes, `w-fit` position card, equal height via stretch + `h-full` trigger button); slider stripped to label + value + track (no min/max captions, no preset pills); custom shade square + hue bar kept as the only picker, preset swatches removed.
+- Re-synced via `npm run pointery:sync-page`; lint + build clean.

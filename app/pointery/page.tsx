@@ -25,8 +25,6 @@ type SaveState = "idle" | "saving" | "saved" | "error";
 
 const ENV_SNIPPET = "POINTERY_LLM_URL=https://api.openai.com/v1/chat/completions\nPOINTERY_LLM_KEY=sk-...\nPOINTERY_LLM_MODEL=gpt-4o-mini";
 
-const RADIUS_PRESETS = [{ label: "Soft", value: 8 }, { label: "Round", value: 14 }, { label: "Pill", value: 20 }];
-
 const normalizeHex = (v: string) => {
   const t = v.trim().replace(/^#/, "");
   return /^[0-9a-fA-F]{6}$/.test(t) ? ("#" + t.toUpperCase()) : null;
@@ -101,13 +99,13 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (v: string)
     else setDraft(value);
   };
   return (
-    <div ref={boxRef} className="relative">
+    <div ref={boxRef} className="relative w-56 max-w-full">
       <button
         type="button"
         onClick={() => { if (!open) setDraft(value); setOpen((o) => !o); }}
         aria-expanded={open}
         aria-label="Pick primary color"
-        className="flex w-full items-center gap-3 rounded-xl border border-zinc-200 px-2.5 py-1.5 text-left hover:border-zinc-400"
+        className="flex h-full w-full items-center gap-3 rounded-xl border border-zinc-200 px-2.5 py-1.5 text-left hover:border-zinc-400"
       >
         <span className="h-8 w-8 shrink-0 rounded-lg border border-black/10 shadow-sm" style={{ background: value }} />
         <span className="min-w-0 flex-1">
@@ -197,7 +195,7 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (v: string)
 function RadiusSlider({ value, primary, onChange }: { value: number; primary: string; onChange: (v: number) => void }) {
   const pct = ((value - 4) / (24 - 4)) * 100;
   return (
-    <div className="rounded-xl border border-zinc-200 px-2.5 py-1.5">
+    <div className="w-56 max-w-full rounded-xl border border-zinc-200 px-2.5 py-1.5">
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs text-zinc-500">Corner radius</p>
         <span className="py-inset rounded-full px-2.5 py-0.5 font-mono text-xs font-semibold text-zinc-700">{value}px</span>
@@ -213,22 +211,6 @@ function RadiusSlider({ value, primary, onChange }: { value: number; primary: st
         className="py-slider mt-3 w-full"
         style={{ ["--pct" as string]: `${pct}%`, ["--fill" as string]: primary }}
       />
-      <div className="mt-1 flex items-center justify-between text-[11px] text-zinc-400">
-        <span>4px sharp</span>
-        <span>24px round</span>
-      </div>
-      <div className="mt-2 flex flex-wrap gap-1.5">
-        {RADIUS_PRESETS.map((p) => (
-          <button
-            key={p.label}
-            type="button"
-            onClick={() => onChange(p.value)}
-            className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${value === p.value ? "py-pill-active" : "py-pill"}`}
-          >
-            {p.label} · {p.value}
-          </button>
-        ))}
-      </div>
     </div>
   );
 }
@@ -418,9 +400,6 @@ export default function PointerySettingsPage() {
         .py-code { background: var(--color-background-secondary); border: 1px solid var(--color-border); color: var(--color-text-primary); }
         .py-save { background: var(--color-action-primary); color: #fff; }
         .py-save:hover { background: var(--color-action-primary-hover); }
-        .py-pill { border: 1px solid var(--color-border); color: var(--color-text-secondary); }
-        .py-pill:hover { border-color: var(--color-border-strong); color: var(--color-text-primary); }
-        .py-pill-active { background: var(--color-surface-inverse); border-color: var(--color-surface-inverse); color: #fff; }
         input.py-slider { -webkit-appearance: none; appearance: none; height: 8px; border-radius: 999px; outline: none;
           background: linear-gradient(to right, var(--fill, #00A878) 0%, var(--fill, #00A878) var(--pct, 50%), var(--color-border) var(--pct, 50%), var(--color-border) 100%); }
         input.py-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; height: 20px; width: 20px; border-radius: 999px;
@@ -580,22 +559,22 @@ export default function PointerySettingsPage() {
           </section>
 
           <section data-pointery="pointery-settings-brand" className="py-6">
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-wrap gap-4">
               <ColorPicker value={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: v } })} />
               <RadiusSlider value={cfg.theme.radius} primary={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: v } })} />
+              <div className="w-fit min-w-36 rounded-xl border border-zinc-200 px-2.5 py-1.5">
+                <label htmlFor="py-position" className="block text-xs text-zinc-500">Palette position</label>
+                <select id="py-position" value={cfg.position} onChange={(e) => setCfg({ ...cfg, position: e.target.value as Config["position"] })} className="mt-1 w-full bg-transparent text-sm font-semibold outline-none">
+                  <option value="top">Top</option>
+                  <option value="center">Center</option>
+                  <option value="bottom">Bottom</option>
+                </select>
+              </div>
             </div>
           </section>
 
                     <section data-pointery="pointery-settings-behavior" className="py-6">
-            <label className="block text-sm">
-              <span className="mb-2 block font-medium">Palette position</span>
-              <select value={cfg.position} onChange={(e) => setCfg({ ...cfg, position: e.target.value as Config["position"] })} className="w-fit rounded-lg border px-2.5 py-1.5">
-                <option value="top">Top</option>
-                <option value="center">Center</option>
-                <option value="bottom">Bottom</option>
-              </select>
-            </label>
-            <div className="mt-3 text-sm">
+            <div className="text-sm">
               <span className="font-medium">Suggestions</span>
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
                 {(() => { const rows = [...cfg.suggestions]; while (rows.length < 3) rows.push(""); return rows; })().map((s, i) => (
