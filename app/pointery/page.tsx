@@ -49,8 +49,6 @@ const hsvToHex = (h: number, s: number, v: number) => {
 
 const HUE_BAR = "linear-gradient(to right,hsl(0,100%,50%),hsl(60,100%,50%),hsl(120,100%,50%),hsl(180,100%,50%),hsl(240,100%,50%),hsl(300,100%,50%),hsl(360,100%,50%))";
 
-const VARIANT_NAMES = ["Current", "Cards", "Rows", "Stacked", "Big touch", "Compact", "Appearance first", "Suggestions first", "Action bar", "Split"] as const;
-
 function ColorPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -229,7 +227,6 @@ export default function PointerySettingsPage() {
   const [llm, setLlm] = useState<{ configured: boolean; host: string; model: string } | null>(null);
   const [preview, setPreview] = useState<"closed" | "open">("open");
   const [copied, setCopied] = useState(false);
-  const [variant, setVariant] = useState(1);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const firstRun = useRef(true);
@@ -291,19 +288,7 @@ export default function PointerySettingsPage() {
     return () => window.removeEventListener("keydown", onKey, true);
   }, [recording]);
 
-  // vartest: keys 1-9 + 0(=10) switch visual variants. Skipped when typing.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (recording) return;
-      const t = e.target as HTMLElement | null;
-      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
-      if (e.key >= "1" && e.key <= "9") setVariant(Number(e.key));
-      else if (e.key === "0") setVariant(10);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [recording]);
+  // Live: apply theme vars + notify the mounted <Pointery/> instantly.
   const broadcast = useCallback((next: Config) => {
     document.documentElement.style.setProperty("--pointery-primary", next.theme.primary);
     document.documentElement.style.setProperty("--pointery-radius", `${next.theme.radius}px`);
@@ -370,264 +355,6 @@ export default function PointerySettingsPage() {
   );
 
   const snippet = `<Pointery\n  trigger="${cfg.trigger}"\n  theme={{ primary: "${cfg.theme.primary}", radius: ${cfg.theme.radius} }}\n  position="${cfg.position}"\n/>`;
-
-  // ---- vartest: shared control pieces (same state, new layouts in V2-V10) ----
-  const secHead = (t: string) => (
-    <h3 className="py-sec-title mb-3">{t}</h3>
-  );
-  const recordBtn = (
-    <button
-      onClick={() => { setRecording((r) => !r); setRecordingPreview(null); }}
-      aria-label={recording ? "Stop recording" : "Record new shortcut"}
-      title={recording ? "Stop (Esc)" : "Record new shortcut"}
-      className={recording ? "py-press grid h-8 w-8 shrink-0 place-items-center rounded-full bg-amber-500 text-white" : "py-press grid h-8 w-8 shrink-0 place-items-center rounded-full border border-zinc-200 text-zinc-600 hover:border-zinc-400"}
-    >
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /></svg>
-    </button>
-  );
-  const triggerInner = (
-    <div>
-      <p className="text-xs text-zinc-500">{recording ? "Recording — press keys…" : "Current shortcut"}</p>
-      <div className="mt-1.5 flex h-10 items-center gap-3">
-        <p className="max-w-48 truncate text-sm font-medium">{recording ? prettyShortcut(recordingPreview ?? "…") : prettyShortcut(cfg.trigger)}</p>
-        {recordBtn}
-      </div>
-    </div>
-  );
-  const positionInner = (
-    <div>
-      <p className="text-xs text-zinc-500">Palette position</p>
-      <div className="relative mt-1.5 flex h-10 items-center gap-1 rounded-xl border border-zinc-200 bg-zinc-50 p-1" role="radiogroup" aria-label="Palette position">
-        <span aria-hidden className="py-thumb absolute inset-y-1 left-1 rounded-lg border border-zinc-200 bg-white shadow-sm" style={{ width: "calc((100% - 8px) / 3)", transform: cfg.position === "top" ? "translateX(0%)" : cfg.position === "center" ? "translateX(100%)" : "translateX(200%)" }} />
-        {(["top", "center", "bottom"] as const).map((o) => (
-          <button key={o} type="button" role="radio" aria-checked={cfg.position === o} onClick={() => setCfg({ ...cfg, position: o })}
-            className={cfg.position === o ? "py-press relative z-10 flex-1 rounded-lg px-3 py-1.5 text-xs font-medium text-zinc-900" : "py-press relative z-10 flex-1 rounded-lg px-3 py-1.5 text-xs font-medium text-zinc-500 hover:text-zinc-800"}>
-            {o[0].toUpperCase() + o.slice(1)}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-  const suggInner = (
-    <div className="grid gap-2 sm:grid-cols-2">
-      {(() => { const rows = [...cfg.suggestions]; while (rows.length < 3) rows.push(""); return rows; })().map((s, i) => (
-        <div key={i} className="flex items-center gap-2">
-          <input
-            value={s}
-            onChange={(e) => { const v = e.target.value; setCfg((c) => { const next = [...c.suggestions]; while (next.length <= i) next.push(""); next[i] = v; return { ...c, suggestions: next }; }); }}
-            placeholder={["Where is export?", "How do I invite a teammate?", "Try a third query…", "One more…"][i] ?? ("Suggestion " + (i + 1))}
-            className="py-field h-10 w-full rounded-xl border px-3 text-sm"
-          />
-          {i < cfg.suggestions.length ? (
-            <button onClick={() => setCfg((c) => ({ ...c, suggestions: c.suggestions.filter((_, j) => j !== i) }))} aria-label={"Remove suggestion " + (i + 1)}
-              className="py-press h-8 w-8 shrink-0 rounded-full border border-zinc-200 text-sm text-zinc-500 hover:border-zinc-400">−</button>
-          ) : <span className="h-8 w-8 shrink-0" />}
-        </div>
-      ))}
-      {cfg.suggestions.length < 4 && (
-        <button onClick={() => setCfg((c) => ({ ...c, suggestions: [...c.suggestions, ""].slice(0, 4) }))}
-          className="py-press h-10 rounded-xl border border-dashed border-zinc-300 text-xs font-medium text-zinc-500 hover:border-zinc-500">+ Add suggestion</button>
-      )}
-    </div>
-  );
-  const saveInner = (
-    <div className="flex items-center gap-3 py-2">
-      <button onClick={saveNow} disabled={saveState === "saving"} className="py-save py-press w-fit rounded-full px-5 py-2 text-sm font-medium disabled:opacity-70">
-        <span key={saveState} className="py-swap">{saveState === "saved" ? "Saved ✓" : saveState === "saving" ? "Saving…" : "Save now"}</span>
-      </button>
-      <p className="text-xs text-zinc-500">Edits auto-save ~1s after you stop typing — no reload needed.</p>
-    </div>
-  );
-  const renderControls = () => {
-    switch (variant) {
-      case 2: return (
-        <div className="py-enter grid min-w-0 gap-4 lg:order-1">
-          <section data-pointery="pointery-settings-shortcut" className="py-card p-5">
-            {secHead("Trigger")}
-            <div className="grid gap-5 sm:grid-cols-2">{triggerInner}{positionInner}</div>
-          </section>
-          <section data-pointery="pointery-settings-brand" className="py-card p-5">
-            {secHead("Appearance")}
-            <div className="grid gap-5 sm:grid-cols-2">
-              <ColorPicker value={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: v } })} />
-              <RadiusSlider value={cfg.theme.radius} primary={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: v } })} />
-            </div>
-          </section>
-          <section data-pointery="pointery-settings-behavior" className="py-card p-5">
-            {secHead("Suggestions")}
-            {suggInner}
-          </section>
-          {saveInner}
-        </div>
-      );
-      case 3: return (
-        <div className="py-enter min-w-0 lg:order-1">
-          <div className="py-card py-row-divide">
-            <section data-pointery="pointery-settings-shortcut" className="grid gap-5 p-5 sm:grid-cols-2">
-              <div>{secHead("Trigger")}{triggerInner}</div>
-              <div>{secHead("Position")}{positionInner}</div>
-            </section>
-            <section data-pointery="pointery-settings-brand" className="grid gap-5 p-5 sm:grid-cols-2">
-              <div>{secHead("Primary color")}<ColorPicker value={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: v } })} /></div>
-              <div>{secHead("Corner radius")}<RadiusSlider value={cfg.theme.radius} primary={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: v } })} /></div>
-            </section>
-            <section data-pointery="pointery-settings-behavior" className="p-5">
-              {secHead("Suggestions")}{suggInner}
-            </section>
-          </div>
-          <div className="mt-4">{saveInner}</div>
-        </div>
-      );
-      case 4: return (
-        <div className="py-enter mx-auto grid w-full max-w-xl min-w-0 gap-8 lg:order-1">
-          <section data-pointery="pointery-settings-shortcut">
-            {secHead("Trigger")}
-            <div className="grid gap-4">{triggerInner}{positionInner}</div>
-          </section>
-          <section data-pointery="pointery-settings-brand">
-            {secHead("Appearance")}
-            <div className="grid gap-4"><ColorPicker value={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: v } })} />
-            <RadiusSlider value={cfg.theme.radius} primary={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: v } })} /></div>
-          </section>
-          <section data-pointery="pointery-settings-behavior">
-            {secHead("Suggestions")}{suggInner}
-          </section>
-          {saveInner}
-        </div>
-      );
-      case 5: return (
-        <div className="py-enter grid min-w-0 gap-4 lg:order-1">
-          <section data-pointery="pointery-settings-shortcut" className="py-card p-6">
-            {secHead("Trigger")}
-            <div className="grid gap-4">
-              <div className="flex h-14 items-center justify-between gap-3 rounded-2xl border border-zinc-200 px-4">
-                <p className="truncate text-base font-medium">{recording ? prettyShortcut(recordingPreview ?? "…") : prettyShortcut(cfg.trigger)}</p>
-                {recordBtn}
-              </div>
-              <div className="relative flex h-14 items-center gap-1 rounded-2xl border border-zinc-200 bg-zinc-50 p-1.5" role="radiogroup" aria-label="Palette position">
-                <span aria-hidden className="py-thumb absolute inset-y-1.5 left-1.5 rounded-xl bg-white shadow" style={{ width: "calc((100% - 12px) / 3)", transform: cfg.position === "top" ? "translateX(0%)" : cfg.position === "center" ? "translateX(100%)" : "translateX(200%)" }} />
-                {(["top", "center", "bottom"] as const).map((o) => (
-                  <button key={o} type="button" role="radio" aria-checked={cfg.position === o} onClick={() => setCfg({ ...cfg, position: o })}
-                    className="relative z-10 flex-1 rounded-xl py-2 text-sm font-medium text-zinc-700">{o[0].toUpperCase() + o.slice(1)}</button>
-                ))}
-              </div>
-            </div>
-          </section>
-          <section data-pointery="pointery-settings-brand" className="py-card p-6">
-            {secHead("Appearance")}
-            <div className="grid gap-4 sm:grid-cols-2"><ColorPicker value={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: v } })} />
-            <RadiusSlider value={cfg.theme.radius} primary={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: v } })} /></div>
-          </section>
-          <section data-pointery="pointery-settings-behavior" className="py-card p-6">
-            {secHead("Suggestions")}{suggInner}
-          </section>
-          {saveInner}
-        </div>
-      );
-      case 6: return (
-        <div className="py-enter min-w-0 lg:order-1">
-          <section data-pointery="pointery-settings-shortcut" className="flex flex-wrap items-center gap-x-6 gap-y-3 border-b border-zinc-200 py-3">
-            <div className="flex items-center gap-2"><span className="text-xs text-zinc-500">Shortcut</span><span className="text-xs font-medium">{recording ? prettyShortcut(recordingPreview ?? "…") : prettyShortcut(cfg.trigger)}</span>{recordBtn}</div>
-            <div className="flex items-center gap-1 rounded-lg bg-zinc-100 p-0.5" role="radiogroup" aria-label="Palette position">
-              {(["top", "center", "bottom"] as const).map((o) => (
-                <button key={o} type="button" role="radio" aria-checked={cfg.position === o} onClick={() => setCfg({ ...cfg, position: o })}
-                  className={cfg.position === o ? "rounded-md bg-white px-2.5 py-1 text-xs font-medium shadow-sm" : "px-2.5 py-1 text-xs text-zinc-500"}>{o}</button>
-              ))}
-            </div>
-          </section>
-          <section data-pointery="pointery-settings-brand" className="grid gap-3 border-b border-zinc-200 py-3 sm:grid-cols-2">
-            <ColorPicker value={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: v } })} />
-            <RadiusSlider value={cfg.theme.radius} primary={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: v } })} />
-          </section>
-          <section data-pointery="pointery-settings-behavior" className="py-3">
-            <p className="mb-2 text-xs font-medium text-zinc-500">Suggestions</p>
-            {suggInner}
-          </section>
-          {saveInner}
-        </div>
-      );
-      case 7: return (
-        <div className="py-enter grid min-w-0 gap-4 lg:order-1">
-          <section data-pointery="pointery-settings-brand" className="py-card border-2 p-5" style={{ borderColor: cfg.theme.primary }}>
-            {secHead("Appearance")}
-            <div className="grid gap-5 sm:grid-cols-2"><ColorPicker value={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: v } })} />
-            <RadiusSlider value={cfg.theme.radius} primary={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: v } })} /></div>
-          </section>
-          <section data-pointery="pointery-settings-shortcut" className="py-card p-5">
-            {secHead("Trigger")}
-            <div className="grid gap-5 sm:grid-cols-2">{triggerInner}{positionInner}</div>
-          </section>
-          <section data-pointery="pointery-settings-behavior" className="py-card p-5">
-            {secHead("Suggestions")}{suggInner}
-          </section>
-          {saveInner}
-        </div>
-      );
-      case 8: return (
-        <div className="py-enter grid min-w-0 gap-4 lg:order-1">
-          <section data-pointery="pointery-settings-behavior" className="py-card p-5">
-            {secHead("Suggestions")}
-            {suggInner}
-          </section>
-          <section data-pointery="pointery-settings-shortcut" className="py-card p-5">
-            {secHead("Trigger")}
-            <div className="grid gap-5 sm:grid-cols-2">{triggerInner}{positionInner}</div>
-          </section>
-          <section data-pointery="pointery-settings-brand" className="py-card p-5">
-            {secHead("Appearance")}
-            <div className="grid gap-5 sm:grid-cols-2"><ColorPicker value={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: v } })} />
-            <RadiusSlider value={cfg.theme.radius} primary={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: v } })} /></div>
-          </section>
-          {saveInner}
-        </div>
-      );
-      case 9: return (
-        <div className="py-enter grid min-w-0 gap-4 lg:order-1">
-          <div className="py-card flex flex-wrap items-center gap-3 p-4">
-            <button onClick={saveNow} disabled={saveState === "saving"} className="py-save py-press rounded-full px-5 py-2 text-sm font-medium disabled:opacity-70">
-              <span key={saveState} className="py-swap">{saveState === "saved" ? "Saved ✓" : saveState === "saving" ? "Saving…" : "Save now"}</span>
-            </button>
-            <span className="text-sm font-medium">{prettyShortcut(cfg.trigger)}</span>
-            <span className="text-xs capitalize text-zinc-500">· {cfg.position}</span>
-            <span className="ml-auto text-xs text-zinc-400">auto-saves as you type</span>
-          </div>
-          <section data-pointery="pointery-settings-shortcut" className="py-card p-5">
-            {secHead("Trigger")}
-            <div className="grid gap-5 sm:grid-cols-2">
-              <div><div className="flex h-10 items-center gap-3"><p className="text-sm font-medium">{recording ? prettyShortcut(recordingPreview ?? "…") : prettyShortcut(cfg.trigger)}</p>{recordBtn}</div></div>
-              {positionInner}
-            </div>
-          </section>
-          <section data-pointery="pointery-settings-brand" className="py-card p-5">
-            {secHead("Appearance")}
-            <div className="grid gap-5 sm:grid-cols-2"><ColorPicker value={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: v } })} />
-            <RadiusSlider value={cfg.theme.radius} primary={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: v } })} /></div>
-          </section>
-          <section data-pointery="pointery-settings-behavior" className="py-card p-5">
-            {secHead("Suggestions")}{suggInner}
-          </section>
-        </div>
-      );
-      default: return (
-        <div className="py-enter grid min-w-0 gap-4 lg:order-1">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <section data-pointery="pointery-settings-shortcut" className="py-card grid gap-5 p-5">
-              <div>{triggerInner}</div>
-              <div>{positionInner}</div>
-            </section>
-            <section data-pointery="pointery-settings-brand" className="py-card grid content-start gap-5 p-5">
-              <div><ColorPicker value={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: v } })} /></div>
-              <div><RadiusSlider value={cfg.theme.radius} primary={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: v } })} /></div>
-            </section>
-          </div>
-          <section data-pointery="pointery-settings-behavior" className="py-card p-5">
-            {suggInner}
-          </section>
-          {saveInner}
-        </div>
-      );
-    }
-  };
 
   if (!loaded) return <div className="mx-auto w-full max-w-4xl flex-1 px-6 py-10 text-sm text-zinc-500">Loading Pointery settings…</div>;
 
@@ -724,17 +451,11 @@ export default function PointerySettingsPage() {
           .py-press:active { transform: none; }
           .py-thumb { transition: none; }
         }
-        /* ---- vartest: controls-only variants (same colors, Figtree, preview untouched) ---- */
-        .py-sec-title { font-size: 13px; font-weight: 600; letter-spacing: -0.01em; }
-        .py-sec-desc { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; }
-        .py-card { background: #fff; border: 1px solid var(--color-border); border-radius: 16px; box-shadow: var(--shadow-sm); }
-        .py-row-divide > * + * { border-top: 1px solid var(--color-border); }
       `}</style>
-    <div className={`pointery-settings variant-${variant} w-full flex-1`}>
+    <div className="pointery-settings w-full flex-1">
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-10">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="py-enter">
-          <p className="mb-1 inline-block rounded-full border border-zinc-200 bg-white px-2 py-0.5 font-mono text-[11px] text-zinc-500">V{variant} · {VARIANT_NAMES[variant - 1]} · keys 1–0</p>
           <h1 className="text-2xl font-medium tracking-tight">Pointery Settings</h1>
           <p className="text-sm text-zinc-500">
             Auto saves to <code className="font-mono">pointery.config.json</code> and updates the palette live.
@@ -816,7 +537,6 @@ export default function PointerySettingsPage() {
           </div>
         </section>
 
-        {variant === 1 ? (
         <div className="min-w-0 lg:order-1">
           <section data-pointery="pointery-settings-shortcut" className="py-6 first:pt-0">
             <div className="grid items-stretch gap-4 sm:grid-cols-2">
@@ -916,7 +636,6 @@ export default function PointerySettingsPage() {
             <p className="text-xs text-zinc-500">Edits auto-save ~1s after you stop typing — no reload needed.</p>
           </div>
         </div>
-        ) : renderControls()}
       </div>
 
       {ctx && (
@@ -953,19 +672,6 @@ export default function PointerySettingsPage() {
           </span>
         </button>
       </div>
-    </div>
-    {/* vartest floating toolbar — dev only, remove before mainpr */}
-    <div className="fixed bottom-5 right-5 z-50 flex items-center gap-1 rounded-full border border-zinc-200 bg-white/95 p-1.5 shadow-xl backdrop-blur" role="toolbar" aria-label="Variant switcher">
-      {VARIANT_NAMES.map((n, i) => (
-        <button
-          key={n}
-          title={`${i + 1}: ${n}`}
-          onClick={() => setVariant(i + 1)}
-          className={`grid h-7 min-w-7 place-items-center rounded-full px-1.5 font-mono text-xs font-medium transition ${variant === i + 1 ? "bg-zinc-900 text-white" : "text-zinc-500 hover:bg-zinc-100"}`}
-        >
-          {i + 1 === 10 ? "0" : i + 1}
-        </button>
-      ))}
     </div>
     </div>
     </>
