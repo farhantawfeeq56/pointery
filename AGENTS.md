@@ -167,7 +167,7 @@ npm run kit:build           # build the package to packages/pointery/dist
 npm run pointery:sync-page  # copy the settings page into the CLI
 ```
 
-`npm run lint` reports errors from `packages/pointery/dist` once it has been built. Remove that folder before linting. Build the package before `npm run build`.
+`packages/pointery/dist` is gitignored build output and is excluded from ESLint. `npm run build` rebuilds the package automatically, so never delete `dist` to fix the build.
 
 Run `next typegen` before a bare `tsc`: global route types such as `LayoutProps<"/">` are generated, so `tsc` alone fails on a fresh clone.
 

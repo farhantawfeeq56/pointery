@@ -27,7 +27,6 @@ jobs:
       - name: Install
         run: npm ci
 
-      # Lint runs before the builds: ESLint reports errors from the built dist/.
       - name: Lint
         run: npm run lint
 

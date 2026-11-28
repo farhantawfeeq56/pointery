@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Kit build output (rebuild with `npm run kit:build`): generated JS, never lint it.
+    "packages/pointery/dist/**",
   ]),
 ]);
 
