@@ -624,3 +624,10 @@ Per-page settings via `routes` in pointery.config.json.
 - `bin/pointery.js` STARTER_CONFIG ships `routes: {}` with a commented example.
 - Harness `app/pointery-mount.tsx` forwards `routes` + live `route={path}` (also fixed: `closed` is now forwarded, and route follows navigation instead of load-time only); `pointery.config.json` has a `/demo/pipeline` example with pipeline-specific suggestions.
 - Verified: `kit:build`, `tsc`, `lint`, `config --validate` clean.
+
+## Pass 86 (feat/basic-changes, 2026-11-28)
+AGENTS.md new-page rule: brand + visibility per page, user wins.
+
+- New bullet in the `<!-- pointery:start -->` block (root `AGENTS.md` + CLI `AGENTS_BLOCK` kept identical, verified via fresh-`init` block diff): when the agent adds a new page where Pointery mounts, give it a `routes` entry (brand primary/radius from theme tokens, position/animation that keeps key UI visible). Only for pages being added - never restyle existing pages unprompted. Explicit user instructions always win.
+- Drive-by: fixed one-phrase drift between the two block copies ("for in-app ask-anything" was in `AGENTS.md` but missing from `AGENTS_BLOCK`).
+- Verified: `node --check` bin, fresh-`init` block identical, `lint` clean.

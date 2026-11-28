@@ -186,10 +186,11 @@ const AGENTS_START = "<!-- pointery:start -->";
 const AGENTS_END = "<!-- pointery:end -->";
 const AGENTS_BLOCK = `${AGENTS_START} - do not remove; \`npx pointery init --force\` refreshes this block.
 ## Pointery - keep pointery.context.json in sync
-- \`pointery.context.json\` is the index of stable UI anchors (\`/api/ask\` sends the top-ranked slice as system context in an OpenAI-compatible \`{ model, messages }\` call to our own model). Keep it small and current: max ~40 entries, ~10 flows, allowlisted actions only.
+- \`pointery.context.json\` is the index of stable UI anchors for in-app ask-anything (\`/api/ask\` sends the top-ranked slice as system context in an OpenAI-compatible \`{ model, messages }\` call to our own model). Keep it small and current: max ~40 entries, ~10 flows, allowlisted actions only.
 - Whenever you add, move, rename, or remove a user-facing control or route: update its \`data-pointery="kebab-id"\` in code AND its entry in \`pointery.context.json\` (label + purpose; \`confirm: true\` for destructive actions). Keep ids stable; never invent selectors - only ids present in the rendered DOM.
 - After any UI change, run \`npx pointery init --check\` (two-way: fails on code anchors missing from the map AND map entries missing from rendered code, plus stale steps) and fix what it reports.
 - \`node_modules/pointery/schema.json\` is truth for \`pointery.config.json\` (position: top|center|bottom, animation: fade|slide|scale|none). After any config edit, run \`npx pointery config --validate\`.
+- When you add a new page where Pointery mounts: give it a \`routes\` entry in \`pointery.config.json\` so the palette follows the app's brand (primary/radius from theme tokens) and stays visible (position/animation that doesn't cover the page's key UI). Only tune per-page settings for pages you are adding - never restyle existing pages unprompted. Explicit user instructions always win over these defaults.
 ${AGENTS_END}`;
 
 const SNIPPET = `import { Pointery } from "pointery";

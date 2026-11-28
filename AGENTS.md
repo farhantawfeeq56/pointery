@@ -184,6 +184,7 @@ There is no test framework yet. Before calling a change done, run `npm run lint`
 - Whenever you add, move, rename, or remove a user-facing control or route: update its `data-pointery="kebab-id"` in code AND its entry in `pointery.context.json` (label + purpose; `confirm: true` for destructive actions). Keep ids stable; never invent selectors - only ids present in the rendered DOM.
 - After any UI change, run `npx pointery init --check` (two-way: fails on code anchors missing from the map AND map entries missing from rendered code, plus stale steps) and fix what it reports.
 - `node_modules/pointery/schema.json` is truth for `pointery.config.json` (position: top|center|bottom, animation: fade|slide|scale|none). After any config edit, run `npx pointery config --validate`.
+- When you add a new page where Pointery mounts: give it a `routes` entry in `pointery.config.json` so the palette follows the app's brand (primary/radius from theme tokens) and stays visible (position/animation that doesn't cover the page's key UI). Only tune per-page settings for pages you are adding - never restyle existing pages unprompted. Explicit user instructions always win over these defaults.
 <!-- pointery:end -->
 
 <!-- BEGIN:nextjs-agent-feedback -->
