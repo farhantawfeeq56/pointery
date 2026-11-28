@@ -105,7 +105,7 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (v: string)
         onClick={() => { if (!open) setDraft(value); setOpen((o) => !o); }}
         aria-expanded={open}
         aria-label="Pick primary color"
-        className="py-press relative flex min-h-[76px] h-full w-full items-center gap-2 rounded-[14px] border border-zinc-200 px-3 py-2 text-left hover:border-zinc-400"
+        className="py-press relative flex h-full w-full items-center gap-3 py-1 text-left"
       >
         <span className="h-8 w-8 shrink-0 rounded-lg border border-black/10 shadow-sm" style={{ background: value }} />
         <span className="min-w-0 flex-1">
@@ -195,7 +195,7 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (v: string)
 function RadiusSlider({ value, primary, onChange }: { value: number; primary: string; onChange: (v: number) => void }) {
   const pct = ((value - 4) / (24 - 4)) * 100;
   return (
-    <div className="flex min-h-[76px] h-full w-full flex-col justify-center rounded-[14px] border border-zinc-200 px-3 py-2">
+    <div className="flex h-full w-full flex-col justify-center py-1">
       <div className="flex items-center justify-between gap-2">
         <p className="text-xs text-zinc-500">Corner radius</p>
         <span className="py-inset rounded-full px-2.5 py-0.5 font-mono text-xs font-medium text-zinc-700">{value}px</span>
@@ -226,6 +226,7 @@ export default function PointerySettingsPage() {
   const [errors, setErrors] = useState<string[]>([]);
   const [llm, setLlm] = useState<{ configured: boolean; host: string; model: string } | null>(null);
   const [preview, setPreview] = useState<"closed" | "open">("open");
+  const [variant, setVariant] = useState(1);
   const [copied, setCopied] = useState(false);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -287,6 +288,16 @@ export default function PointerySettingsPage() {
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
   }, [recording]);
+
+  // vartest: keys 1-5 switch layout variants (temporary test harness).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLElement && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.isContentEditable)) return;
+      if (e.key >= "1" && e.key <= "5") setVariant(Number(e.key));
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   // Live: apply theme vars + notify the mounted <Pointery/> instantly.
   const broadcast = useCallback((next: Config) => {
@@ -486,8 +497,8 @@ export default function PointerySettingsPage() {
       <div className="py-enter border-t border-zinc-200 pt-6" style={{ animationDelay: "160ms" }}>
         <p className="text-xs font-medium uppercase tracking-wider text-zinc-400">02 - Customize and preview</p>
       </div>
-      <div className="py-enter grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-12" style={{ animationDelay: "210ms" }}>
-        <section data-pointery="pointery-settings-preview" className="self-start lg:order-2 lg:sticky lg:top-6">
+      <div className={variant === 4 ? "py-enter grid items-start gap-6" : variant === 5 ? "py-enter mx-auto grid w-full max-w-2xl items-start gap-6" : "py-enter grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-12"} style={{ animationDelay: "210ms" }}> 
+        <section data-pointery="pointery-settings-preview" className={variant === 2 ? "self-start lg:order-1 lg:sticky lg:top-6" : variant === 4 || variant === 5 ? "min-w-0" : "self-start lg:order-2 lg:sticky lg:top-6"}>
           <div className="flex flex-wrap items-center justify-end gap-3">
             <div className="py-inset relative flex rounded-2xl p-1 text-sm font-medium" role="tablist" aria-label="Preview state">
               <span aria-hidden className="py-thumb absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-xl border border-zinc-200 bg-white shadow-sm" style={{ transform: preview === "open" ? "translateX(100%)" : "translateX(0)" }} />
@@ -555,10 +566,11 @@ export default function PointerySettingsPage() {
           </div>
         </section>
 
-        <div className="min-w-0 lg:order-1">
-          <section data-pointery="pointery-settings-shortcut" className="py-6 first:pt-0">
-            <div className="grid items-stretch gap-4 sm:grid-cols-2">
-            <div className="flex min-h-[76px] w-full flex-col justify-center rounded-[14px] border border-zinc-200 px-3 py-2">
+        <div className={variant === 2 ? "min-w-0 lg:order-2" : variant === 4 ? "grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-4" : variant === 5 ? "w-full min-w-0 space-y-6" : variant === 3 ? "min-w-0 space-y-4 lg:order-1" : "min-w-0 lg:order-1"}>
+          <section data-pointery="pointery-settings-shortcut" className={variant === 4 ? "contents" : variant === 3 ? "border-t border-zinc-200 pt-5 first:border-0 first:pt-0" : variant === 5 ? "" : "py-6 first:pt-0"}>
+            {variant === 3 && <p className="mb-3 text-xs font-medium uppercase tracking-wider text-zinc-400">Trigger</p>}
+            <div className={variant === 4 ? "contents" : variant === 5 ? "grid items-stretch gap-4" : "grid items-stretch gap-4 sm:grid-cols-2"}>
+            <div className="flex w-full flex-col py-1">
               <p className="text-xs text-zinc-500">{recording ? "Recording — press keys…" : "Current shortcut"}</p>
               <div className="mt-1 flex h-8 items-center gap-3">
               <p className="max-w-48 truncate font-mono text-sm font-medium">{recording ? prettyShortcut(recordingPreview ?? "…") : prettyShortcut(cfg.trigger)}</p>
@@ -572,7 +584,7 @@ export default function PointerySettingsPage() {
               </button>
               </div>
             </div>
-            <div className="flex min-h-[76px] w-full flex-col justify-center rounded-[14px] border border-zinc-200 px-3 py-2">
+            <div className="flex w-full flex-col py-1">
                 <p id="py-position-label" className="text-xs text-zinc-500">Palette position</p>
                 <div className="relative mt-1 flex h-8 items-center gap-1 rounded-lg" role="radiogroup" aria-labelledby="py-position-label">
                   <span aria-hidden className="py-thumb absolute inset-y-0 left-0 rounded-lg border border-zinc-200 bg-white shadow-sm" style={{ width: "calc(100% / 3)", transform: cfg.position === "top" ? "translateX(0%)" : cfg.position === "center" ? "translateX(100%)" : "translateX(200%)" }} />
@@ -593,14 +605,16 @@ export default function PointerySettingsPage() {
             </div>
           </section>
 
-          <section data-pointery="pointery-settings-brand" className="py-6">
-            <div className="grid items-stretch gap-4 sm:grid-cols-2">
+          <section data-pointery="pointery-settings-brand" className={variant === 4 ? "contents" : variant === 3 ? "border-t border-zinc-200 pt-5" : variant === 5 ? "" : "py-6"}>
+            {variant === 3 && <p className="mb-3 text-xs font-medium uppercase tracking-wider text-zinc-400">Appearance</p>}
+            <div className={variant === 4 ? "contents" : variant === 5 ? "grid items-stretch gap-4" : "grid items-stretch gap-4 sm:grid-cols-2"}>
               <ColorPicker value={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: v } })} />
               <RadiusSlider value={cfg.theme.radius} primary={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: v } })} />
             </div>
           </section>
 
-                    <section data-pointery="pointery-settings-behavior" className="py-6">
+                    <section data-pointery="pointery-settings-behavior" className={variant === 4 ? "sm:col-span-2 lg:col-span-4" : variant === 3 ? "border-t border-zinc-200 pt-5" : variant === 5 ? "" : "py-6"}>
+            {variant === 3 && <p className="mb-3 text-xs font-medium uppercase tracking-wider text-zinc-400">Suggestions</p>}
             <div className="text-sm">
               <span className="font-medium">Suggestions</span>
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
@@ -637,7 +651,7 @@ export default function PointerySettingsPage() {
             </div>
           </section>
 
-          <div className="flex items-center gap-3 py-6">
+          <div className={variant === 4 ? "flex items-center gap-3 sm:col-span-2 lg:col-span-4" : "flex items-center gap-3 py-6"}>
             <button onClick={saveNow} disabled={saveState === "saving"} className="py-save py-press w-fit rounded-full px-5 py-2 text-sm font-medium disabled:opacity-70">
               <span className="py-stack items-center text-center">
                 <span className={saveState === "saving" ? "invisible" : ""}>
@@ -692,6 +706,22 @@ export default function PointerySettingsPage() {
       </div>
     </div>
     </div>
+      {/* vartest toolbar — temporary, remove after variant pick */}
+      <div className="fixed bottom-4 right-4 z-50 flex items-center gap-1 rounded-full border border-zinc-200 bg-white/95 p-1 shadow-lg backdrop-blur" role="tablist" aria-label="Layout variants">
+        <span className="px-2 text-xs font-medium text-zinc-500">{["", "Split", "Swapped", "Divided", "Top + 4-up", "Narrow"][variant]}</span>
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button
+            key={n}
+            role="tab"
+            aria-selected={variant === n}
+            title={["", "Split: controls left, preview right", "Swapped: preview left, controls right", "Divided: hairline sections, no boxes", "Top preview + 4-up controls", "Narrow stacked"][n]}
+            onClick={() => setVariant(n)}
+            className={variant === n ? "h-8 w-8 rounded-full bg-zinc-900 text-xs font-semibold text-white" : "h-8 w-8 rounded-full text-xs font-medium text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"}
+          >
+            {n}
+          </button>
+        ))}
+      </div>
     </>
   );
 }
