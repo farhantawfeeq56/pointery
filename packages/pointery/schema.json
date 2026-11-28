@@ -14,7 +14,8 @@
         "background": { "type": "string" },
         "text": { "type": "string" },
         "border": { "type": "string" },
-        "radius": { "type": "number" }
+        "radius": { "type": "number" },
+        "fontFamily": { "type": "string", "description": "CSS font-family stack for the palette/toast/guide. Defaults to bundled Figtree." }
       },
       "additionalProperties": false
     },

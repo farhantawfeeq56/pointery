@@ -81,7 +81,7 @@ export type PointeryResult = {
   hint?: string;
 };
 
-export type PointeryTheme = { primary?: string; radius?: number; accent?: string; background?: string; text?: string; border?: string };
+export type PointeryTheme = { primary?: string; radius?: number; accent?: string; background?: string; text?: string; border?: string; /** CSS font-family stack for the palette/toast/guide, e.g. "Inter, system-ui, sans-serif". Defaults to bundled Figtree. */ fontFamily?: string };
 
 export type PointeryTiming = {
   /** Toast auto-dismiss. Defaults to 4200. */

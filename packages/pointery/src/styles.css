@@ -78,10 +78,12 @@
   --pointery-z: 60;
   --pointery-width: 560px;
   --pointery-overlay-blur: 2px;
+  /* Set live from theme.fontFamily - full stack so buyers can point at their own font */
+  --pointery-font: "Figtree", ui-sans-serif, system-ui, sans-serif;
 }
 
 .pointery-overlay, .pointery-palette, .pointery-toast, .pointery-guide, .pointery-confirm, .pointery-fab {
-  font-family: "Figtree", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--pointery-font);
   color: var(--color-text-primary);
 }
 

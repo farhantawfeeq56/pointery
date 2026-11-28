@@ -71,7 +71,7 @@ your app.
 | Prop | Default | What |
 | ---- | ------- | ---- |
 | `trigger` | `"shift+a"` | Shortcut the user configures (the only toggle) |
-| `theme` | `{ primary: "#6d28d9", radius: 14 }` | Applied as `--pointery-*` CSS vars |
+| `theme` | `{ primary: "#6d28d9", radius: 14 }` | Applied as `--pointery-*` CSS vars (`fontFamily` sets `--pointery-font`, defaults to bundled Figtree) |
 | `position` | `"top"` | `"top"` / `"center"` / `"bottom"` |
 | `suggestions` | built-in 5 | Buttons shown before typing |
 | `allowActions` | `[]` (blocked) | Actions the UI will run - anything else routes to spot/go/guide |

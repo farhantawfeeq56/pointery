@@ -152,11 +152,12 @@ export default function Pointery(props: PointeryProps) {
     if (cfg.theme.text) root.style.setProperty("--color-text-primary", cfg.theme.text);
     if (cfg.theme.border) root.style.setProperty("--color-border", cfg.theme.border);
     if (cfg.theme.radius != null) root.style.setProperty("--pointery-radius", `${cfg.theme.radius}px`);
+    if (cfg.theme.fontFamily) root.style.setProperty("--pointery-font", cfg.theme.fontFamily);
     if (cfg.zIndex != null) root.style.setProperty("--pointery-z", String(cfg.zIndex));
     if (cfg.paletteWidth != null) root.style.setProperty("--pointery-width", `${cfg.paletteWidth}px`);
     if (cfg.overlayBlur != null) root.style.setProperty("--pointery-overlay-blur", `${cfg.overlayBlur}px`);
     if (cfg.cssVars) for (const [k, v] of Object.entries(cfg.cssVars)) root.style.setProperty(k.startsWith("--") ? k : `--pointery-${k}`, v);
-  }, [cfg.theme.primary, cfg.theme.accent, cfg.theme.background, cfg.theme.text, cfg.theme.border, cfg.theme.radius, cfg.zIndex, cfg.paletteWidth, cfg.overlayBlur, cfg.cssVars]);
+  }, [cfg.theme.primary, cfg.theme.accent, cfg.theme.background, cfg.theme.text, cfg.theme.border, cfg.theme.radius, cfg.theme.fontFamily, cfg.zIndex, cfg.paletteWidth, cfg.overlayBlur, cfg.cssVars]);
 
   // Several rows matched the filter - toast which one is shown.
   useEffect(() => {
