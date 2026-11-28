@@ -55,8 +55,8 @@ keyless mode). Re-run whenever your UI changes.
 >    (Next: `app/pointery/page.tsx` + `app/api/admin/config/route.ts`;
 >    other stacks: build the equivalent). It is read-only by design:
 >    customization lives in the `<Pointery/>` props in code, so the page
->    shows system status (ask health, brain, context validity), the
->    context table, and the mount snippet to copy. It loads
+>    shows system status (ask health, brain, context validity) and the
+>    context table. It loads
 >    `pointery.config.json` via GET only (PUT stays dev-only and refuses
 >    in production — edit the file directly and redeploy). Personalize it
 >    on first run from the files you just wrote:

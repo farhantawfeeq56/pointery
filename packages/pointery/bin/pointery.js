@@ -16,7 +16,6 @@ const STARTER_CONTEXT = {
     { id: "export-button", page: "/dashboard", label: "Export", for: "Downloads the report as CSV", type: "button", aliases: ["csv"] },
     { id: "pointery-settings-status", page: "/pointery", label: "Status", for: "Ask health, brain and context validity", type: "section" },
     { id: "pointery-settings-context", page: "/pointery", label: "Context", for: "Entries, flows and actions from disk", type: "section" },
-    { id: "pointery-settings-snippet", page: "/pointery", label: "Snippet", for: "The Pointery mount code to copy", type: "section" },
   ],
   flows: [
     { id: "export-report", title: "Export your report", aliases: ["export"], steps: ["export-button"] },
@@ -76,48 +75,20 @@ export async function PUT(req: Request) {
 // Degrades gracefully when /api/admin/context or /api/admin/llm are absent.
 const STARTER_SETTINGS_PAGE = `"use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { notFound } from "next/navigation";
 import type { PointeryContext } from "pointery";
-
-type Config = {
-  trigger: string;
-  theme: { primary: string; radius: number };
-  position: "top" | "center" | "bottom";
-  suggestions: string[];
-  allowActions: string[];
-  labels?: { placeholder?: string; empty?: string; confirmTitle?: string };
-};
-
-const DEFAULTS: Config = {
-  trigger: "shift+a",
-  theme: { primary: "#00A878", radius: 14 },
-  position: "top",
-  suggestions: [],
-  allowActions: [],
-};
 
 const ENV_SNIPPET = "POINTERY_LLM_URL=https://api.openai.com/v1/chat/completions\\nPOINTERY_LLM_KEY=sk-...\\nPOINTERY_LLM_MODEL=gpt-4o-mini";
 
 export default function PointerySettingsPage() {
-  const [cfg, setCfg] = useState<Config>(DEFAULTS);
-  const [loaded, setLoaded] = useState(false);
   const [askOk, setAskOk] = useState<boolean | null>(null);
   const [ctx, setCtx] = useState<PointeryContext | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [llm, setLlm] = useState<{ configured: boolean; host: string; model: string } | null>(null);
-  const [copied, setCopied] = useState(false);
-  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Disk is truth: load pointery.config.json + context summary on mount.
   useEffect(() => {
-    fetch("/api/admin/config")
-      .then((r) => r.json().catch(() => null))
-      .then((d) => {
-        if (d?.config) setCfg({ ...DEFAULTS, ...d.config, theme: { ...DEFAULTS.theme, ...d.config.theme } });
-        setLoaded(true);
-      })
-      .catch(() => setLoaded(true));
     fetch("/api/admin/context")
       .then((r) => r.json().catch(() => null))
       .then((d) => {
@@ -143,10 +114,6 @@ export default function PointerySettingsPage() {
   if (process.env.NODE_ENV === "production") notFound();
 
   const counts = ctx ? \`\${ctx.entries?.length ?? 0} entries · \${ctx.flows?.length ?? 0} flows · \${ctx.actions?.length ?? 0} actions\` : null;
-
-  const snippet = \`<Pointery\\n  trigger="\${cfg.trigger}"\\n  theme={{ primary: "\${cfg.theme.primary}", radius: \${cfg.theme.radius} }}\\n  position="\${cfg.position}"\\n/>\`;
-
-  if (!loaded) return <div className="mx-auto w-full max-w-4xl flex-1 px-6 py-10 text-sm text-zinc-500">Loading Pointery settings…</div>;
 
   return (
     <>
@@ -196,26 +163,18 @@ export default function PointerySettingsPage() {
           --shadow-lg: 0 12px 32px rgba(11, 5, 0, 0.12);
         }
         .pointery-settings { font-family: "Figtree", ui-sans-serif, system-ui, sans-serif; background: var(--color-background); color: var(--color-text-primary); }
-        .pointery-settings input:not(.font-mono), .pointery-settings select, .pointery-settings textarea:not(.font-mono), .pointery-settings button:not(.font-mono) { font-family: inherit; }
         .py-ok, .py-warn, .py-err, .py-idle, .py-subtle { background: var(--color-background-secondary); color: var(--color-text-secondary); border: 1px solid var(--color-border); }
         .py-ok::before, .py-warn::before, .py-err::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 999px; margin-right: 6px; vertical-align: 1px; }
         .py-ok::before { background: var(--color-success); }
         .py-warn::before { background: var(--color-warning); }
         .py-err::before { background: var(--color-error); }
         .py-code { background: var(--color-background-secondary); border: 1px solid var(--color-border); color: var(--color-text-primary); }
-        /* ---- interior.dev motion system: ease, press, crossfade, pop, sheet ---- */
+        /* motion: ease + enter only */
         .pointery-settings { --py-ease: cubic-bezier(0.23, 1, 0.32, 1); }
-        .py-press { transition: transform 150ms var(--py-ease), background-color 150ms var(--py-ease), border-color 150ms var(--py-ease), box-shadow 150ms var(--py-ease), color 150ms var(--py-ease); touch-action: manipulation; }
-        .py-press:active { transform: translateY(1px) scale(0.98); }
         @keyframes py-enter { from { opacity: 0; transform: translateY(8px); filter: blur(4px); } to { opacity: 1; transform: none; filter: blur(0); } }
         .py-enter { animation: py-enter 480ms var(--py-ease) both; }
-        @keyframes py-swap-in { from { opacity: 0; transform: translateY(3px); filter: blur(3px); } to { opacity: 1; transform: none; filter: blur(0); } }
-        .py-swap { display: inline-block; animation: py-swap-in 220ms var(--py-ease); }
-        .py-stack { display: grid; }
-        .py-stack > * { grid-area: 1 / 1; }
         @media (prefers-reduced-motion: reduce) {
-          .py-enter, .py-swap { animation-duration: 0ms; }
-          .py-press:active { transform: none; }
+          .py-enter { animation-duration: 0ms; }
         }
       \`}</style>
     <div className="pointery-settings w-full flex-1">
@@ -224,7 +183,7 @@ export default function PointerySettingsPage() {
         <div>
           <h1 className="text-2xl font-medium tracking-tight">Pointery status</h1>
           <p className="text-sm text-zinc-500">
-            Customize with <code className="font-mono">{"<Pointery/>"}</code> props in your layout — this page shows status and the snippet.
+            Customize with <code className="font-mono">{"<Pointery/>"}</code> props in your layout — this page shows system status.
           </p>
         </div>
       </div>
@@ -278,21 +237,6 @@ export default function PointerySettingsPage() {
           </p>
         </div>
       )}
-
-      <div data-pointery="pointery-settings-snippet" className="py-enter rounded-[14px] border border-zinc-200 bg-white p-5 text-sm text-zinc-800" style={{ animationDelay: "260ms" }}>
-        <h2 className="text-sm font-medium">Install snippet</h2>
-        <p className="mb-3 text-xs text-zinc-500">Paste in your layout and edit the props there — trigger, theme, position, suggestions.</p>
-        <pre className="overflow-x-auto font-mono text-sm leading-6 text-zinc-800">{snippet}</pre>
-        <button
-          onClick={() => { navigator.clipboard.writeText(snippet); setCopied(true); if (copyTimer.current) clearTimeout(copyTimer.current); copyTimer.current = setTimeout(() => setCopied(false), 2000); }}
-          className="py-press mt-3 rounded-full bg-zinc-900 px-4 py-1.5 text-sm font-medium text-white"
-        >
-          <span className="py-stack items-center text-center">
-            <span className={copied ? "invisible" : ""}>Copy snippet</span>
-            {copied && <span className="py-swap">Copied ✓</span>}
-          </span>
-        </button>
-      </div>
     </div>
     </div>
     </>
@@ -359,8 +303,8 @@ keyless mode). Re-run whenever your UI changes.
 >    (Next: \`app/pointery/page.tsx\` + \`app/api/admin/config/route.ts\`;
 >    other stacks: build the equivalent). It is read-only by design:
 >    customization lives in the \`<Pointery/>\` props in code, so the page
->    shows system status (ask health, brain, context validity), the
->    context table, and the mount snippet to copy. It loads
+>    shows system status (ask health, brain, context validity) and the
+>    context table. It loads
 >    \`pointery.config.json\` via GET only (PUT stays dev-only and refuses
 >    in production — edit the file directly and redeploy). Personalize it
 >    on first run from the files you just wrote:

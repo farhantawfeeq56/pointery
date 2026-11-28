@@ -91,13 +91,6 @@
       "label": "Context",
       "for": "Entries, flows and actions from disk",
       "type": "section"
-    },
-    {
-      "id": "pointery-settings-snippet",
-      "page": "/pointery",
-      "label": "Snippet",
-      "for": "The Pointery mount code to copy",
-      "type": "section"
     }
   ],
   "flows": [
