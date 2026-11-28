@@ -420,3 +420,8 @@ Removed the install snippet from `/pointery` — page is now status + context ta
 
 - `app/pointery/page.tsx` — dropped snippet section, config load, and dead state/CSS (Config, copied, copyTimer, snippet, loaded gate, py-press/swap/stack). Props editing lives entirely in code now.
 - `pointery.context.json` + CLI `STARTER_CONTEXT` — removed snippet entry. Prompt step 7 updated in both files. Re-synced CLI starter; lint + tsc + `init --check` clean.
+
+## Pass 59 (feat/basic-changes, 2026-11-28)
+Prompt: brand-sync the palette at init.
+
+- `POINTERY_PROMPT.md` + CLI `STARTER_PROMPT` — wiring-diff paragraph now tells the agent to lift primary color + radius from the app's theme/tokens into `pointery.config.json` and `<Pointery/>` props at init (native on day one, still user-configurable). Also fixed stale "confirm `/pointery` saves to disk" (page is read-only now). No code touched; `node --check` + `init --check` clean.
