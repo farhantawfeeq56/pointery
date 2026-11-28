@@ -495,3 +495,9 @@ Guide card final polish (page feedback on /demo/contacts): close ✕ moved from 
 - `packages/pointery/src/styles.css` — close absolute top-right; title 0.95rem; row `justify-content: flex-end`; guide `width: 260px` + `max-width: calc(100vw - 2.5rem)` (confirm stays 300px).
 - Temp `1-7` palette hooks in `app/api/ask/route.ts` kept for feedback previews (delete before merge).
 - Verified: `kit:build` + `lint` clean.
+
+## Pass 69 (feat/basic-changes, 2026-11-28)
+Single-toast rule: one ask fires at most one toast; guide Next/Back are silent (card already shows the step).
+
+- `packages/pointery/src/Pointery.tsx` — `announced` flag in `ask()`; first message (answer / guide step-1 / blocked) wins, trailing `hint` suppressed when something already said; walkthroughs skip the redundant top-level `goSpot` (was double-navigating + double-toasting); Next passes no hint like Back; blocked-without-target no longer overwritten by empty text.
+- Verified: `kit:build` + `lint` clean.
