@@ -431,3 +431,9 @@ Brand-synced the palette.
 
 - `pointery.config.json` — theme to brand green `#00A878`, radius 14 (matches landing tokens + card radius). Mount reads config, so no code change needed for the palette itself.
 - `app/pointery-mount.tsx` — comment-only: no longer claims the /pointery page drives live updates; documents the `pointery:config` contract instead.
+
+## Pass 61 (feat/basic-changes, 2026-11-28)
+Single trigger: removed the hardcoded Cmd/Ctrl+K secondary shortcut.
+
+- `packages/pointery/src/Pointery.tsx` — only `cfg.trigger` toggles the palette now; meta copy drops "⌘K works too". `triggerMatches` already parses `ctrl+k`.
+- `pointery.config.json` — trigger `s` → `ctrl+k`. Package README updated. `kit:build` + lint + tsc clean.
