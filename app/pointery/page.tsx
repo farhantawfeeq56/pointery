@@ -99,13 +99,13 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (v: string)
     else setDraft(value);
   };
   return (
-    <div ref={boxRef} className="relative w-56 max-w-full">
+    <div ref={boxRef} className="relative h-full w-full">
       <button
         type="button"
         onClick={() => { if (!open) setDraft(value); setOpen((o) => !o); }}
         aria-expanded={open}
         aria-label="Pick primary color"
-        className="py-press relative flex h-full w-full items-center gap-2 rounded-[14px] border border-zinc-200 px-2.5 py-1.5 text-left hover:border-zinc-400"
+        className="py-press relative flex min-h-[76px] h-full w-full items-center gap-2 rounded-[14px] border border-zinc-200 px-3 py-2 text-left hover:border-zinc-400"
       >
         <span className="h-8 w-8 shrink-0 rounded-lg border border-black/10 shadow-sm" style={{ background: value }} />
         <span className="min-w-0 flex-1">
@@ -195,7 +195,7 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (v: string)
 function RadiusSlider({ value, primary, onChange }: { value: number; primary: string; onChange: (v: number) => void }) {
   const pct = ((value - 4) / (24 - 4)) * 100;
   return (
-    <div className="w-56 max-w-full rounded-[14px] border border-zinc-200 px-2.5 py-1.5">
+    <div className="flex min-h-[76px] h-full w-full flex-col justify-center rounded-[14px] border border-zinc-200 px-3 py-2">
       <div className="flex items-center justify-between gap-2">
         <p className="text-xs text-zinc-500">Corner radius</p>
         <span className="py-inset rounded-full px-2.5 py-0.5 font-mono text-xs font-medium text-zinc-700">{value}px</span>
@@ -208,7 +208,7 @@ function RadiusSlider({ value, primary, onChange }: { value: number; primary: st
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
         aria-label="Corner radius"
-        className="py-slider mt-3 w-full"
+        className="py-slider mt-1 flex h-8 w-full items-center"
         style={{ ["--pct" as string]: `${pct}%`, ["--fill" as string]: primary }}
       />
     </div>
@@ -557,8 +557,8 @@ export default function PointerySettingsPage() {
 
         <div className="min-w-0 lg:order-1">
           <section data-pointery="pointery-settings-shortcut" className="py-6 first:pt-0">
-            <div className="flex flex-wrap gap-4">
-            <div className="w-fit min-w-60 rounded-[14px] border border-zinc-200 px-2.5 py-1.5">
+            <div className="grid items-stretch gap-4 sm:grid-cols-2">
+            <div className="flex min-h-[76px] w-full flex-col justify-center rounded-[14px] border border-zinc-200 px-3 py-2">
               <p className="text-xs text-zinc-500">{recording ? "Recording — press keys…" : "Current shortcut"}</p>
               <div className="mt-1 flex h-8 items-center gap-3">
               <p className="max-w-48 truncate font-mono text-sm font-medium">{recording ? prettyShortcut(recordingPreview ?? "…") : prettyShortcut(cfg.trigger)}</p>
@@ -572,9 +572,9 @@ export default function PointerySettingsPage() {
               </button>
               </div>
             </div>
-            <div className="w-56 max-w-full rounded-[14px] border border-zinc-200 px-2.5 py-1.5">
+            <div className="flex min-h-[76px] w-full flex-col justify-center rounded-[14px] border border-zinc-200 px-3 py-2">
                 <p id="py-position-label" className="text-xs text-zinc-500">Palette position</p>
-                <div className="relative mt-1.5 flex h-9 items-center gap-1 rounded-lg" role="radiogroup" aria-labelledby="py-position-label">
+                <div className="relative mt-1 flex h-8 items-center gap-1 rounded-lg" role="radiogroup" aria-labelledby="py-position-label">
                   <span aria-hidden className="py-thumb absolute inset-y-0 left-0 rounded-lg border border-zinc-200 bg-white shadow-sm" style={{ width: "calc(100% / 3)", transform: cfg.position === "top" ? "translateX(0%)" : cfg.position === "center" ? "translateX(100%)" : "translateX(200%)" }} />
                   {(["top", "center", "bottom"] as const).map((o) => (
                     <button
@@ -594,7 +594,7 @@ export default function PointerySettingsPage() {
           </section>
 
           <section data-pointery="pointery-settings-brand" className="py-6">
-            <div className="flex flex-wrap gap-4">
+            <div className="grid items-stretch gap-4 sm:grid-cols-2">
               <ColorPicker value={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: v } })} />
               <RadiusSlider value={cfg.theme.radius} primary={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: v } })} />
             </div>
