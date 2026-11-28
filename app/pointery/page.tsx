@@ -324,7 +324,7 @@ export default function PointerySettingsPage() {
 
         <div className="min-w-0 lg:order-1">
           <section data-pointery="pointery-settings-shortcut" className="py-8 first:pt-0">
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2">
               {(["shift+a", "cmd+k"] as const).map((v) => (
                 <button
                   key={v}
@@ -353,7 +353,7 @@ export default function PointerySettingsPage() {
           </section>
 
           <section data-pointery="pointery-settings-brand" className="py-8">
-            <div className="mt-3 grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
               <label className="text-sm">
                 <span className="font-medium">Primary color</span>
                 <span className="mt-2 flex items-center gap-3">
@@ -369,14 +369,25 @@ export default function PointerySettingsPage() {
           </section>
 
           <section data-pointery="pointery-settings-behavior" className="py-8">
-            <label className="mt-3 block text-sm">
-              <span className="font-medium">Palette position</span>
-              <select value={cfg.position} onChange={(e) => setCfg({ ...cfg, position: e.target.value as Config["position"] })} className="mt-2 w-full rounded-lg border px-3 py-2">
-                <option value="top">Top</option>
-                <option value="center">Center</option>
-                <option value="bottom">Bottom</option>
-              </select>
-            </label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="block text-sm">
+                <span className="font-medium">Palette position</span>
+                <select value={cfg.position} onChange={(e) => setCfg({ ...cfg, position: e.target.value as Config["position"] })} className="mt-2 w-full rounded-lg border px-3 py-2">
+                  <option value="top">Top</option>
+                  <option value="center">Center</option>
+                  <option value="bottom">Bottom</option>
+                </select>
+              </label>
+              <label className="block text-sm">
+                <span className="font-medium">Allowed actions (comma-separated names from the context)</span>
+                <input
+                  value={cfg.allowActions.join(", ")}
+                  onChange={(e) => setCfg({ ...cfg, allowActions: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })}
+                  placeholder="export-pipeline, invite-teammate"
+                  className="mt-2 w-full rounded-lg border px-3 py-2 font-mono text-xs"
+                />
+              </label>
+            </div>
             <label className="mt-3 block text-sm">
               <span className="font-medium">Suggestions (one per line)</span>
               <textarea
@@ -384,15 +395,6 @@ export default function PointerySettingsPage() {
                 onChange={(e) => setCfg({ ...cfg, suggestions: e.target.value.split("\n").map((s) => s.trim()).filter(Boolean) })}
                 rows={3}
                 placeholder={"Where is export?\nHow do I invite a teammate?"}
-                className="mt-2 w-full rounded-lg border px-3 py-2 font-mono text-xs"
-              />
-            </label>
-            <label className="mt-3 block text-sm">
-              <span className="font-medium">Allowed actions (comma-separated names from the context)</span>
-              <input
-                value={cfg.allowActions.join(", ")}
-                onChange={(e) => setCfg({ ...cfg, allowActions: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })}
-                placeholder="export-pipeline, invite-teammate"
                 className="mt-2 w-full rounded-lg border px-3 py-2 font-mono text-xs"
               />
             </label>

@@ -306,3 +306,9 @@ Removed section dividers in /pointery customize zone.
 
 - `app/pointery/page.tsx` — dropped `divide-y divide-zinc-200` from the controls column; sections now separated by padding alone.
 - Re-synced via `npm run pointery:sync-page`; `init --check` ok, `tsc` clean.
+
+## Pass 40 (feat/basic-changes, 2026-11-28)
+Arranged /pointery customize zone: uniform rhythm + paired fields.
+
+- `app/pointery/page.tsx` — dropped orphan `mt-3` on each group's first row (leftover heading gaps); Palette position + Allowed actions now sit side-by-side (`sm:grid-cols-2`), Suggestions full-width below, label inputs keep their 3-col row.
+- Re-synced via `npm run pointery:sync-page`; `init --check` ok, `tsc` clean.
