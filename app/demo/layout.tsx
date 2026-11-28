@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isDemoEnabled } from "@/lib/demo";
-import VariantSwitcher from "./variant-switcher";
 
 const NAV = [
   { href: "/demo", label: "Dashboard", key: "nav-dashboard" },
@@ -33,7 +32,6 @@ export default function DemoLayout({ children }: { children: React.ReactNode }) 
         </p>
       </aside>
       <section className="min-w-0 flex-1">{children}</section>
-      <VariantSwitcher />
     </div>
   );
 }

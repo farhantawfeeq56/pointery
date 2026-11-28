@@ -69,7 +69,7 @@ export function validateContext(ctx: PointeryContext): string[] {
 /** Allowed top-level keys of `pointery.config.json` (`$schema` is ignored). Mirrors schema.json. */
 const CONFIG_KEYS = new Set([
   "$schema", "trigger", "theme", "cssVars", "zIndex", "paletteWidth", "overlayBlur",
-  "fab", "hiddenRoutes", "timing", "position", "animation", "suggestions",
+  "closed", "fab", "hiddenRoutes", "timing", "position", "animation", "suggestions",
   "allowActions", "labels", "endpoint", "brain",
 ]);
 
@@ -87,6 +87,20 @@ export function validateConfig(cfg: unknown): string[] {
     errors.push(`position must be one of top|center|bottom (got ${JSON.stringify(c.position)})`);
   if (c.animation !== undefined && !["fade", "slide", "scale", "none"].includes(c.animation as string))
     errors.push(`animation must be one of fade|slide|scale|none (got ${JSON.stringify(c.animation)})`);
+  const closed = c.closed;
+  if (closed !== undefined) {
+    if (!closed || typeof closed !== "object" || Array.isArray(closed)) errors.push("closed must be an object");
+    else {
+      const o = closed as Record<string, unknown>;
+      for (const k of Object.keys(o)) if (!["variant", "icon", "label", "hint", "showHint"].includes(k)) errors.push(`closed: unknown key "${k}"`);
+      if (o.variant !== undefined && !["fab", "pill", "tab", "helper", "ghost"].includes(o.variant as string))
+        errors.push(`closed.variant must be one of fab|pill|tab|helper|ghost (got ${JSON.stringify(o.variant)})`);
+      for (const k of ["icon", "label", "hint"]) {
+        if (o[k] !== undefined && typeof o[k] !== "string") errors.push(`closed.${k} must be a string (got ${JSON.stringify(o[k])})`);
+      }
+      if (o.showHint !== undefined && typeof o.showHint !== "boolean") errors.push(`closed.showHint must be a boolean (got ${JSON.stringify(o.showHint)})`);
+    }
+  }
   // shortcut: numbers that arrive as strings ("14px") silently break CSS vars - flag them.
   for (const k of ["zIndex", "paletteWidth", "overlayBlur"]) {
     const v = (c[k] as unknown);

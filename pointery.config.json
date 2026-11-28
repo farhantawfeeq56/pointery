@@ -23,7 +23,7 @@
     "confirmTitle": "Run this action?"
   },
   "endpoint": "/api/ask",
-  "fab": true,
+  "closed": { "variant": "fab", "icon": "?", "label": "Ask" },
   "hiddenRoutes": ["/"],
   "timing": {
     "toastMs": 4200,

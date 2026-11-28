@@ -312,17 +312,56 @@ export default function Pointery(props: PointeryProps) {
     }
   }, [cfg.allowActions, cfg.labels, cfg.endpoint, cfg.timing.askMs, goSpot, runAction, say, close]);
 
+  // Closed state: `closed` wins, legacy `fab` fills in (false hides, string = glyph).
+  const closed = cfg.closed ?? {};
+  const legacyGlyph = typeof cfg.fab === "string" ? cfg.fab : undefined;
+  const shut = cfg.closed === undefined && cfg.fab === false;
+  const icon = closed.icon ?? legacyGlyph ?? "?";
+  const label = closed.label ?? "Ask";
+  const prettyTrigger = cfg.trigger
+    .split("+").map((p) => p.trim()).filter(Boolean)
+    .map((p) =>
+      p === "shift" ? "⇧" : p === "ctrl" || p === "control" ? "Ctrl" :
+      p === "cmd" || p === "meta" || p === "command" ? "⌘" :
+      p === "alt" || p === "opt" || p === "option" ? "Alt" : p.toUpperCase()
+    ).join(" ");
+  const hint = closed.hint ?? prettyTrigger;
+  const showHint = closed.showHint ?? true;
+  // Image icons (buyer logo): absolute/remote/data URLs render as <img>, else text glyph.
+  const isImg = /^(https?:\/\/|data:|blob:|\/)/.test(icon);
+  const iconNode = isImg
+    // eslint-disable-next-line @next/next/no-img-element -- kit stays Next-independent; buyer logos are tiny local files, not LCP candidates
+    ? <img src={icon} alt="" aria-hidden className="pointery-closed-img" />
+    : <span aria-hidden>{icon}</span>;
+  const openPalette = () => { setSel(0); setOpen(true); };
+  const hintChip = showHint && hint
+    ? <kbd className="pointery-closed-kbd">{hint}</kbd>
+    : null;
+
   if (!open && !guide && !toast && !pendingAction) {
-    if (cfg.fab === false) return null;
-    const glyph = typeof cfg.fab === "string" ? cfg.fab : "?";
-    return (
-      <button
-        onClick={() => { setSel(0); setOpen(true); }}
-        aria-label={cfg.labels.fabLabel}
-        className="pointery-fab"
-        title={`${cfg.labels.fabLabel} (${cfg.trigger})`}
-      >{glyph}</button>
-    );
+    if (shut) return null;
+    const common = {
+      onClick: openPalette,
+      "aria-label": cfg.labels.fabLabel,
+      title: `${cfg.labels.fabLabel} (${cfg.trigger})`,
+    };
+    switch (closed.variant ?? "fab") {
+      case "pill":
+        return <button {...common} className="pointery-closed-pill">{iconNode}<span>{label}</span>{hintChip}</button>;
+      case "tab":
+        return <button {...common} className="pointery-closed-tab">{iconNode}<span>{label}</span>{hintChip}</button>;
+      case "helper":
+        return (
+          <button {...common} className="pointery-closed-helper">
+            <span className="pointery-closed-avatar">{iconNode}<span className="pointery-closed-dot" /></span>
+            <span>{label}</span><span className="pointery-closed-online">● online</span>
+          </button>
+        );
+      case "ghost":
+        return <button {...common} className="pointery-closed-ghost">Press {hint ? <kbd className="pointery-closed-kbd">{hint}</kbd> : "the shortcut"} to ask</button>;
+      default:
+        return <button {...common} className="pointery-fab">{iconNode}</button>;
+    }
   }
 
   const pos = cfg.position === "center" ? "pointery-pos-center" : cfg.position === "bottom" ? "pointery-pos-bottom" : "pointery-pos-top";

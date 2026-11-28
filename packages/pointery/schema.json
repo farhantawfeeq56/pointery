@@ -23,7 +23,19 @@
     "zIndex": { "type": "number" },
     "paletteWidth": { "type": "number" },
     "overlayBlur": { "type": "number" },
-    "fab": { "description": "false hides the idle button, string sets its glyph.", "type": ["boolean", "string"] },
+    "closed": {
+      "type": "object",
+      "description": "Closed-state launcher: shape, icon, wording. Icon URLs (/logo.png, https://…, data:…) render as an image, else as a glyph.",
+      "properties": {
+        "variant": { "type": "string", "enum": ["fab", "pill", "tab", "helper", "ghost"] },
+        "icon": { "type": "string" },
+        "label": { "type": "string" },
+        "hint": { "type": "string" },
+        "showHint": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "fab": { "description": "Legacy: false hides the idle button, string sets its glyph. `closed` wins when set.", "type": ["boolean", "string"] },
     "hiddenRoutes": { "type": "array", "items": { "type": "string" } },
     "timing": {
       "type": "object",

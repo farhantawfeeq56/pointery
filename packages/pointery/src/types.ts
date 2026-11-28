@@ -100,6 +100,24 @@ export type PointeryTiming = {
   /** Ask fetch timeout. Defaults to 30000. */
   askMs?: number;
 };
+/** Closed-state launcher shape. Look-alikes merged: fab covers ?/✦ circles,
+ *  pill covers ask/command buttons - glyph and wording are `icon`/`label`, not variants. */
+export type PointeryClosedVariant = "fab" | "pill" | "tab" | "helper" | "ghost";
+
+export type PointeryClosed = {
+  /** Launcher shape. Defaults to "fab". */
+  variant?: PointeryClosedVariant;
+  /** Glyph, emoji, or image: URLs (`/logo.png`, `https://…`, `data:…`) render as an <img>,
+   *  anything else renders as text. Defaults to "?". */
+  icon?: string;
+  /** Pill/helper/tab wording. Defaults to "Ask". */
+  label?: string;
+  /** Kbd hint (pill/ghost). Defaults to a pretty print of `trigger`. */
+  hint?: string;
+  /** Show the kbd chip on pill/tab. Defaults to true. */
+  showHint?: boolean;
+};
+
 export type PointeryPosition = "top" | "center" | "bottom";
 /** Palette entrance. `slide` drifts in from the palette edge (down on top, up on bottom). */
 export type PointeryAnimation = "fade" | "slide" | "scale" | "none";
@@ -149,7 +167,11 @@ export type PointeryProps = {
   paletteWidth?: number;
   /** Overlay blur px. Defaults to 2. */
   overlayBlur?: number;
-  /** Idle "?" button: false hides it, string sets its glyph. Defaults to true. */
+  /** Closed-state launcher: which shape, whose icon/label/hint. All configurable.
+   *  `fab` circle (default) · `pill` labeled button + kbd · `tab` edge tab ·
+   *  `helper` avatar row · `ghost` kbd hint only. */
+  closed?: PointeryClosed;
+  /** Legacy: `false` hides the idle button, string sets its glyph. `closed` wins when set. */
   fab?: boolean | string;
   /** Routes where the palette never mounts (mount checks this). Defaults to ["/"]. */
   hiddenRoutes?: string[];

@@ -82,10 +82,22 @@
   --pointery-font: "Figtree", ui-sans-serif, system-ui, sans-serif;
 }
 
-.pointery-overlay, .pointery-palette, .pointery-toast, .pointery-guide, .pointery-confirm, .pointery-fab {
+.pointery-overlay, .pointery-palette, .pointery-toast, .pointery-guide, .pointery-confirm, .pointery-fab,
+.pointery-closed-pill, .pointery-closed-tab, .pointery-closed-helper, .pointery-closed-ghost {
   font-family: var(--pointery-font);
   color: var(--color-text-primary);
 }
+/* closed-state launchers (all driven by `closed` in pointery.config.json) */
+.pointery-closed-img { width: 1.25em; height: 1.25em; border-radius: 0.3em; object-fit: contain; }
+.pointery-closed-kbd { border: 1px solid var(--color-border); border-radius: 6px; padding: 0.1rem 0.4rem; font-size: 0.65rem; color: inherit; font-family: inherit; background: rgb(127 127 127 / 0.12); }
+.pointery-closed-pill { position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: var(--pointery-z); display: flex; align-items: center; gap: 0.5rem; border-radius: 999px; background: var(--color-surface-inverse); color: var(--color-text-inverse); border: none; padding: 0.65rem 1rem; font-size: 0.9rem; font-weight: 600; box-shadow: var(--shadow-md); cursor: pointer; }
+.pointery-closed-pill:hover { filter: brightness(1.15); }
+.pointery-closed-tab { position: fixed; right: 0; top: 45%; z-index: var(--pointery-z); writing-mode: vertical-rl; letter-spacing: 0.15em; display: flex; align-items: center; gap: 0.5rem; background: var(--color-surface-inverse); color: var(--color-text-inverse); border: none; border-radius: 10px 0 0 10px; padding: 0.9rem 0.5rem; font-size: 0.75rem; font-weight: 700; box-shadow: var(--shadow-md); cursor: pointer; }
+.pointery-closed-helper { position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: var(--pointery-z); display: flex; align-items: center; gap: 0.6rem; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 999px; padding: 0.35rem 0.9rem 0.35rem 0.35rem; font-size: 0.85rem; font-weight: 600; box-shadow: var(--shadow-md); cursor: pointer; }
+.pointery-closed-avatar { position: relative; width: 1.9rem; height: 1.9rem; border-radius: 999px; background: var(--pointery-primary); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }
+.pointery-closed-dot { position: absolute; bottom: 0; right: 0; width: 0.55rem; height: 0.55rem; border-radius: 999px; background: var(--color-success); border: 2px solid var(--color-surface); }
+.pointery-closed-online { color: var(--color-success); font-weight: 400; font-size: 0.75rem; }
+.pointery-closed-ghost { position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: var(--pointery-z); font-size: 0.75rem; color: var(--color-text-secondary); border: 1px dashed var(--color-border-strong); border-radius: 999px; padding: 0.45rem 0.8rem; background: color-mix(in srgb, var(--color-surface) 75%, transparent); cursor: pointer; }
 
 /* pulse target */
 @keyframes pointery-ping {

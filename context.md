@@ -598,3 +598,12 @@ Closed-state vartest moved into the real demo.
 - `app/demo/variant-switcher.tsx` (new, demo-only) - same 10 launchers as `/vartest-closed`, fixed-positioned above a floating 1..0 switcher (keys 1-9/0, choice persists in localStorage). Kit fab hidden on demo pages; variant 1 is its pixel-twin. Clicking any launcher dispatches the configured trigger (fetched from `/api/admin/config`) so the REAL palette opens.
 - `app/demo/layout.tsx` - mounts `<VariantSwitcher/>`.
 - Verified: `lint` + `tsc` clean, `/demo` 200 on dev with switcher in HTML. No kit change.
+
+## Pass 83 (feat/basic-changes, 2026-11-28)
+Closed state is config: `closed` in pointery.config.json. Lab removed.
+
+- Kit (`packages/pointery`): new `closed` key - `variant` fab|pill|tab|helper|ghost (3 search-stub/nudge/dot dropped, ?/✦ and ask/command merged into options), `icon` (glyph/emoji or image: `/logo.png`, `https://…`, `data:…` renders <img>), `label`, `hint` (defaults to pretty trigger), `showHint`. Legacy `fab` still honored when `closed` is absent. `Pointery.tsx` renders all five, `styles.css` adds `pointery-closed-*` classes, `schema.json` + `validate.ts` enforce it.
+- Harness `pointery.config.json`: `"closed": { "variant": "fab", "icon": "?", "label": "Ask" }` replaces `fab: true` (same look, new canonical form).
+- Removed the lab: `app/vartest-closed/` and `app/demo/variant-switcher.tsx` deleted, demo layout back to plain. Variants are now plain config options like the rest - edit the file, `npx pointery config --validate`.
+- Left UNCOMMITTED (another pass in tree): `bin/pointery.js` + `POINTERY_PROMPT.md` carry my `closed` hunks (STARTER_CONFIG, known-keys, slim validate, key list) mixed with their starter-page removal - fold in after that pass lands.
+- Verified: `lint` + `tsc` clean, `config --validate` ok.
