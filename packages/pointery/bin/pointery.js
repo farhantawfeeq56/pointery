@@ -413,7 +413,7 @@ export default function PointerySettingsPage() {
 
         <div className="min-w-0 lg:order-1">
           <section data-pointery="pointery-settings-shortcut" className="py-6 first:pt-0">
-            <div className="flex max-w-md items-center justify-between gap-2 rounded-xl border border-zinc-200 px-2.5 py-1.5">
+            <div className="flex w-fit min-w-60 items-center justify-between gap-6 rounded-xl border border-zinc-200 px-2.5 py-1.5">
               <div className="min-w-0">
                 <p className="text-xs text-zinc-500">{recording ? "Recording — press keys…" : "Current shortcut"}</p>
                 <p className="truncate font-mono text-sm font-semibold">{recording ? prettyShortcut(recordingPreview ?? "…") : prettyShortcut(cfg.trigger)}</p>

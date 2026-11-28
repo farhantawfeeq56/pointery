@@ -342,3 +342,9 @@ Narrowed boxes per page feedback.
 
 - `app/pointery/page.tsx` — suggestion boxes into 2-col grid (half-width each), + button on its own row; shortcut card capped at `max-w-md`.
 - Re-synced via `npm run pointery:sync-page`; `init --check` ok, `tsc` clean.
+
+## Pass 46 (feat/basic-changes, 2026-11-28)
+Shortcut card hugs content per page feedback.
+
+- `app/pointery/page.tsx` — current-shortcut card `max-w-md` → `w-fit min-w-60` (fits "Shift + A", stable width while recording), gap widened for breathing room.
+- Re-synced via `npm run pointery:sync-page`; `init --check` ok, `tsc` clean.
