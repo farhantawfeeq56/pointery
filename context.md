@@ -318,3 +318,9 @@ Shortcut section rework per page feedback: live card + pencil + chips.
 
 - `app/pointery/page.tsx` — preset cards + Record button + Current line replaced by: current-shortcut card (label + mono value) with pencil icon button to start/stop recording; Shift+A and Cmd/Ctrl+K moved below as "Suggestions:" chips (active chip filled); custom badge kept. Recorder shows live progress (`Shift + …`) incl. bare-modifier presses, Esc cancels, hint line switches to "Press keys… (Esc to cancel)" while recording.
 - Re-synced via `npm run pointery:sync-page`; `init --check` ok, `tsc` clean.
+
+## Pass 42 (feat/basic-changes, 2026-11-28)
+Tightened shortcut-box padding per page feedback.
+
+- `app/pointery/page.tsx` — current-shortcut card `px-4 py-3` → `px-3 py-2`, pencil `p-2` → `p-1.5`, suggestion chips `px-3 py-1` → `px-2.5 py-0.5`.
+- Re-synced via `npm run pointery:sync-page`; `init --check` ok, `tsc` clean.

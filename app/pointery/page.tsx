@@ -330,7 +330,7 @@ export default function PointerySettingsPage() {
 
         <div className="min-w-0 lg:order-1">
           <section data-pointery="pointery-settings-shortcut" className="py-8 first:pt-0">
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-zinc-200 px-4 py-3">
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-zinc-200 px-3 py-2">
               <div className="min-w-0">
                 <p className="text-xs text-zinc-500">{recording ? "Recording — press keys…" : "Current shortcut"}</p>
                 <p className="truncate font-mono text-sm font-semibold">{recording ? prettyShortcut(recordingPreview ?? "…") : prettyShortcut(cfg.trigger)}</p>
@@ -339,7 +339,7 @@ export default function PointerySettingsPage() {
                 onClick={() => { setRecording((r) => !r); setRecordingPreview(null); }}
                 aria-label={recording ? "Stop recording" : "Record new shortcut"}
                 title={recording ? "Stop (Esc)" : "Record new shortcut"}
-                className={recording ? "rounded-full bg-amber-500 p-2 text-white" : "rounded-full border border-zinc-200 p-2 text-zinc-600 hover:border-zinc-400"}
+                className={recording ? "rounded-full bg-amber-500 p-1.5 text-white" : "rounded-full border border-zinc-200 p-1.5 text-zinc-600 hover:border-zinc-400"}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /></svg>
               </button>
@@ -350,7 +350,7 @@ export default function PointerySettingsPage() {
                 <button
                   key={v}
                   onClick={() => setCfg({ ...cfg, trigger: v })}
-                  className={cfg.trigger === v && !recording ? "rounded-full border border-zinc-900 bg-zinc-900 px-3 py-1 font-mono font-semibold text-white" : "rounded-full border border-zinc-200 px-3 py-1 font-mono text-zinc-600 hover:border-zinc-400"}
+                  className={cfg.trigger === v && !recording ? "rounded-full border border-zinc-900 bg-zinc-900 px-2.5 py-0.5 font-mono font-semibold text-white" : "rounded-full border border-zinc-200 px-2.5 py-0.5 font-mono text-zinc-600 hover:border-zinc-400"}
                 >
                   {v === "shift+a" ? "Shift + A" : "⌘/Ctrl + K"}
                 </button>
