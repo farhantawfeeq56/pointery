@@ -329,8 +329,8 @@ export default function PointerySettingsPage() {
         </section>
 
         <div className="min-w-0 lg:order-1">
-          <section data-pointery="pointery-settings-shortcut" className="py-8 first:pt-0">
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-zinc-200 px-3 py-2">
+          <section data-pointery="pointery-settings-shortcut" className="py-6 first:pt-0">
+            <div className="flex items-center justify-between gap-2 rounded-xl border border-zinc-200 px-2.5 py-1.5">
               <div className="min-w-0">
                 <p className="text-xs text-zinc-500">{recording ? "Recording — press keys…" : "Current shortcut"}</p>
                 <p className="truncate font-mono text-sm font-semibold">{recording ? prettyShortcut(recordingPreview ?? "…") : prettyShortcut(cfg.trigger)}</p>
@@ -360,12 +360,12 @@ export default function PointerySettingsPage() {
             <p className="mt-2 text-xs text-zinc-500">{recording ? "Press keys… (Esc to cancel)" : "Try it now — press your shortcut anywhere on this page."}</p>
           </section>
 
-          <section data-pointery="pointery-settings-brand" className="py-8">
+          <section data-pointery="pointery-settings-brand" className="py-6">
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="text-sm">
                 <span className="font-medium">Primary color</span>
                 <span className="mt-2 flex items-center gap-3">
-                  <input type="color" value={cfg.theme.primary} onChange={(e) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: e.target.value } })} className="h-10 w-14 cursor-pointer rounded" />
+                  <input type="color" value={cfg.theme.primary} onChange={(e) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: e.target.value } })} className="h-8 w-12 cursor-pointer rounded" />
                   <code className="font-mono text-xs">{cfg.theme.primary}</code>
                 </span>
               </label>
@@ -376,10 +376,10 @@ export default function PointerySettingsPage() {
             </div>
           </section>
 
-                    <section data-pointery="pointery-settings-behavior" className="py-8">
+                    <section data-pointery="pointery-settings-behavior" className="py-6">
             <label className="block text-sm">
               <span className="font-medium">Palette position</span>
-              <select value={cfg.position} onChange={(e) => setCfg({ ...cfg, position: e.target.value as Config["position"] })} className="mt-2 w-40 rounded-lg border px-3 py-2">
+              <select value={cfg.position} onChange={(e) => setCfg({ ...cfg, position: e.target.value as Config["position"] })} className="mt-2 w-fit rounded-lg border px-2.5 py-1.5">
                 <option value="top">Top</option>
                 <option value="center">Center</option>
                 <option value="bottom">Bottom</option>
@@ -394,7 +394,7 @@ export default function PointerySettingsPage() {
                       value={s}
                       onChange={(e) => { const v = e.target.value; setCfg((c) => { const next = [...c.suggestions]; while (next.length <= i) next.push(""); next[i] = v; return { ...c, suggestions: next }; }); }}
                       placeholder={["Where is export?", "How do I invite a teammate?", "Try a third query…", "One more…"][i] ?? ("Suggestion " + (i + 1))}
-                      className="w-full rounded-lg border px-3 py-2 font-mono text-xs"
+                      className="w-full rounded-lg border px-2.5 py-1.5 font-mono text-xs"
                     />
                     {i < cfg.suggestions.length && (
                       <button
@@ -410,7 +410,7 @@ export default function PointerySettingsPage() {
                 {cfg.suggestions.length < 4 && (
                   <button
                     onClick={() => setCfg((c) => ({ ...c, suggestions: [...c.suggestions, ""].slice(0, 4) }))}
-                    className="rounded-full border border-dashed border-zinc-300 px-3 py-1 text-xs font-semibold text-zinc-500 hover:border-zinc-500"
+                    className="rounded-full border border-dashed border-zinc-300 px-2.5 py-0.5 text-xs font-semibold text-zinc-500 hover:border-zinc-500"
                   >
                     + Add suggestion
                   </button>
@@ -419,8 +419,8 @@ export default function PointerySettingsPage() {
             </div>
           </section>
 
-          <div className="flex items-center gap-3 py-8">
-            <button onClick={saveNow} className="py-save w-fit rounded-full px-6 py-2.5 text-sm font-semibold">
+          <div className="flex items-center gap-3 py-6">
+            <button onClick={saveNow} className="py-save w-fit rounded-full px-5 py-2 text-sm font-semibold">
               {saveState === "saved" ? "Saved ✓" : "Save now"}
             </button>
             <p className="text-xs text-zinc-500">Edits auto-save ~1s after you stop typing — no reload needed.</p>

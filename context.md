@@ -330,3 +330,9 @@ Behavior section rework per page feedback (4 items).
 
 - `app/pointery/page.tsx` — position select shortened to `w-40`; Allowed actions editor removed; Suggestions textarea replaced by boxes (3 by default, pad-to-3 when empty, + adds up to 4, − per stored row); Placeholder/Empty/Confirm grid removed. Live preview now filters blank suggestions so half-typed boxes never render empty chips.
 - Re-synced via `npm run pointery:sync-page`; `init --check` ok, `tsc` clean.
+
+## Pass 44 (feat/basic-changes, 2026-11-28)
+Padding tightening per page feedback (2 items).
+
+- `app/pointery/page.tsx` — position select `w-40` → `w-fit` (hugs biggest option); sections + save row `py-8` → `py-6`; inputs/select `px-3 py-2` → `px-2.5 py-1.5`; color swatch `h-10 w-14` → `h-8 w-12`; shortcut card `px-3 py-2` → `px-2.5 py-1.5 gap-2`; + button and save button slimmed. Preview mock untouched.
+- Re-synced via `npm run pointery:sync-page`; `init --check` ok, `tsc` clean.
