@@ -607,3 +607,11 @@ Closed state is config: `closed` in pointery.config.json. Lab removed.
 - Removed the lab: `app/vartest-closed/` and `app/demo/variant-switcher.tsx` deleted, demo layout back to plain. Variants are now plain config options like the rest - edit the file, `npx pointery config --validate`.
 - Left UNCOMMITTED (another pass in tree): `bin/pointery.js` + `POINTERY_PROMPT.md` carry my `closed` hunks (STARTER_CONFIG, known-keys, slim validate, key list) mixed with their starter-page removal - fold in after that pass lands.
 - Verified: `lint` + `tsc` clean, `config --validate` ok.
+
+## Pass 84 (feat/basic-changes, 2026-11-28)
+`init` no longer ships the `/pointery` page - harness-only debug now.
+
+- `packages/pointery/bin/pointery.js` - dropped `STARTER_SETTINGS_PAGE` + `STARTER_ADMIN_CONFIG_ROUTE`, the 3 `pointery-settings-*` starter entries, and the `app/` write block; step 7 is now first-run copy (`suggestions` + `labels` from real entries), closing line confirms `init --check` clean. `closed` hunks from the parallel pass preserved.
+- `POINTERY_PROMPT.md` (root) - same step 7 + closing-line rewrite.
+- Deleted `scripts/sync-starter-page.mjs` + `pointery:sync-page` npm script; `AGENTS.md` (app row, release rule) and `POINTERY_PARTS.md` (§8, §10) updated - harness `/pointery` never ships.
+- Verified: `node --check` bin, fresh `init` writes 3 files + `AGENTS.md` (no page), harness `init --check` ok, `lint` + `kit:build` + `tsc` + full `build` clean.

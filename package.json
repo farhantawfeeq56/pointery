@@ -10,8 +10,7 @@
     "build": "npm run kit:build && next build",
     "start": "next start",
     "lint": "eslint",
-    "kit:build": "npm run build -w pointery",
-    "pointery:sync-page": "node scripts/sync-starter-page.mjs"
+    "kit:build": "npm run build -w pointery"
   },
   "dependencies": {
     "next": "16.4.6",

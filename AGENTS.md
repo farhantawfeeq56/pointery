@@ -65,7 +65,7 @@ Two developers. GitHub Issues is the only to-do list. WhatsApp is for talking, G
 | --- | --- |
 | `packages/pointery/` | The product: the `pointery` npm package (public, MIT), built with `tsc` to `dist/` |
 | `packages/pointery/bin/pointery.js` | The `npx pointery init` CLI, with the starter files embedded as strings |
-| `app/` | The harness app (`pointery-harness`, private): landing page, demo CRM, `/api/ask`, `/api/admin/*`, `/pointery` (settings, dev-only) |
+| `app/` | The harness app (`pointery-harness`, private): landing page, demo CRM, `/api/ask`, `/api/admin/*`, `/pointery` (harness-only status, dev-only, never shipped) |
 | `lib/demo.ts` | Turns the demo CRM off in production unless `POINTERY_DEMO=1` |
 | `pointery.context.json`, `pointery.config.json` | The harness app's map and settings |
 | `context.md` | Pass-by-pass build log. Read it for recent decisions |
@@ -76,7 +76,6 @@ Rules for that code:
 - The harness uses the workspace copy of `pointery`, not the registry one.
 - Subpath imports (`pointery/server`, `pointery/resolver`, `pointery/validate`) work without Next. The root import needs it.
 - Keep relative imports in the package `.js`-suffixed, so Node ESM resolves them.
-- `app/pointery/page.tsx` is the source of the settings page that `init` ships. After editing it, run `npm run pointery:sync-page`.
 - `POINTERY_PROMPT.md` is also embedded in the CLI as `STARTER_PROMPT`. There is no sync script for it, so change both.
 - `npx pointery init --check` runs `init` first, so it writes any missing starter files before checking.
 - The LLM is set with `POINTERY_LLM_URL` and `POINTERY_LLM_KEY` in `.env.local`. Without a URL, the bundled keyword resolver answers.
@@ -97,7 +96,7 @@ Known gaps between `README.md` and the code. Ask before resolving one:
 - The bump is patch by default. Label the PR `release:minor`, `release:major` or `release:skip` before merging to change that.
 - While the version is below 1.0, use `release:minor` for changes to the public API or to what `init` writes.
 - Don't edit the package version by hand, and don't run `npm publish` locally.
-- Only a change under `packages/pointery` triggers a release. A change to the root `POINTERY_PROMPT.md` or `app/pointery/page.tsx` ships only once it is copied into the CLI.
+- Only a change under `packages/pointery` triggers a release. A change to the root `POINTERY_PROMPT.md` ships only once it is copied into the CLI (`STARTER_PROMPT`). The harness `/pointery` page never ships.
 - Authentication is npm trusted publishing (OIDC). There is no `NPM_TOKEN`; don't add one.
 - The trusted publisher on npmjs.com is tied to this repository and the filename `publish.yml`, with direct `npm publish` allowed. Renaming either breaks publishing. A new connection expires if it doesn't publish successfully within 2 days; delete it and create it again.
 - Keep `repository.url` in the package pointing at this GitHub repository.
@@ -164,7 +163,6 @@ For the package:
 
 ```bash
 npm run kit:build           # build the package to packages/pointery/dist
-npm run pointery:sync-page  # copy the settings page into the CLI
 ```
 
 `packages/pointery/dist` is gitignored build output and is excluded from ESLint. `npm run build` rebuilds the package automatically, so never delete `dist` to fix the build.

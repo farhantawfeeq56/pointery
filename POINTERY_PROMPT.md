@@ -57,38 +57,22 @@ keyless mode). Re-run whenever your UI changes.
 >    fade|slide|scale|none. Run `npx pointery config --validate` after any config edit.
 > 6. Brain (my key, my bill, required - one step): walk me through it - add `POINTERY_LLM_URL` (my model endpoint: OpenAI-compatible chat-completions URL, or native Anthropic `…/v1/messages` / Gemini `…:generateContent` - auto-detected), `POINTERY_LLM_KEY`, AND `POINTERY_LLM_MODEL` (exact model id as the provider spells it: `gpt-4o-mini`, `claude-3-5-haiku-latest`, `gemini-2-flash`, …) to `.env.local` together, restart dev, and
 >    verify with a real question built from THIS map (a flow title or entry label you just indexed - never the "export" placeholder if the app has no export). Without all three, `/api/ask` fails closed (503). OpenAI defaults the model to `gpt-4o-mini` when unset; every other provider needs it. Never print or commit the key.
-> 7. Settings page (`/pointery`): `init` already dropped a starter
->    (Next: `app/pointery/page.tsx` + `app/api/admin/config/route.ts`;
->    other stacks: build the equivalent). It is read-only by design and
->    dev-only (must render `notFound()` in production): the page
->    shows system status (ask health, brain, context validity) and the
->    context table. It loads
->    `pointery.config.json` via GET only (PUT stays dev-only and refuses
->    in production - edit the file directly and redeploy; PUT validates with the
->    same rules as `config --validate`). Personalize it
->    on first run from the files you just wrote:
->    status probe must use real queries from the
->    context (a flow title, an entry label - never the "export"
->    placeholder if the app has no export), and defaults (trigger, theme,
->    position, suggestions, allowActions) must mirror `pointery.config.json`.
->    Set `suggestions` to 3-5 real first-run questions for THIS app, built
+> 7. First-run copy: set `suggestions` to 3-5 real questions for THIS app, built
 >    from the entry labels and flow titles you just indexed (the palette
 >    shows them as its default list) - never the "export" placeholder if
 >    the app has no export - and rewrite the starter `labels` placeholder/empty
->    copy the same way. Tag its
->    sections with `data-pointery` ids and keep the matching
->    `pointery-settings-*` entries on page `/pointery` in sync; re-run step 5.
+>    copy the same way; re-run step 5.
 >
 > Then show me the wiring diff: `pointery.config.json` is truth - mount `<Pointery/>` once in `layout.tsx`
 > via a client wrapper (e.g. `components/pointery-wrapper.tsx`) that passes the config file as props and listens for
 > `pointery:config`, gated off marketing pages (wrapper returns null on
 > `/`, or mount only in the `(app)` group layout). Keep every key the starter sets
-> (`trigger, theme, position, animation, suggestions, allowActions, hiddenRoutes, fab, endpoint, timing, brain`) flowing through - don't drop keys to match a shorter snippet. Sync the palette to my
+> (`trigger, theme, position, animation, suggestions, allowActions, hiddenRoutes, closed, endpoint, timing, brain`) flowing through - don't drop keys to match a shorter snippet. Sync the palette to my
 > brand at init: lift my primary color and corner radius from my theme /
 > tokens into `pointery.config.json` (props only override it where you explicitly pass them), so it looks native on day one. Ensure
 > `/api/ask` calls `createAskHandler(context, { llm: { url, key, model }, retrieve, limits, cache })`
 > with `retrieve/limits/cache` (plus `llm.temperature/maxTokens`) read from `pointery.config.json` `brain`
-> (required - no keyless mode; never strip tuning to match a shorter snippet), and confirm `/pointery` shows status ok, done.
+> (required - no keyless mode; never strip tuning to match a shorter snippet), and confirm `npx pointery init --check` is clean, done.
 
 **Rules for the agent:** no fake selectors, `confirm:true` on destructive,
 re-run on UI change. This file is versioned per stack (Next / Vue / HTML) -

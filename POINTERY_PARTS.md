@@ -47,8 +47,7 @@ answers/hints; rebuilds guide from flow id.
 
 ### 8. CLI - `bin/pointery.js`
 `init` writes `pointery.context.json` + `pointery.config.json` +
-`POINTERY_PROMPT.md` + `app/pointery/page.tsx` +
-`app/api/admin/config/route.ts` (+ upserts `AGENTS.md` block).
+`POINTERY_PROMPT.md` (+ upserts `AGENTS.md` block).
 `--check` validates map. No deps, node fs/path only.
 
 ### 9. Prompt - `POINTERY_PROMPT.md`
@@ -66,9 +65,8 @@ How palette looks/behaves: `trigger, theme, position, suggestions, allowActions`
 Context = where things are; config = how palette behaves.
 
 ### 10. Scaffolded glue (not in `dist/`, lives in buyer's repo)
-Settings page (reads/writes config via `GET/PUT /api/admin/config`, dev-only PUT,
-dispatches `pointery:config`), 3-line `/api/ask` route snippet,
-`data-pointery="kebab-id"` anchors in DOM.
+3-line `/api/ask` route snippet, `data-pointery="kebab-id"` anchors in DOM.
+(`/pointery` status page is harness-only debug - never scaffolded.)
 
 ## Iteration rules
 - Behavior change order: **7 (contract) → 5 + 6 → 1 + 2**, then **8 + 9**
