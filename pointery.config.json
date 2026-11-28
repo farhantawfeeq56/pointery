@@ -1,8 +1,8 @@
 {
   "trigger": "s",
   "theme": {
-    "primary": "#b090e4",
-    "radius": 23
+    "primary": "#00A878",
+    "radius": 14
   },
   "position": "bottom",
   "suggestions": [

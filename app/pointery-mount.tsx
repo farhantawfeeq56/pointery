@@ -10,14 +10,14 @@ const HIDDEN = ["/"];
 
 // Server-component layout can't render the client <Pointery/> directly.
 // Disk is truth: load pointery.config.json via /api/admin/config so the
-// Studio page preview matches what visitors get. Falls back to kit
+// mounted palette matches the shipped config. Falls back to kit
 // defaults when the API is unreachable.
 export default function PointeryMount() {
   const [cfg, setCfg] = useState<PointeryProps>({});
   const path = usePathname();
 
-  // Live updates: /pointery settings page dispatches `pointery:config` on every edit
-  // so the mounted palette follows disk without a reload.
+  // Live updates: applies `pointery:config` events (dispatched by config
+  // tooling) so the mounted palette follows disk without a reload.
   useEffect(() => {
     const onLive = (e: Event) => {
       const detail = (e as CustomEvent).detail as PointeryProps | undefined;
