@@ -507,3 +507,10 @@ Fixed `useEffect` deps-size crash (theme effect): HEAD added `theme.fontFamily` 
 
 - `packages/pointery/src/Pointery.tsx` - `themeKey` + `}, [themeKey]);` with exhaustive-deps disable.
 - Verified: `kit:build` + `lint` clean. Needs a full page reload to clear the thrown HMR error.
+
+## Pass 71 (feat/basic-changes, 2026-11-28)
+Temp 1-15 palette hooks to preview each package empty state (delete before merge).
+
+- `app/api/ask/route.ts` - `tempEmptyDemo()` bypass (dev-only): exact queries 1-15 return canned payloads; all else rebuilds the request into the real handler. 3 = non-JSON body (unreachable), 5 = 1.5s delayed (asking), 4/9 = blocked/confirm split.
+- `pointery.config.json` - `allowActions` temp-trimmed to `["mark-won"]` so hook 4 (invite-teammate) hits the blocked path.
+- Verified: `lint` + `tsc` clean; all hooks curled live on :3000, normal queries unaffected.

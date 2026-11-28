@@ -13,9 +13,7 @@
     "Show me the pipeline table"
   ],
   "allowActions": [
-    "mark-won",
-    "invite-teammate",
-    "export-pipeline"
+    "mark-won"
   ],
   "labels": {
     "placeholder": "Ask \"where is export?\" or \"how do I invite?\"",

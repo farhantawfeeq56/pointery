@@ -12,7 +12,44 @@ const brain = (rawConfig as { brain?: { retrieve?: { entries?: number; flows?: n
 // to the customer's own model endpoint (their key, their cost).
 // Nothing goes to Pointery. Missing env fails closed with a 503.
 // Tuning (retrieve/limits/cache/temperature) lives in pointery.config.json `brain`.
-export const POST = createAskHandler(context, {
+// TEMP-EMPTY-DEMO (delete before merge): type 1-15 in the palette to preview
+// each package empty state. Raw bypass of the real handler (incl. server sanitize).
+async function tempEmptyDemo(q: string): Promise<Response | null> {
+  if (process.env.NODE_ENV === "production") return null;
+  if (!/^(1[0-5]|[1-9])$/.test(q)) return null;
+  switch (q) {
+    case "3":
+      // Non-JSON body: client r.json() throws -> unreachable toast.
+      return new Response("temp hook 3: not JSON", { status: 500, headers: { "content-type": "text/plain" } });
+    case "4":
+      // Real action, but NOT in config allowActions (temp ["mark-won"]) -> blocked toast + navigate.
+      return Response.json({ action: "invite-teammate", actionLabel: "Invite teammate", actionTarget: "Contacts", confirm: true, spot: "invite-button", go: "/demo/contacts" });
+    case "5":
+      await new Promise((r) => setTimeout(r, 1500));
+      return Response.json({ spot: "nav-pipeline", go: "/demo/pipeline", hint: "Pipeline" });
+    case "6":
+      return Response.json({ spot: "pipeline-table", go: "/demo/pipeline", filter: "e" });
+    case "7":
+      return Response.json({ spot: "export-button" });
+    case "8":
+      return Response.json({ guide: { id: "temp-broken", title: "Broken guide", steps: [] } });
+    case "9":
+      return Response.json({ action: "mark-won", actionLabel: "Mark deal Acme as Won", actionTarget: "Pipeline table", confirm: true, spot: "pipeline-table", go: "/demo/pipeline" });
+    case "11":
+      return Response.json({ spot: "temp-nope-not-real" });
+    case "12":
+      return Response.json({ plan: { title: "Half plan", steps: [{ text: "Go to Dashboard", go: "/demo", spot: "nav-dashboard" }] }, spot: "nav-dashboard", go: "/demo", hint: "Half plan" });
+    case "13":
+      return Response.json({ answer: "Empty-slice demo: a blank query sends { entries: [], flows: [], actions: [] } to the LLM - no UI of its own.", spot: "nav-dashboard", go: "/demo" });
+    case "15":
+      return Response.json({ answer: "LLM not configured. Set POINTERY_LLM_URL, POINTERY_LLM_KEY and POINTERY_LLM_MODEL in .env.local and restart." }, { status: 503 });
+    default:
+      // 1, 2, 10, 14 -> {} collapses to the empty toast.
+      return Response.json({});
+  }
+}
+
+const basePOST = createAskHandler(context, {
   llm: {
     url: process.env.POINTERY_LLM_URL ?? "",
     key: process.env.POINTERY_LLM_KEY ?? "",
@@ -29,3 +66,17 @@ export const POST = createAskHandler(context, {
       ? { answer: "The demo CRM is disabled in this environment. Set POINTERY_DEMO=1 to explore it." }
       : null,
 });
+
+// TEMP-EMPTY-DEMO wrapper (delete before merge): reads the body once,
+// serves 1-15 hooks, else rebuilds the request for the real handler.
+export async function POST(req: Request): Promise<Response> {
+  const raw = await req.text().catch(() => "");
+  let q = "";
+  try {
+    const b = JSON.parse(raw || "{}") as { query?: unknown };
+    if (typeof b.query === "string") q = b.query.trim();
+  } catch { /* fall through to real handler */ }
+  const temp = await tempEmptyDemo(q);
+  if (temp) return temp;
+  return basePOST(new Request(req.url, { method: req.method, headers: req.headers, body: raw }));
+}
