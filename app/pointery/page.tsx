@@ -227,6 +227,18 @@ export default function PointerySettingsPage() {
   const [llm, setLlm] = useState<{ configured: boolean; host: string; model: string } | null>(null);
   const [preview, setPreview] = useState<"closed" | "open">("open");
   const [copied, setCopied] = useState(false);
+  const [variant, setVariant] = useState<number>(1);
+  const [editing, setEditing] = useState<null | "text" | "color" | "shortcut" | "position" | "radius">(null);
+  useEffect(() => {
+    const onNum = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey || recording) return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      if (e.key >= "1" && e.key <= "5") setVariant(Number(e.key));
+    };
+    window.addEventListener("keydown", onNum);
+    return () => window.removeEventListener("keydown", onNum);
+  }, [recording]);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const firstRun = useRef(true);
@@ -356,6 +368,122 @@ export default function PointerySettingsPage() {
 
   const snippet = `<Pointery\n  trigger="${cfg.trigger}"\n  theme={{ primary: "${cfg.theme.primary}", radius: ${cfg.theme.radius} }}\n  position="${cfg.position}"\n/>`;
 
+  const PRESETS = ["#00A878", "#2563EB", "#7C3AED", "#FE5E41", "#F3C178", "#0B0500"];
+  const HOTKEYS: { key: Exclude<typeof editing, null>; label: string }[] = [
+    { key: "text", label: "Text" },
+    { key: "color", label: "Color" },
+    { key: "shortcut", label: "Keys" },
+    { key: "position", label: "Pos" },
+    { key: "radius", label: "Shape" },
+  ];
+  const savePill = (
+    <span className={`rounded-full px-3 py-1 text-xs font-medium ${saveState === "saved" ? "py-ok" : saveState === "saving" ? "py-warn" : saveState === "error" ? "py-err" : "py-idle"}`}>
+      <span key={saveState} className="py-swap">{saveState === "saved" ? "Saved ✓" : saveState === "saving" ? "Saving…" : saveState === "error" ? "Save failed" : "Auto-save on"}</span>
+    </span>
+  );
+  const switcher = (
+    <div className="fixed bottom-4 right-4 z-50 flex items-center gap-1 rounded-full border border-zinc-200 bg-white/95 p-1 shadow-lg backdrop-blur" role="tablist" aria-label="Variants">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button key={n} role="tab" aria-selected={variant === n} title={`Variant ${n} (key ${n})`} onClick={() => setVariant(n)}
+          className={`py-press h-8 w-8 rounded-full text-xs font-semibold ${variant === n ? "bg-zinc-900 text-white" : "text-zinc-500 hover:bg-zinc-100"}`}>{n}</button>
+      ))}
+    </div>
+  );
+  const editorBody = (key: Exclude<typeof editing, null>) => {
+    if (key === "text") return (
+      <div className="grid gap-2">
+        <label className="text-xs text-zinc-500">Placeholder</label>
+        <input value={cfg.labels?.placeholder || ""} onChange={(e) => setCfg({ ...cfg, labels: { ...cfg.labels, placeholder: e.target.value } })} placeholder='Ask "where is export?"…' className="py-field w-full rounded-lg border px-2.5 py-1.5 font-mono text-xs" />
+        <label className="mt-1 text-xs text-zinc-500">Suggestions (max 4)</label>
+        {[0, 1, 2].map((i) => (
+          <input key={i} value={cfg.suggestions[i] || ""}
+            onChange={(e) => { const v = e.target.value; setCfg((c) => { const next = [...c.suggestions]; while (next.length <= i) next.push(""); next[i] = v; return { ...c, suggestions: next }; }); }}
+            placeholder={["Where is export?", "How do I invite?", "Third query…"][i]} className="py-field w-full rounded-lg border px-2.5 py-1.5 font-mono text-xs" />
+        ))}
+      </div>
+    );
+    if (key === "color") return (
+      <div className="grid gap-3">
+        <div className="flex flex-wrap gap-2">{PRESETS.map((p) => (
+          <button key={p} onClick={() => setCfg({ ...cfg, theme: { ...cfg.theme, primary: p } })} aria-label={p} title={p}
+            className={`h-8 w-8 rounded-full border-2 ${cfg.theme.primary.toUpperCase() === p ? "border-zinc-900" : "border-transparent"}`} style={{ background: p }} />
+        ))}</div>
+        <ColorPicker value={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: v } })} />
+      </div>
+    );
+    if (key === "shortcut") return (
+      <div className="flex items-center gap-3">
+        <code className="rounded-lg bg-zinc-100 px-3 py-1.5 font-mono text-sm font-medium">{recording ? prettyShortcut(recordingPreview ?? "…") : prettyShortcut(cfg.trigger)}</code>
+        <button onClick={() => { setRecording((r) => !r); setRecordingPreview(null); }} className={recording ? "py-press rounded-full bg-amber-500 px-4 py-1.5 text-xs font-medium text-white" : "py-press rounded-full border px-4 py-1.5 text-xs font-medium hover:border-zinc-500"}>
+          {recording ? "Press keys… (Esc stops)" : "Record"}
+        </button>
+      </div>
+    );
+    if (key === "position") return (
+      <div className="grid grid-cols-3 gap-2">{(["top", "center", "bottom"] as const).map((o) => (
+        <button key={o} onClick={() => setCfg({ ...cfg, position: o })}
+          className={`py-press rounded-xl border px-3 py-2 text-xs font-medium capitalize ${cfg.position === o ? "border-zinc-900 bg-zinc-900 text-white" : "hover:border-zinc-400"}`}>{o}</button>
+      ))}</div>
+    );
+    return <RadiusSlider value={cfg.theme.radius} primary={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: v } })} />;
+  };
+  // Click-to-edit palette used by variants 2-5. Each dotted zone sets `editing`.
+  const clickPalette = (large = false) => (
+    <div className="py-sheet w-full max-w-[400px] bg-white p-2 shadow-2xl" style={{ borderRadius: cfg.theme.radius }} onClick={(e) => e.stopPropagation()}>
+      <button onClick={() => setEditing("text")} title="Edit text"
+        className={`block w-full rounded-md border px-3 ${large ? "py-3 text-sm" : "py-2 text-xs"} text-left text-zinc-700 ${editing === "text" ? "border-zinc-900" : "border-zinc-200 hover:border-dashed hover:border-zinc-500"}`} style={{ borderRadius: Math.max(4, cfg.theme.radius - 4) }}>
+        {cfg.labels?.placeholder || 'Ask "where is export?"…'}
+      </button>
+      <div className="flex flex-wrap gap-2 p-2">
+        {(cfg.suggestions.filter(Boolean).length ? cfg.suggestions.filter(Boolean).slice(0, 3) : ["Add suggestions — click text"]).map((s, i) => (
+          <button key={s + i} onClick={() => setEditing("text")} title="Edit suggestions"
+            className={`rounded-full border px-2.5 py-1 text-xs ${editing === "text" ? "border-zinc-900" : "hover:border-zinc-500"} ${cfg.suggestions.filter(Boolean).length ? "py-inset" : "text-zinc-400"}`}>{s}</button>
+        ))}
+        <button onClick={() => setEditing("color")} title="Edit color" className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs ${editing === "color" ? "border-zinc-900" : "hover:border-zinc-500"}`}>
+          <span className="h-3.5 w-3.5 rounded-full border border-black/10" style={{ background: cfg.theme.primary }} />{cfg.theme.primary}
+        </button>
+      </div>
+      <div className="flex items-center justify-between px-1 pt-1">
+        <button onClick={() => { setEditing("shortcut"); setRecording(true); setRecordingPreview(null); }} title="Edit shortcut"
+          className={`rounded-full px-2 py-0.5 text-xs text-zinc-400 ${editing === "shortcut" ? "outline outline-2 outline-zinc-900" : "hover:outline hover:outline-1 hover:outline-dashed hover:outline-zinc-400"}`}>
+          {recording ? prettyShortcut(recordingPreview ?? "…") : prettyShortcut(cfg.trigger)} · ⌘K · Esc
+        </button>
+        <span className="flex gap-1">
+          <button onClick={() => setEditing("position")} title="Edit position"
+            className={`rounded-full border px-2 py-0.5 text-[11px] ${editing === "position" ? "border-zinc-900" : "hover:border-zinc-500"}`}>{cfg.position}</button>
+          <button onClick={() => setEditing("radius")} title="Edit shape"
+            className={`rounded-full border px-2 py-0.5 text-[11px] ${editing === "radius" ? "border-zinc-900" : "hover:border-zinc-500"}`}>{cfg.theme.radius}px</button>
+        </span>
+      </div>
+    </div>
+  );
+  const fakeApp = (alignCls: string, interactive: boolean) => (
+    <div className="relative min-h-[520px] overflow-hidden rounded-[14px] border border-zinc-200 bg-zinc-50 p-6">
+      <div className="flex items-center gap-2">
+        <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" /><span className="h-2.5 w-2.5 rounded-full bg-zinc-300" /><span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
+        <span className="ml-3 flex-1 rounded-md bg-white px-3 py-1 font-mono text-[11px] text-zinc-400">yourapp.com/dashboard</span>
+      </div>
+      <div className="mt-5 grid grid-cols-3 gap-3">
+        <div className="h-24 rounded-lg bg-zinc-200" />
+        <div className="h-24 rounded-lg" style={{ background: "color-mix(in srgb, var(--c) 25%, #e4e4e7)", ["--c" as string]: cfg.theme.primary }} />
+        <div className="h-24 rounded-lg bg-zinc-200" />
+      </div>
+      <div className="mt-4 space-y-2"><div className="h-3 rounded bg-zinc-200" /><div className="h-3 w-5/6 rounded bg-zinc-200" /><div className="h-3 w-4/6 rounded bg-zinc-200" /></div>
+      <button onClick={() => interactive && setEditing("position")} title="Move palette" className="absolute bottom-4 right-4 flex h-10 w-10 items-center justify-center text-base font-semibold text-white shadow-lg" style={{ background: cfg.theme.primary, borderRadius: 999 }}>?</button>
+      <div key={cfg.position} className={`py-fade pointer-events-none absolute inset-0 flex justify-center px-4 ${alignCls}`}>
+        <div className="pointer-events-auto">{clickPalette(true)}</div>
+      </div>
+    </div>
+  );
+  const statusRow = (
+    <div className="flex flex-wrap items-center gap-2 text-xs">
+      <span className={`rounded-full px-3 py-1 font-medium ${askOk ? "py-ok" : "py-idle"}`}>/api/ask {askOk == null ? "…" : askOk ? "ok ✓" : "down"}</span>
+      <span className={`rounded-full px-3 py-1 font-medium ${llm?.configured ? "py-ok" : "py-err"}`}>{llm == null ? "brain …" : llm.configured ? "LLM ✓" : "LLM missing"}</span>
+      {counts && <span className="py-subtle rounded-full px-3 py-1 font-medium">{counts}</span>}
+      {savePill}
+    </div>
+  );
+
   if (!loaded) return <div className="mx-auto w-full max-w-4xl flex-1 px-6 py-10 text-sm text-zinc-500">Loading Pointery settings…</div>;
 
   return (
@@ -451,7 +579,111 @@ export default function PointerySettingsPage() {
           .py-press:active { transform: none; }
           .py-thumb { transition: none; }
         }
+        .py-hot { outline: 1px dashed transparent; outline-offset: 2px; border-radius: 8px; }
+        .py-hot:hover { outline-color: #a1a1aa; }
       `}</style>
+    {variant !== 1 ? (
+    <div className="pointery-settings w-full flex-1">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-6 py-10 pb-24">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-medium tracking-tight">Pointery Settings</h1>
+          <p className="text-sm text-zinc-500">
+            {variant === 2 && "V2 · click anything dotted — editor pops over the preview."}
+            {variant === 3 && "V3 · click to select — edit in the inspector on the right."}
+            {variant === 4 && "V4 · pick a section below — one dock edits everything."}
+            {variant === 5 && "V5 · everything edits in place — click, then type."}
+            {" "}Keys 1–5 switch variants.
+          </p>
+        </div>
+        {savePill}
+      </div>
+      {statusRow}
+      {variant === 2 && (
+        <div className="relative">
+          {fakeApp(posAlign, true)}
+          <div className="absolute inset-x-0 bottom-3 flex justify-center px-4">
+            {editing ? (
+              <div className="py-pop w-full max-w-[440px] rounded-2xl border border-zinc-200 bg-white p-4 shadow-xl">
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">{HOTKEYS.find((h) => h.key === editing)?.label}</p>
+                  <button onClick={() => setEditing(null)} className="py-press rounded-full px-2 py-0.5 text-xs text-zinc-400 hover:text-zinc-800">✕</button>
+                </div>
+                {editorBody(editing)}
+              </div>
+            ) : (
+              <p className="rounded-full bg-zinc-900/85 px-4 py-1.5 text-xs text-white shadow-lg">Click the question, text, color, shortcut, pos or shape ↑</p>
+            )}
+          </div>
+        </div>
+      )}
+      {variant === 3 && (
+        <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
+          <div onClick={() => setEditing(null)}>{fakeApp(posAlign, true)}</div>
+          <aside className="rounded-[14px] border border-zinc-200 bg-white p-4 lg:sticky lg:top-6">
+            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Inspector</p>
+            <div className="mt-2 grid gap-1">
+              {HOTKEYS.map((h) => (
+                <button key={h.key} onClick={() => setEditing(editing === h.key ? null : h.key)}
+                  className={`py-press flex items-center justify-between rounded-xl border px-3 py-2 text-left text-sm ${editing === h.key ? "border-zinc-900 bg-zinc-900 text-white" : "hover:border-zinc-400"}`}>
+                  <span className="font-medium">{h.label}</span>
+                  <span className="font-mono text-xs opacity-60">
+                    {h.key === "text" ? (cfg.labels?.placeholder || "Ask…").slice(0, 14) : h.key === "color" ? cfg.theme.primary : h.key === "shortcut" ? prettyShortcut(cfg.trigger) : h.key === "position" ? cfg.position : cfg.theme.radius + "px"}
+                  </span>
+                </button>
+              ))}
+            </div>
+            <div className="mt-3 border-t border-zinc-100 pt-3 min-h-[120px]">
+              {editing ? editorBody(editing) : <p className="text-xs text-zinc-400">Select Text, Color, Keys, Pos or Shape — or click the preview.</p>}
+            </div>
+          </aside>
+        </div>
+      )}
+      {variant === 4 && (
+        <div className="grid gap-3">
+          {fakeApp(posAlign, true)}
+          <div className="rounded-[14px] border border-zinc-200 bg-white p-3 shadow-sm">
+            <div className="flex flex-wrap gap-1.5" role="tablist" aria-label="Edit section">
+              {HOTKEYS.map((h) => (
+                <button key={h.key} role="tab" aria-selected={editing === h.key} onClick={() => setEditing(editing === h.key ? null : h.key)}
+                  className={`py-press rounded-full px-4 py-1.5 text-xs font-medium ${editing === h.key ? "bg-zinc-900 text-white" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"}`}>{h.label}</button>
+              ))}
+              <span className="ml-auto hidden font-mono text-[11px] text-zinc-400 sm:block">{snippet.replace(/\n/g, " ")}</span>
+            </div>
+            <div className="mt-3 border-t border-zinc-100 pt-3">
+              {editing ? editorBody(editing) : <p className="text-xs text-zinc-400">Pick Text / Color / Keys / Pos / Shape above — the preview updates live. Click the preview works too.</p>}
+            </div>
+          </div>
+        </div>
+      )}
+      {variant === 5 && (
+        <div className="relative">
+          {fakeApp(posAlign, true)}
+          <div className="mx-auto -mt-2 w-full max-w-[560px] rounded-b-2xl border border-t-0 border-dashed border-zinc-300 bg-white/95 p-4 shadow-sm backdrop-blur">
+            {!editing && <p className="text-center text-xs text-zinc-400">Click text, color, shortcut, position or shape in the palette ↑ — it becomes editable right here.</p>}
+            {editing === "text" && (
+              <div className="grid gap-2">
+                <input autoFocus value={cfg.labels?.placeholder || ""} onChange={(e) => setCfg({ ...cfg, labels: { ...cfg.labels, placeholder: e.target.value } })} placeholder='Ask "where is export?"…' className="py-field w-full rounded-lg border px-2.5 py-1.5 text-sm" />
+                <div className="flex flex-wrap gap-2">{[0, 1, 2].map((i) => (
+                  <input key={i} value={cfg.suggestions[i] || ""} onChange={(e) => { const v = e.target.value; setCfg((c) => { const next = [...c.suggestions]; while (next.length <= i) next.push(""); next[i] = v; return { ...c, suggestions: next }; }); }}
+                    placeholder={["Where is export?", "Invite?", "Third…"][i]} className="py-field w-32 flex-1 rounded-full border px-3 py-1 font-mono text-xs" />
+                ))}</div>
+              </div>
+            )}
+            {editing === "color" && <div className="flex items-center gap-2">{PRESETS.map((p) => (
+              <button key={p} onClick={() => setCfg({ ...cfg, theme: { ...cfg.theme, primary: p } })} className={`h-9 w-9 rounded-full border-2 ${cfg.theme.primary.toUpperCase() === p ? "border-zinc-900" : "border-zinc-200"}`} style={{ background: p }} aria-label={p} />
+            ))}<input value={cfg.theme.primary} onChange={(e) => { const h = normalizeHex(e.target.value); if (h) setCfg({ ...cfg, theme: { ...cfg.theme, primary: h } }); }} className="py-field ml-1 w-24 rounded-lg border px-2 py-1 font-mono text-xs uppercase" /></div>}
+            {editing === "shortcut" && <div className="flex items-center gap-3"><code className="rounded-lg bg-zinc-100 px-3 py-1.5 font-mono text-sm font-medium">{recording ? prettyShortcut(recordingPreview ?? "…") : prettyShortcut(cfg.trigger)}</code><button onClick={() => { setRecording((r) => !r); setRecordingPreview(null); }} className={recording ? "rounded-full bg-amber-500 px-4 py-1.5 text-xs font-medium text-white" : "rounded-full border px-4 py-1.5 text-xs font-medium"}>{recording ? "Press keys…" : "Record"}</button></div>}
+            {editing === "position" && <div className="grid grid-cols-3 gap-2">{(["top", "center", "bottom"] as const).map((o) => (<button key={o} onClick={() => setCfg({ ...cfg, position: o })} className={`rounded-xl border px-3 py-2 text-xs font-medium capitalize ${cfg.position === o ? "border-zinc-900 bg-zinc-900 text-white" : ""}`}>{o}</button>))}</div>}
+            {editing === "radius" && <RadiusSlider value={cfg.theme.radius} primary={cfg.theme.primary} onChange={(v) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: v } })} />}
+            {editing && <button onClick={() => setEditing(null)} className="mt-2 text-xs text-zinc-400 hover:text-zinc-700">Done ✓</button>}
+          </div>
+        </div>
+      )}
+      <details className="text-xs text-zinc-500"><summary className="cursor-pointer">Snippet & context</summary><pre className="py-code mt-2 overflow-x-auto rounded-lg p-3 font-mono">{snippet}</pre>{counts && <p className="mt-1 font-mono">{counts}</p>}</details>
+    </div>
+    </div>
+    ) : (
     <div className="pointery-settings w-full flex-1">
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-10">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -674,6 +906,8 @@ export default function PointerySettingsPage() {
       </div>
     </div>
     </div>
+    )}
+    {switcher}
     </>
   );
 }
