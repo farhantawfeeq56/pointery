@@ -1,9 +1,103 @@
 /* Pointery kit styles. Consumers get these via `import "pointery/styles.css"`. */
+/* Figtree is bundled (fonts/*.woff2) - no runtime request to Google Fonts,
+   so the kit works offline and behind strict CSP. */
+@font-face {
+  font-family: "Figtree";
+  font-style: normal;
+  font-weight: 300 900;
+  font-display: swap;
+  src: url(../fonts/figtree-latin-ext.woff2) format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Figtree";
+  font-style: normal;
+  font-weight: 300 900;
+  font-display: swap;
+  src: url(../fonts/figtree-latin.woff2) format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
 
 :root {
-  --pointery-primary: #6d28d9;
+  /* Brand */
+  --color-primary: #00A878;
+  --color-primary-hover: #008F65;
+  --color-primary-active: #007653;
+  --color-primary-subtle: #D8F1A0;
+  --color-accent: #FE5E41;
+  --color-accent-hover: #E94D32;
+
+  /* Background & Surfaces */
+  --color-background: #FFFFFF;
+  --color-background-secondary: #F8FAF5;
+  --color-surface: #FFFFFF;
+  --color-surface-secondary: #D8F1A0;
+  --color-surface-tertiary: #F3C178;
+  --color-surface-inverse: #0B0500;
+
+  /* Text */
+  --color-text-primary: #0B0500;
+  --color-text-secondary: #716D67;
+  --color-text-tertiary: #9B9892;
+  --color-text-inverse: #FFFFFF;
+  --color-text-brand: #00A878;
+  --color-text-accent: #FE5E41;
+
+  /* Borders */
+  --color-border: #E8EAE5;
+  --color-border-strong: #C9CEC4;
+  --color-border-brand: #00A878;
+  --color-border-focus: #00A878;
+
+  /* Actions */
+  --color-action-primary: #00A878;
+  --color-action-primary-hover: #008F65;
+  --color-action-secondary: #D8F1A0;
+  --color-action-accent: #FE5E41;
+  --color-action-disabled: #E8EAE5;
+
+  /* Feedback */
+  --color-success: #00A878;
+  --color-success-subtle: #D8F1A0;
+  --color-warning: #F3C178;
+  --color-warning-text: #0B0500;
+  --color-error: #FE5E41;
+  --color-error-subtle: #FFF0EC;
+  --color-info: #00A878;
+  --color-info-subtle: #E8F7F1;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(11, 5, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(11, 5, 0, 0.08);
+  --shadow-lg: 0 12px 32px rgba(11, 5, 0, 0.12);
+
+  /* Theme overrides (set live from config) */
+  --pointery-primary: #00A878;
+  --pointery-accent: #00A878;
   --pointery-radius: 14px;
+  --pointery-z: 60;
+  --pointery-width: 560px;
+  --pointery-overlay-blur: 2px;
+  /* Set live from theme.fontFamily - full stack so buyers can point at their own font */
+  --pointery-font: "Figtree", ui-sans-serif, system-ui, sans-serif;
 }
+
+.pointery-overlay, .pointery-palette, .pointery-toast, .pointery-guide, .pointery-confirm, .pointery-fab,
+.pointery-closed-pill, .pointery-closed-tab, .pointery-closed-helper, .pointery-closed-ghost {
+  font-family: var(--pointery-font);
+  color: var(--color-text-primary);
+}
+/* closed-state launchers (all driven by `closed` in pointery.config.json) */
+.pointery-closed-img { width: 1.25em; height: 1.25em; border-radius: 0.3em; object-fit: contain; }
+.pointery-closed-kbd { border: 1px solid var(--color-border); border-radius: 6px; padding: 0.1rem 0.4rem; font-size: 0.65rem; color: inherit; font-family: inherit; background: rgb(127 127 127 / 0.12); }
+.pointery-closed-pill { position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: var(--pointery-z); display: flex; align-items: center; gap: 0.5rem; border-radius: 999px; background: var(--color-surface-inverse); color: var(--color-text-inverse); border: none; padding: 0.65rem 1rem; font-size: 0.9rem; font-weight: 600; box-shadow: var(--shadow-md); cursor: pointer; }
+.pointery-closed-pill:hover { filter: brightness(1.15); }
+.pointery-closed-tab { position: fixed; right: 0; top: 45%; z-index: var(--pointery-z); writing-mode: vertical-rl; letter-spacing: 0.15em; display: flex; align-items: center; gap: 0.5rem; background: var(--color-surface-inverse); color: var(--color-text-inverse); border: none; border-radius: 10px 0 0 10px; padding: 0.9rem 0.5rem; font-size: 0.75rem; font-weight: 700; box-shadow: var(--shadow-md); cursor: pointer; }
+.pointery-closed-helper { position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: var(--pointery-z); display: flex; align-items: center; gap: 0.6rem; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 999px; padding: 0.35rem 0.9rem 0.35rem 0.35rem; font-size: 0.85rem; font-weight: 600; box-shadow: var(--shadow-md); cursor: pointer; }
+.pointery-closed-avatar { position: relative; width: 1.9rem; height: 1.9rem; border-radius: 999px; background: var(--pointery-primary); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }
+.pointery-closed-dot { position: absolute; bottom: 0; right: 0; width: 0.55rem; height: 0.55rem; border-radius: 999px; background: var(--color-success); border: 2px solid var(--color-surface); }
+.pointery-closed-online { color: var(--color-success); font-weight: 400; font-size: 0.75rem; }
+.pointery-closed-ghost { position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: var(--pointery-z); font-size: 0.75rem; color: var(--color-text-secondary); border: 1px dashed var(--color-border-strong); border-radius: 999px; padding: 0.45rem 0.8rem; background: color-mix(in srgb, var(--color-surface) 75%, transparent); cursor: pointer; }
 
 /* pulse target */
 @keyframes pointery-ping {
@@ -20,25 +114,78 @@
   z-index: 5;
 }
 
-/* palette */
-.pointery-overlay { position: fixed; inset: 0; z-index: 60; display: flex; justify-content: center; background: rgb(0 0 0 / 0.25); backdrop-filter: blur(2px); padding: 0 1rem; }
-.pointery-palette { width: min(560px, 100%); height: fit-content; background: #fff; border-radius: var(--pointery-radius); box-shadow: 0 24px 64px rgb(0 0 0 / 0.25); padding: 0.75rem; margin-top: 0; }
-.pointery-palette input { width: 100%; border: 1px solid #e4e4e7; border-radius: calc(var(--pointery-radius) - 4px); padding: 0.8rem 1rem; font-size: 0.95rem; outline: none; }
-.pointery-palette input:focus { border-color: var(--pointery-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--pointery-primary) 18%, transparent); }
-.pointery-suggest { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.7rem 0.2rem 0.3rem; }
-.pointery-suggest button { border: 1px solid #e4e4e7; border-radius: 999px; padding: 0.35rem 0.8rem; font-size: 0.8rem; background: #fafafa; }
-.pointery-suggest button:hover { border-color: var(--pointery-primary); color: var(--pointery-primary); }
-.pointery-result { border-top: 1px solid #f4f4f5; margin-top: 0.6rem; padding: 0.7rem 0.2rem 0.2rem; font-size: 0.9rem; }
-.pointery-meta { padding: 0.5rem 0.2rem 0; font-size: 0.72rem; color: #a1a1aa; }
+/* palette - floats with a viewport gap, never flush to the app edge */
+.pointery-overlay { position: fixed; inset: 0; z-index: var(--pointery-z); display: flex; justify-content: center; background: rgb(11 5 0 / 0.25); backdrop-filter: blur(var(--pointery-overlay-blur)); padding: 0 1rem; }
+.pointery-pos-top { align-items: flex-start; padding-top: min(12vh, 6rem); }
+.pointery-pos-center { align-items: center; padding-bottom: 5vh; }
+.pointery-pos-bottom { align-items: flex-end; padding-bottom: min(12vh, 6rem); }
+.pointery-palette { width: min(var(--pointery-width), 100%); height: fit-content; background: var(--color-surface); border-radius: var(--pointery-radius); box-shadow: var(--shadow-lg); padding: 0.75rem; margin-top: 0; }
+.pointery-palette input { width: 100%; border: 1px solid var(--color-border); border-radius: calc(var(--pointery-radius) - 4px); padding: 0.8rem 1rem; font-size: 0.95rem; outline: none; font-family: inherit; }
+.pointery-palette input:focus { border-color: var(--color-border-focus); box-shadow: 0 0 0 3px color-mix(in srgb, var(--pointery-primary) 18%, transparent); }
+.pointery-list { list-style: none; margin: 0.6rem 0 0; padding: 0; max-height: 320px; overflow: auto; }
+.pointery-row { display: flex; width: 100%; align-items: center; gap: 0.6rem; padding: 0.6rem; font-size: 0.88rem; text-align: left; background: none; border: none; cursor: pointer; color: var(--color-text-primary); font-family: inherit; }
+.pointery-row:hover, .pointery-row[data-active="true"] { background: var(--color-background-secondary); }
+.pointery-row-dot { flex: none; width: 6px; height: 6px; border-radius: 999px; background: var(--pointery-primary); }
+.pointery-row-text { flex: 1; min-width: 0; }
+.pointery-row-sub { display: block; font-size: 0.75rem; color: var(--color-text-tertiary); }
+.pointery-row kbd { flex: none; border: 1px solid var(--color-border); border-radius: 6px; padding: 0.1rem 0.4rem; font-size: 0.65rem; color: var(--color-text-tertiary); font-family: inherit; }
+.pointery-meta { padding: 0.5rem 0.2rem 0; font-size: 0.72rem; color: var(--color-text-tertiary); }
+
+/* palette entrance - picked via `animation` in pointery.config.json ("fade" | "slide" | "scale" | "none") */
+.pointery-pos-top { --pointery-slide-from: translateY(-14px); }
+.pointery-pos-bottom { --pointery-slide-from: translateY(14px); }
+.pointery-pos-center { --pointery-slide-from: translateY(8px) scale(0.98); }
+@keyframes pointery-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pointery-slide { from { opacity: 0; transform: var(--pointery-slide-from, translateY(-12px)); } to { opacity: 1; transform: none; } }
+@keyframes pointery-scale { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: none; } }
+.pointery-anim-fade { animation: pointery-fade 180ms ease-out both; }
+.pointery-anim-slide { animation: pointery-slide 220ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+.pointery-anim-scale { animation: pointery-scale 200ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+/* exit: reverse of entrance, played before unmount */
+@keyframes pointery-fade-out { to { opacity: 0; } }
+@keyframes pointery-slide-out { to { opacity: 0; transform: var(--pointery-slide-from, translateY(-12px)); } }
+@keyframes pointery-scale-out { to { opacity: 0; transform: scale(0.96); } }
+.pointery-anim-fade.pointery-leaving { animation: pointery-fade-out 150ms ease-in both; }
+.pointery-anim-slide.pointery-leaving { animation: pointery-slide-out 160ms ease-in both; }
+.pointery-anim-scale.pointery-leaving { animation: pointery-scale-out 150ms ease-in both; }
+.pointery-overlay.pointery-leaving { animation: pointery-fade-out 160ms ease-in both; }
+
+/* content-state transitions - the keyed .pointery-view remounts on every
+   suggest/loading/result swap, replaying the enter animation. Chips cascade. */
+@keyframes pointery-view-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.pointery-anim-fade .pointery-view { animation: pointery-fade 160ms ease-out both; }
+.pointery-anim-slide .pointery-view, .pointery-anim-scale .pointery-view { animation: pointery-view-in 180ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+.pointery-anim-fade .pointery-list li { animation: pointery-fade 160ms ease-out both; }
+.pointery-anim-slide .pointery-list li, .pointery-anim-scale .pointery-list li { animation: pointery-view-in 180ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+.pointery-palette[class*="pointery-anim-"] .pointery-list li:nth-child(2) { animation-delay: 35ms; }
+.pointery-palette[class*="pointery-anim-"] .pointery-list li:nth-child(3) { animation-delay: 70ms; }
+.pointery-palette[class*="pointery-anim-"] .pointery-list li:nth-child(4) { animation-delay: 105ms; }
+.pointery-palette[class*="pointery-anim-"] .pointery-list li:nth-child(n+5) { animation-delay: 140ms; }
+/* toast carries the same anim class - rise from its bottom anchor (fade needs no override) */
+@keyframes pointery-toast-in { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+.pointery-anim-slide.pointery-toast, .pointery-anim-scale.pointery-toast { animation: pointery-toast-in 200ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .pointery-anim-fade, .pointery-anim-slide, .pointery-anim-scale,
+  .pointery-overlay.pointery-leaving,
+  .pointery-view, .pointery-toast, .pointery-list li { animation-duration: 0ms; }
+}
 
 /* toast / guide / confirm / fab */
-.pointery-toast { position: fixed; bottom: 1.25rem; left: 50%; transform: translateX(-50%); z-index: 70; background: #18181b; color: #fff; border-radius: 999px; padding: 0.7rem 1.2rem; font-size: 0.85rem; box-shadow: 0 12px 32px rgb(0 0 0 / 0.3); max-width: min(520px, 90vw); text-align: center; }
-.pointery-guide, .pointery-confirm { position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: 70; width: 300px; background: #fff; border-radius: var(--pointery-radius); box-shadow: 0 16px 48px rgb(0 0 0 / 0.22); padding: 1rem; font-size: 0.85rem; }
-.pointery-guide-title { font-weight: 700; } .pointery-guide-title span { color: #a1a1aa; font-weight: 400; }
-.pointery-guide-step { margin: 0.4rem 0 0.7rem; color: #52525b; }
-.pointery-guide-row { display: flex; gap: 0.5rem; }
-.pointery-guide-row button { border: 1px solid #e4e4e7; border-radius: 999px; padding: 0.4rem 0.9rem; font-size: 0.8rem; font-weight: 600; }
+.pointery-toast { position: fixed; bottom: 1.25rem; left: 50%; transform: translateX(-50%); z-index: calc(var(--pointery-z) + 10); background: var(--color-surface-inverse); color: var(--color-text-inverse); border-radius: 999px; padding: 0.7rem 1.2rem; font-size: 0.85rem; box-shadow: var(--shadow-lg); max-width: min(520px, 90vw); text-align: center; }
+.pointery-guide, .pointery-confirm { position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: calc(var(--pointery-z) + 10); width: 300px; max-width: calc(100vw - 2.5rem); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--pointery-radius); box-shadow: var(--shadow-lg); padding: 1rem; font-size: 0.85rem; }
+.pointery-guide { position: fixed; width: 260px; padding: 0.75rem 3rem 0.75rem 1rem; }
+.pointery-guide-close { position: absolute; top: 0.8rem; right: 0.8rem; width: 1.75rem; height: 1.75rem; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); color: var(--color-text-secondary); font-size: 0.8rem; font-weight: 600; cursor: pointer; padding: 0; }
+.pointery-guide-close:hover { background: var(--color-background-secondary); color: var(--color-text-primary); }
+.pointery-guide-title { font-weight: 700; font-size: 0.95rem; } .pointery-guide-title span { color: var(--color-text-tertiary); font-weight: 400; }
+.pointery-guide-step { margin: 0.3rem 0 0.55rem; color: var(--color-text-secondary); }
+.pointery-guide-row { display: flex; gap: 0.5rem; justify-content: flex-end; }
+/* Guide action row sits in the card's right corner: starts 53px in, ends 12px from the edge.
+   Scoped to .pointery-guide - the confirm dialog keeps its normal row so buttons never leave the box. */
+.pointery-guide .pointery-guide-row { margin-left: 36px; margin-right: -36px; }
+.pointery-confirm .pointery-guide-row { margin-top: 0.7rem; }
+.pointery-guide-row button { border: 1px solid var(--color-border); border-radius: 999px; padding: 0.4rem 0.9rem; font-size: 0.8rem; font-weight: 600; background: var(--color-surface); color: var(--color-text-primary); cursor: pointer; }
 .pointery-guide-row button:disabled { opacity: 0.4; }
-.pointery-guide-row button.primary, .pointery-confirm button.primary { background: var(--pointery-primary); border-color: transparent; color: #fff; }
-.pointery-fab { position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: 60; width: 2.75rem; height: 2.75rem; border-radius: 999px; background: var(--pointery-primary); color: #fff; font-size: 1.2rem; font-weight: 700; box-shadow: 0 12px 28px rgb(0 0 0 / 0.3); }
+.pointery-guide-row button.primary, .pointery-confirm button.primary { background: var(--color-action-primary); border-color: transparent; color: var(--color-text-inverse); }
+.pointery-guide-row button.primary:hover, .pointery-confirm button.primary:hover { background: var(--color-action-primary-hover); }
+.pointery-fab { position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: var(--pointery-z); width: 2.75rem; height: 2.75rem; border-radius: 999px; background: var(--pointery-accent, var(--pointery-primary)); color: #fff; font-size: 1.2rem; font-weight: 700; box-shadow: var(--shadow-md); border: none; cursor: pointer; }
 .pointery-fab:hover { filter: brightness(1.1); }

@@ -27,7 +27,9 @@ jobs:
       - name: Install
         run: npm ci
 
-      # Lint runs before the builds: ESLint reports errors from the built dist/.
+      - name: Pointery map check
+        run: node packages/pointery/bin/pointery.js init --check
+
       - name: Lint
         run: npm run lint
 

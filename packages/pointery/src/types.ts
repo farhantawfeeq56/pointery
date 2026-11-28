@@ -1,51 +1,229 @@
 export type PointerySpot = { key: string; page: string; hint: string };
 export type PointeryGuideStep = { text: string; go: string; spot: string };
 export type PointeryGuide = { id: string; title: string; steps: PointeryGuideStep[] };
-export type PointeryAction = { name: string; label?: string; confirm?: boolean };
 
-export type PointeryContext = {
-  targets: { key: string; page: string; hint: string; keywords: string[] }[];
-  guides: { id: string; title: string; keywords: string[]; steps: { text: string; go: string; spot: string }[] }[];
-  actions: { name: string; label?: string; confirm?: boolean; keywords: string[] }[];
-  answers?: { keywords: string[]; answer: string; spot?: string; go?: string; hint?: string }[];
+/** Ad-hoc multi-intent walkthrough - templated steps, same UI as a guide. Max 4 steps. */
+export type PointeryPlanStep = { text: string; go: string; spot: string; filter?: string };
+export type PointeryPlan = { title: string; steps: PointeryPlanStep[] };
+
+/** One UI anchor: identity + purpose + place. No sentences, no live values. */
+export type PointeryEntry = {
+  id: string;
+  page: string;
+  label: string;
+  /** Stable purpose, one clause ("Downloads the pipeline as CSV") - never an instruction. */
+  for?: string;
+  type?: "nav" | "button" | "table" | "card" | "field" | "section" | string;
+  /** Non-obvious synonyms only ("csv"); matching derives from label + for. */
+  aliases?: string[];
+  /** Container whose rows are found by text at runtime (never per-record ids). */
+  rows?: boolean;
 };
 
-export type PointeryResult = {
+/** Ordered anchor ids - the model (or the "Go to {label}" template) writes the wording. */
+export type PointeryFlow = {
+  id: string;
+  title: string;
+  steps: string[];
+  /** Non-obvious synonyms / verb forms ("closing"); matching derives from title + id. */
+  aliases?: string[];
+};
+
+export type PointeryAction = {
+  name: string;
+  label?: string;
+  confirm?: boolean;
+  /** Entry id the action runs against. */
+  at?: string;
+  aliases?: string[];
+};
+
+/** Curated fast-path: exact-phrase wins that skip generic scoring and the LLM.
+ *  Strict match only (no word-overlap fallback) - nothing else is pinned. */
+export type PointeryPin = {
+  /** Canonical phrase, e.g. "where is export" - normalized before compare. */
+  match: string;
+  aliases?: string[];
   spot?: string;
   go?: string;
   action?: string;
-  /** Echoed from the matched action's `confirm` flag — UI confirms only when true. */
-  confirm?: boolean;
-  answer?: string;
-  guide?: PointeryGuide;
+  /** Flow id - steps are rebuilt from the flow, never stored here. */
+  guide?: string;
   hint?: string;
 };
 
-export type PointeryTheme = { primary?: string; radius?: number };
+export type PointeryContext = {
+  version?: number;
+  entries: PointeryEntry[];
+  flows: PointeryFlow[];
+  actions: PointeryAction[];
+  pins?: PointeryPin[];
+};
+
+/** Top-ranked slice of the map sent to the LLM - never the whole file. */
+export type PointeryCandidates = Pick<PointeryContext, "entries" | "flows" | "actions">;
+
+export type PointeryResult = {
+  /** Stable support code (e.g. LLM_NOT_CONFIGURED) - the human sentence rides in `answer`. */
+  error?: string;
+  spot?: string;
+  go?: string;
+  action?: string;
+  /** Human label of the action from the map (falls back to the action name) - shown in the confirm dialog and Done toast. */
+  actionLabel?: string;
+  /** Anchor the action runs against, e.g. `Pipeline table` - the row `filter` (if any) is named inside the action sentence. */
+  actionTarget?: string;
+  /** Row search text - kept only alongside a `spot` whose entry has `rows: true`. */
+  filter?: string;
+  /** Echoed from the matched action's `confirm` flag - UI confirms only when true. */
+  confirm?: boolean;
+  answer?: string;
+  guide?: PointeryGuide;
+  plan?: PointeryPlan;
+  hint?: string;
+};
+
+export type PointeryTheme = { primary?: string; radius?: number; accent?: string; background?: string; text?: string; border?: string; /** CSS font-family stack for the palette/toast/guide, e.g. "Inter, system-ui, sans-serif". Defaults to bundled Figtree. */ fontFamily?: string };
+
+export type PointeryTiming = {
+  /** Toast auto-dismiss. Defaults to 4200. */
+  toastMs?: number;
+  /** Pulse highlight duration. Defaults to 2600. */
+  pulseMs?: number;
+  /** Palette exit animation. Defaults to 160. */
+  closeMs?: number;
+  /** Input autofocus delay. Defaults to 30. */
+  focusMs?: number;
+  /** Pulse delay after navigation vs in place. Defaults to 450 / 50. */
+  navigateMs?: number;
+  navigateIdleMs?: number;
+  /** Ask fetch timeout. Defaults to 30000. */
+  askMs?: number;
+};
+/** Closed-state launcher shape. Look-alikes merged: fab covers ?/✦ circles,
+ *  pill covers ask/command buttons - glyph and wording are `icon`/`label`, not variants. */
+export type PointeryClosedVariant = "fab" | "pill" | "tab" | "helper" | "ghost";
+
+export type PointeryClosed = {
+  /** Launcher shape. Defaults to "fab". */
+  variant?: PointeryClosedVariant;
+  /** Glyph, emoji, or image: URLs (`/logo.png`, `https://…`, `data:…`) render as an <img>,
+   *  anything else renders as text. Defaults to "?". */
+  icon?: string;
+  /** Pill/helper/tab wording. Defaults to "Ask". */
+  label?: string;
+  /** Kbd hint (pill/ghost). Defaults to a pretty print of `trigger`. */
+  hint?: string;
+  /** Show the kbd chip on pill/tab. Defaults to true. */
+  showHint?: boolean;
+};
+
 export type PointeryPosition = "top" | "center" | "bottom";
-export type PointeryLabels = { placeholder?: string; empty?: string; confirmTitle?: string };
+/** Palette entrance. `slide` drifts in from the palette edge (down on top, up on bottom). */
+export type PointeryAnimation = "fade" | "slide" | "scale" | "none";
+export type PointeryLabels = {
+  placeholder?: string;
+  empty?: string;
+  confirmTitle?: string;
+  /** "Asking…" busy toast. */
+  asking?: string;
+  /** Supports {action}. */
+  blocked?: string;
+  /** Supports {action}. */
+  done?: string;
+  /** Supports {endpoint}. */
+  unreachable?: string;
+  /** Anchor missing from the DOM. */
+  missing?: string;
+  /** Ask timed out (over timing.askMs). */
+  timeout?: string;
+  /** Endpoint reply wasn't JSON. */
+  badResponse?: string;
+  /** Blank submit - guidance, not an error. */
+  emptyQuery?: string;
+  /** @deprecated Unused - free text always submits. Kept so existing configs still validate. */
+  pressEnter?: string;
+  guideComplete?: string;
+  /** Supports {title}. */
+  ambiguous?: string;
+  /** Supports {action}. */
+  confirmBody?: string;
+  back?: string;
+  next?: string;
+  doneBtn?: string;
+  cancel?: string;
+  confirmBtn?: string;
+  fabLabel?: string;
+};
 
 export type PointeryProps = {
-  trigger?: string; // e.g. "shift+a" (default), plus cmd+k always on
+  trigger?: string; // any "+"-joined combo, e.g. "shift+a" (default) or "ctrl+shift+p" - ctrl/cmd treated the same, plus cmd/ctrl+k always on
   theme?: PointeryTheme;
+  /** Extra `--pointery-*` overrides (keys may include the prefix or not). */
+  cssVars?: Record<string, string>;
+  /** Overlay z-index. Defaults to 60 (toast/guide sit +10). */
+  zIndex?: number;
+  /** Palette width px. Defaults to 560. */
+  paletteWidth?: number;
+  /** Overlay blur px. Defaults to 2. */
+  overlayBlur?: number;
+  /** Closed-state launcher: which shape, whose icon/label/hint. All configurable.
+   *  `fab` circle (default) · `pill` labeled button + kbd · `tab` edge tab ·
+   *  `helper` avatar row · `ghost` kbd hint only. */
+  closed?: PointeryClosed;
+  /** Legacy: `false` hides the idle button, string sets its glyph. `closed` wins when set. */
+  fab?: boolean | string;
+  /** Routes where the palette never mounts (mount checks this). Defaults to ["/"]. */
+  hiddenRoutes?: string[];
+  timing?: PointeryTiming;
   position?: PointeryPosition;
+  /** Palette entrance animation. Defaults to "slide". */
+  animation?: PointeryAnimation;
   suggestions?: string[];
   allowActions?: string[];
   labels?: PointeryLabels;
   /** POST endpoint for queries. Defaults to "/api/ask". */
   endpoint?: string;
+  /** Per-page overrides: exact path wins, `"/demo/*"` matches any route under it.
+   *  Merged over the base props on the current route (theme/labels/timing/closed
+   *  merge key-by-key, everything else replaces). */
+  routes?: Record<string, PointeryRouteOverride>;
+  /** Current route for `routes` matching. Defaults to `window.location.pathname`. */
+  route?: string;
   /** Override default action behavior (dispatches `pointery:action` + toast otherwise). */
   onAction?: (name: string) => void | Promise<void>;
 };
 
-/** Customer's own LLM endpoint. Pointery forwards { query, context } — key and cost are theirs. */
+/** Per-page override: every UI prop except the global/router ones. */
+export type PointeryRouteOverride = Pick<
+  PointeryProps,
+  | "trigger" | "theme" | "cssVars" | "zIndex" | "paletteWidth" | "overlayBlur"
+  | "closed" | "fab" | "timing" | "position" | "animation"
+  | "suggestions" | "allowActions" | "labels" | "endpoint"
+>;
+
+/** Customer's own LLM endpoint. Required at runtime - the handler 503s without it. OpenAI-compatible is the default wire (`{ model, messages }`); native Anthropic Messages / Gemini `generateContent` URLs are auto-detected from the host - same shape, no extra config. `model` passes through verbatim: copy the exact id from the provider dashboard (`gpt-4o-mini`, `claude-3-5-haiku-latest`, `gemini-2-flash`, `anthropic/claude-3-5-haiku` via OpenRouter, …). Key and cost are theirs. */
 export type PointeryLLMAdapter = {
   url: string;
   key?: string;
+  /** Exact model id as the provider spells it. Defaults to `gpt-4o-mini` on api.openai.com, otherwise required. */
+  model?: string;
+  /** Sampling temperature. Defaults to 0. */
+  temperature?: number;
+  /** Max response tokens. Defaults to 300. */
+  maxTokens?: number;
 };
 
 export type AskHandlerOptions = {
   llm?: PointeryLLMAdapter;
+  /** When set, other actions are dropped server-side, keeping spot/go/guide. UI defaults to [] (blocked). */
+  allowActions?: string[];
+  /** Cap the candidates slice forwarded to the LLM (defaults 8/3/3). */
+  retrieve?: { entries?: number; flows?: number; actions?: number };
+  /** Query/plan caps (defaults 200 chars / 4 steps). */
+  limits?: { queryMax?: number; planMax?: number };
+  /** LLM-response cache (defaults 5 min / 200 entries; ttlMs 0 disables). */
+  cache?: { ttlMs?: number; max?: number };
   /** Return a result to short-circuit (e.g. block demo routes in prod), or null to continue. */
   guard?: (query: string, local: PointeryResult) => PointeryResult | null;
 };

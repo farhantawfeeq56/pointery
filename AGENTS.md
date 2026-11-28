@@ -2,9 +2,9 @@
 
 ## This is NOT the Next.js you know
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+This version has breaking changes - APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
 
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+This block is written and re-added by `next dev` - verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
 
@@ -65,28 +65,27 @@ Two developers. GitHub Issues is the only to-do list. WhatsApp is for talking, G
 | --- | --- |
 | `packages/pointery/` | The product: the `pointery` npm package (public, MIT), built with `tsc` to `dist/` |
 | `packages/pointery/bin/pointery.js` | The `npx pointery init` CLI, with the starter files embedded as strings |
-| `app/` | The harness app (`pointery-harness`, private): landing page, demo CRM, `/api/ask`, `/api/admin/*`, `/admin/ask`, `/pointery` |
+| `app/` | The harness app (`pointery-harness`, private): landing page, demo CRM, `/api/ask`, `/api/admin/*`, `/pointery` (harness-only status, dev-only, never shipped) |
 | `lib/demo.ts` | Turns the demo CRM off in production unless `POINTERY_DEMO=1` |
 | `pointery.context.json`, `pointery.config.json` | The harness app's map and settings |
 | `context.md` | Pass-by-pass build log. Read it for recent decisions |
 
 Rules for that code:
 
+- **Package-first: buyer-facing changes go in `packages/pointery`, never only in the harness.** `app/` is the demo - nothing there ships to buyers. Any behavior, copy, or wiring pattern a buyer should get belongs in the package (`src/`, `bin/`, or the embedded starters), with the harness updated to match - not the other way round. `app/`-only changes are for demo-specific needs (e.g. hiding our own landing-page palette) and must be called out as such.
 - The harness uses the workspace copy of `pointery`, not the registry one.
 - Subpath imports (`pointery/server`, `pointery/resolver`, `pointery/validate`) work without Next. The root import needs it.
 - Keep relative imports in the package `.js`-suffixed, so Node ESM resolves them.
-- `app/pointery/page.tsx` is the source of the settings page that `init` ships. After editing it, run `npm run pointery:sync-page`.
 - `POINTERY_PROMPT.md` is also embedded in the CLI as `STARTER_PROMPT`. There is no sync script for it, so change both.
 - `npx pointery init --check` runs `init` first, so it writes any missing starter files before checking.
 - The LLM is set with `POINTERY_LLM_URL` and `POINTERY_LLM_KEY` in `.env.local`. Without a URL, the bundled keyword resolver answers.
-- Any route that writes to disk, including ones `init` scaffolds into a user's app, must require authentication or be disabled in production. The admin `PUT` routes return 403 in production unless `POINTERY_ADMIN=1`, and have no login of their own.
+- Any route that writes to disk, including ones `init` scaffolds into a user's app, must require authentication or be disabled in production. The admin `PUT` routes refuse in production unconditionally (dev-only, no env-flag bypass) and have no login of their own.
 
 Known gaps between `README.md` and the code. Ask before resolving one:
 
 - The README describes a private, paid `pointery-kit`. The code is the public, MIT-licensed `pointery`.
 - The README keeps `POINTERY_PROMPT.md` out of npm. The CLI embeds it.
 - The README describes `<PointeryStudio/>` and OpenAI, Anthropic and Gemini adapters. Neither exists in the package.
-- The context file also has an `answers` array that the README doesn't list.
 
 ## Releasing to npm
 
@@ -97,7 +96,7 @@ Known gaps between `README.md` and the code. Ask before resolving one:
 - The bump is patch by default. Label the PR `release:minor`, `release:major` or `release:skip` before merging to change that.
 - While the version is below 1.0, use `release:minor` for changes to the public API or to what `init` writes.
 - Don't edit the package version by hand, and don't run `npm publish` locally.
-- Only a change under `packages/pointery` triggers a release. A change to the root `POINTERY_PROMPT.md` or `app/pointery/page.tsx` ships only once it is copied into the CLI.
+- Only a change under `packages/pointery` triggers a release. A change to the root `POINTERY_PROMPT.md` ships only once it is copied into the CLI (`STARTER_PROMPT`). The harness `/pointery` page never ships.
 - Authentication is npm trusted publishing (OIDC). There is no `NPM_TOKEN`; don't add one.
 - The trusted publisher on npmjs.com is tied to this repository and the filename `publish.yml`, with direct `npm publish` allowed. Renaming either breaks publishing. A new connection expires if it doesn't publish successfully within 2 days; delete it and create it again.
 - Keep `repository.url` in the package pointing at this GitHub repository.
@@ -120,13 +119,13 @@ Shape of `pointery.context.json`:
 
 ```
 {
-  targets: [{ key, page, hint, keywords }],
-  guides:  [{ title, steps: [{ text, go, spot }] }],
-  actions: [{ name, confirm }]
+  entries: [{ id, page, label, for }],
+  flows:   [{ title, steps: [entryId] }],
+  actions: [{ name, confirm, at }]
 }
 ```
 
-**Customization** is props only: `<Pointery trigger="shift+a" theme={{ primary, radius }} position suggestions allowActions labels />`, plus `--pointery-*` CSS variables for white-labelling. `<PointeryStudio/>` is the options UI (color pickers, shortcut recorder, toggles), mounted at `/admin/ask`, and writes `pointery.config.json` locally. The docs site has the same thing as a static playground.
+**Customization** is props only: `<Pointery trigger="shift+a" theme={{ primary, radius }} position suggestions allowActions labels />`, plus `--pointery-*` CSS variables for white-labelling. `<PointeryStudio/>` is the options UI (shortcut, brand, behavior, status, context table, snippet), mounted at `/pointery`, and writes `pointery.config.json` locally. The docs site has the same thing as a static playground.
 
 **Delivery:** private npm, repo or zip. `npm install` brings the UI, adapters and CLI; `npx pointery init` drops a starter context file and a pointer to the prompt. The developer's wiring should stay around 10 lines.
 
@@ -164,10 +163,9 @@ For the package:
 
 ```bash
 npm run kit:build           # build the package to packages/pointery/dist
-npm run pointery:sync-page  # copy the settings page into the CLI
 ```
 
-`npm run lint` reports errors from `packages/pointery/dist` once it has been built. Remove that folder before linting. Build the package before `npm run build`.
+`packages/pointery/dist` is gitignored build output and is excluded from ESLint. `npm run build` rebuilds the package automatically, so never delete `dist` to fix the build.
 
 Run `next typegen` before a bare `tsc`: global route types such as `LayoutProps<"/">` are generated, so `tsc` alone fails on a fresh clone.
 
@@ -179,3 +177,34 @@ There is no test framework yet. Before calling a change done, run `npm run lint`
 - `cacheComponents` also keeps recently visited routes mounted but hidden (React `<Activity>`), so component state survives navigation and effects are cleaned up and re-run. This matters for Pointery: after navigating, an element matching a `data-pointery` id may exist in a hidden route, and palette or guide state may persist. Target visible elements only.
 - `partialPrefetching: true`: links prefetch a reusable app shell per route. It requires `cacheComponents`.
 - Tailwind runs through the `@tailwindcss/turbopack` loader in `next.config.ts`. There is no PostCSS config or `tailwind.config.*`; theme tokens live in `app/globals.css` under `@theme`.
+
+<!-- pointery:start --> - do not remove; `npx pointery init --force` refreshes this block.
+## Pointery - keep pointery.context.json in sync
+- `pointery.context.json` is the index of stable UI anchors for in-app ask-anything (`/api/ask` sends the top-ranked slice as system context in an OpenAI-compatible `{ model, messages }` call to our own model). Keep it small and current: max ~40 entries, ~10 flows, allowlisted actions only.
+- Whenever you add, move, rename, or remove a user-facing control or route: update its `data-pointery="kebab-id"` in code AND its entry in `pointery.context.json` (label + purpose; `confirm: true` for destructive actions). Keep ids stable; never invent selectors - only ids present in the rendered DOM.
+- After any UI change, run `npx pointery init --check` (two-way: fails on code anchors missing from the map AND map entries missing from rendered code, plus stale steps) and fix what it reports.
+- `node_modules/pointery/schema.json` is truth for `pointery.config.json` (position: top|center|bottom, animation: fade|slide|scale|none). After any config edit, run `npx pointery config --validate`.
+- When you add a new page where Pointery mounts: give it a `routes` entry in `pointery.config.json` so the palette follows the app's brand (primary/radius from theme tokens) and stays visible (position/animation that doesn't cover the page's key UI). Only tune per-page settings for pages you are adding - never restyle existing pages unprompted. Explicit user instructions always win over these defaults.
+- When the user asks to change how Pointery looks or behaves (shortcut, colors, position, launcher, suggestions, wording, timing): remind them it is all configurable in `pointery.config.json` - trigger, theme, closed launcher, position, animation, suggestions, allowActions, labels, timing, zIndex/width/blur, endpoint, plus per-page `routes` overrides (`node_modules/pointery/schema.json` lists everything). Apply the change to the config - never hardcode it.
+<!-- pointery:end -->
+
+<!-- BEGIN:nextjs-agent-feedback -->
+
+## Report Next.js feedback
+
+The project owner enabled `experimental.agentFeedback`, authorizing this feedback pass. When enabled, `next dev` writes this block and restores it if removed. Commit `AGENTS.md` with your work to keep the tree clean.
+
+During the current user request, retain anonymized facts as feedback candidates for meaningful or recurring Next.js issues:
+
+- Crashes, hangs, OOMs, or unexpected slowness
+- Incorrect behavior, output, errors, or diagnostics
+- Missing, unclear, or conflicting documentation
+- Unexpected CLI, codemod, Skill, or upgrade behavior and non-obvious workarounds
+
+Continue the current user request without reporting immediately. Routine debugging is not feedback. Verify changes before retaining them as feedback candidates. Never retain code, logs, paths, URLs, secrets, personal information, or project-specific data.
+
+Retain qualifying friction even if it is later fixed or worked around; record the final outcome during the reporting pass.
+
+Before the final response, run one reporting pass. If candidates remain, from this file's directory run `npx --no-install next internal agent-feedback-instructions` once without piping or truncating its output. Follow its output or error guidance. If a network sandbox blocks it, retry with network access; if it still returns no output, continue normally.
+
+<!-- END:nextjs-agent-feedback -->

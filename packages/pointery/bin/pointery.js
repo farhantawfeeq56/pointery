@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// `npx pointery init` — drop starter files into the consumer's app.
+// `npx pointery init` - drop starter files into the consumer's app.
 // Zero dependencies. Never overwrites without --force.
 import fs from "fs";
 import path from "path";
@@ -11,357 +11,101 @@ const check = args.includes("--check");
 const cwd = process.cwd();
 
 const STARTER_CONTEXT = {
-  version: 1,
-  targets: [
-    {
-      key: "export-button",
-      page: "/dashboard",
-      hint: "Export — downloads the report as CSV",
-      keywords: ["export", "csv", "download", "where is export"],
-    },
-    {
-      key: "pointery-settings-shortcut",
-      page: "/pointery",
-      hint: "Shortcut — keyboard trigger for the palette",
-      keywords: ["shortcut", "keyboard", "hotkey", "trigger", "shift a", "cmd k"],
-    },
-    {
-      key: "pointery-settings-brand",
-      page: "/pointery",
-      hint: "Brand — primary color and corner radius",
-      keywords: ["brand", "color", "theme", "radius", "primary", "appearance"],
-    },
-    {
-      key: "pointery-settings-behavior",
-      page: "/pointery",
-      hint: "Behavior — position, suggestions, actions",
-      keywords: ["behavior", "position", "suggestions", "actions", "settings"],
-    },
-    {
-      key: "pointery-settings-save",
-      page: "/pointery",
-      hint: "Save — writes pointery.config.json to disk",
-      keywords: ["save", "save settings", "persist", "write config"],
-    },
+  version: 2,
+  entries: [
+    { id: "export-button", page: "/dashboard", label: "Export", for: "Downloads the report as CSV", type: "button", aliases: ["csv"] },
   ],
-  guides: [
-    {
-      id: "export-report",
-      title: "Export your report",
-      keywords: ["export", "csv", "download", "report"],
-      steps: [
-        { text: "Open the Dashboard", go: "/dashboard", spot: "export-button" },
-        { text: "Click “Export” (top right)", go: "/dashboard", spot: "export-button" },
-      ],
-    },
+  flows: [
+    { id: "export-report", title: "Export your report", aliases: ["export"], steps: ["export-button"] },
   ],
-  answers: [],
+  // NOTE: keep in sync with POINTERY_PROMPT.md step 5 + AGENTS_BLOCK below (no sync script).
   actions: [
-    { name: "export-report", label: "Export report CSV", confirm: false, keywords: ["export", "download csv"] },
+    { name: "export-report", label: "Export report CSV", confirm: false, at: "export-button" },
   ],
 };
 
 const STARTER_CONFIG = {
+  "$schema": "./node_modules/pointery/schema.json",
   trigger: "shift+a",
-  theme: { primary: "#6d28d9", radius: 14 },
+  theme: { primary: "#00A878", radius: 14 },
   position: "top",
+  animation: "slide",
   suggestions: ["Where is export?"],
   allowActions: ["export-report"],
+  labels: {
+    placeholder: 'Ask "where is export?" or "how do I invite?"',
+    empty: "No match - try “export”. ",
+    confirmTitle: "Run this action?",
+  },
+  endpoint: "/api/ask",
+  closed: { variant: "fab", icon: "?", label: "Ask" },
+  hiddenRoutes: ["/"],
+  // Per-page overrides: exact path wins, "/demo/*" matches anything under it.
+  // e.g. "/demo/pipeline": { position: "bottom", suggestions: ["Show me the pipeline table"] }
+  routes: {},
+  timing: { toastMs: 4200, pulseMs: 2600, closeMs: 160, focusMs: 30, navigateMs: 450, navigateIdleMs: 50 },
+  zIndex: 60,
+  paletteWidth: 560,
+  overlayBlur: 2,
+  brain: {
+    retrieve: { entries: 8, flows: 3, actions: 3 },
+    limits: { queryMax: 200, planMax: 4 },
+    cache: { ttlMs: 300000, max: 200 },
+    llm: { temperature: 0, maxTokens: 300 },
+  },
 };
 
-// Minimal GET+PUT for pointery.config.json (disk is truth). The /pointery
-// settings page reads via GET and auto-saves via PUT.
-const STARTER_ADMIN_CONFIG_ROUTE = `import { promises as fs } from "fs";
-import path from "path";
+// schema.json is truth: editors get autocomplete via the "$schema" key above,
+// agents read node_modules/pointery/schema.json for every key + allowed values
+// (position: top|center|bottom, animation: fade|slide|scale|none). `config
+// --validate` enforces the same rules without dependencies.
+function validateConfigJson(c) {
+  const errs = [];
+  if (!c || typeof c !== "object" || Array.isArray(c)) return ["config must be a JSON object"];
+  const known = new Set(["$schema", "trigger", "theme", "cssVars", "zIndex", "paletteWidth", "overlayBlur", "closed", "fab", "hiddenRoutes", "timing", "position", "animation", "suggestions", "allowActions", "labels", "endpoint", "routes", "brain"]);
+  for (const k of Object.keys(c)) if (!known.has(k)) errs.push(`unknown key "${k}" - see schema.json`);
+  if (c.position !== undefined && !["top", "center", "bottom"].includes(c.position)) errs.push(`position must be one of top|center|bottom (got ${JSON.stringify(c.position)})`);
+  if (c.animation !== undefined && !["fade", "slide", "scale", "none"].includes(c.animation)) errs.push(`animation must be one of fade|slide|scale|none (got ${JSON.stringify(c.animation)})`);
+  if (c.closed !== undefined) {
+    const o = c.closed;
+    if (!o || typeof o !== "object" || Array.isArray(o)) errs.push("closed must be an object");
+    else {
+      for (const k of Object.keys(o)) if (!["variant", "icon", "label", "hint", "showHint"].includes(k)) errs.push(`closed: unknown key "${k}"`);
+      if (o.variant !== undefined && !["fab", "pill", "tab", "helper", "ghost"].includes(o.variant)) errs.push(`closed.variant must be one of fab|pill|tab|helper|ghost (got ${JSON.stringify(o.variant)})`);
+    }
+  }
+  for (const k of ["zIndex", "paletteWidth", "overlayBlur"]) {
+    if (c[k] !== undefined && typeof c[k] !== "number") errs.push(`${k} must be a number (got ${JSON.stringify(c[k])})`);
+  }
+  if (c.routes !== undefined) {
+    if (!c.routes || typeof c.routes !== "object" || Array.isArray(c.routes)) errs.push("routes must be an object keyed by path");
+    else for (const [rk, rv] of Object.entries(c.routes)) {
+      if (!rv || typeof rv !== "object" || Array.isArray(rv)) { errs.push(`routes["${rk}"] must be an object`); continue; }
+      if (rv.position !== undefined && !["top", "center", "bottom"].includes(rv.position)) errs.push(`routes["${rk}"].position must be one of top|center|bottom`);
+      if (rv.animation !== undefined && !["fade", "slide", "scale", "none"].includes(rv.animation)) errs.push(`routes["${rk}"].animation must be one of fade|slide|scale|none`);
+    }
+  }
+  return errs;
+}
 
-const FILE = path.join(process.cwd(), "pointery.config.json");
-
-export async function GET() {
+function readConfig(cwd) {
   try {
-    const raw = await fs.readFile(FILE, "utf8");
-    return Response.json({ config: JSON.parse(raw) });
+    return JSON.parse(fs.readFileSync(path.join(cwd, "pointery.config.json"), "utf8"));
   } catch (e) {
-    return Response.json({ error: \`Cannot read pointery.config.json: \${e}\` }, { status: 500 });
+    console.log(`cannot read pointery.config.json: ${e}`);
+    process.exit(1);
   }
 }
-
-export async function PUT(req: Request) {
-  // No login on this route by design (local disk-truth Studio): refuse writes
-  // in production unless explicitly enabled — otherwise anyone could overwrite the file.
-  if (process.env.NODE_ENV === "production" && process.env.POINTERY_ADMIN !== "1" && process.env.POINTERY_ADMIN !== "true") {
-    return Response.json({ error: "Refusing to write pointery.config.json in production. Set POINTERY_ADMIN=1 to enable." }, { status: 403 });
-  }
-  let config: unknown;
-  try {
-    const body = await req.json();
-    config = (body as { config?: unknown }).config ?? body;
-  } catch {
-    return Response.json({ error: "Invalid JSON body" }, { status: 400 });
-  }
-  if (!config || typeof config !== "object" || Array.isArray(config)) {
-    return Response.json({ error: "Config must be a JSON object" }, { status: 400 });
-  }
-  await fs.writeFile(FILE, JSON.stringify(config, null, 2) + "\\n", "utf8");
-  return Response.json({ ok: true });
-}
-`;
-
-// Starter SaaS settings page. Same contract as the harness /pointery page:
-// loads config via GET, auto-saves via PUT (debounced) + Save button,
-// applies theme vars live, dispatches pointery:config so the mounted
-// <Pointery/> (wrapper listens) updates without reload. Degrades gracefully
-// when /api/admin/context or /api/admin/llm are absent.
-const STARTER_SETTINGS_PAGE = `"use client";
-
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { PointeryContext } from "pointery";
-
-type Config = {
-  trigger: string;
-  theme: { primary: string; radius: number };
-  position: "top" | "center" | "bottom";
-  suggestions: string[];
-  allowActions: string[];
-  labels?: { placeholder?: string; empty?: string; confirmTitle?: string };
-};
-
-const DEFAULTS: Config = {
-  trigger: "shift+a",
-  theme: { primary: "#6d28d9", radius: 14 },
-  position: "top",
-  suggestions: [],
-  allowActions: [],
-};
-
-type SaveState = "idle" | "saving" | "saved" | "error";
-
-export default function PointerySettingsPage() {
-  const [cfg, setCfg] = useState<Config>(DEFAULTS);
-  const [loaded, setLoaded] = useState(false);
-  const [saveState, setSaveState] = useState<SaveState>("idle");
-  const [askOk, setAskOk] = useState<boolean | null>(null);
-  const [counts, setCounts] = useState<string | null>(null);
-  const [llm, setLlm] = useState<{ configured: boolean; host: string } | null>(null);
-  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const firstRun = useRef(true);
-
-  // Disk is truth: load pointery.config.json + context summary on mount.
-  useEffect(() => {
-    fetch("/api/admin/config")
-      .then((r) => r.json().catch(() => null))
-      .then((d) => {
-        if (d?.config) setCfg({ ...DEFAULTS, ...d.config, theme: { ...DEFAULTS.theme, ...d.config.theme } });
-        setLoaded(true);
-      })
-      .catch(() => setLoaded(true));
-    fetch("/api/admin/context")
-      .then((r) => r.json().catch(() => null))
-      .then((d) => {
-        const c = d?.context as PointeryContext | undefined;
-        if (c) setCounts(\`\${c.targets?.length ?? 0} targets · \${c.guides?.length ?? 0} guides · \${c.answers?.length ?? 0} answers · \${c.actions?.length ?? 0} actions\`);
-      })
-      .catch(() => {});
-    fetch("/api/ask", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ query: "where is export?" }),
-    })
-      .then((r) => r.json())
-      .then((d) => setAskOk(Boolean(d.spot || d.go || d.action || d.guide || d.answer)))
-      .catch(() => setAskOk(false));
-    fetch("/api/admin/llm")
-      .then((r) => r.json().catch(() => null))
-      .then((d) => d && setLlm(d))
-      .catch(() => {});
-  }, []);
-
-  // Live: apply theme vars + notify the mounted <Pointery/> instantly.
-  const broadcast = useCallback((next: Config) => {
-    document.documentElement.style.setProperty("--pointery-primary", next.theme.primary);
-    document.documentElement.style.setProperty("--pointery-radius", \`\${next.theme.radius}px\`);
-    window.dispatchEvent(new CustomEvent("pointery:config", { detail: next }));
-  }, []);
-
-  // Auto-save to disk (debounced) on every edit after initial load.
-  useEffect(() => {
-    if (!loaded || firstRun.current) {
-      if (loaded) firstRun.current = false;
-      return;
-    }
-    broadcast(cfg);
-    setSaveState("saving");
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(async () => {
-      try {
-        const r = await fetch("/api/admin/config", {
-          method: "PUT",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ config: cfg }),
-        });
-        setSaveState(r.ok ? "saved" : "error");
-      } catch {
-        setSaveState("error");
-      }
-    }, 700);
-    return () => {
-      if (saveTimer.current) clearTimeout(saveTimer.current);
-    };
-  }, [cfg, loaded, broadcast]);
-
-  const saveNow = useCallback(async () => {
-    setSaveState("saving");
-    try {
-      const r = await fetch("/api/admin/config", {
-        method: "PUT",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ config: cfg }),
-      });
-      setSaveState(r.ok ? "saved" : "error");
-    } catch {
-      setSaveState("error");
-    }
-  }, [cfg]);
-
-  if (!loaded) return <div className="mx-auto w-full max-w-4xl flex-1 px-6 py-10 text-sm text-zinc-500">Loading Pointery settings…</div>;
-
-  return (
-    <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-10">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-violet-700">Pointery · Settings</p>
-          <h1 className="text-2xl font-semibold tracking-tight">Make it yours</h1>
-          <p className="text-sm text-zinc-500">
-            Shortcuts, brand, behavior — auto-saves to <code className="font-mono">pointery.config.json</code> and updates the palette live.
-          </p>
-        </div>
-        <span
-          data-pointery="pointery-settings-save"
-          className={\`rounded-full px-3 py-1 text-xs font-medium \${saveState === "saved" ? "bg-green-100 text-green-800" : saveState === "saving" ? "bg-amber-100 text-amber-800" : saveState === "error" ? "bg-red-100 text-red-800" : "bg-zinc-100 text-zinc-500"}\`}
-        >
-          {saveState === "saved" ? "Saved ✓" : saveState === "saving" ? "Saving…" : saveState === "error" ? "Save failed" : "Auto-save on"}
-        </span>
-      </div>
-
-      <div className="flex flex-wrap gap-2 text-xs">
-        <span className={\`rounded-full px-3 py-1 font-medium \${askOk ? "bg-green-100 text-green-800" : "bg-zinc-100 text-zinc-500"}\`}>
-          /api/ask {askOk == null ? "…" : askOk ? "reachable ✓" : "unreachable"}
-        </span>
-        <span className={\`rounded-full px-3 py-1 font-medium \${llm?.configured ? "bg-green-100 text-green-800" : "bg-zinc-100 text-zinc-500"}\`}>
-          {llm == null ? "brain …" : llm.configured ? \`LLM → \${llm.host || "env"} ✓\` : "keyword resolver (no key)"}
-        </span>
-        {counts && <span className="rounded-full bg-violet-50 px-3 py-1 font-medium text-violet-900">{counts}</span>}
-      </div>
-
-      <section data-pointery="pointery-settings-shortcut" className="rounded-2xl border bg-white p-5">
-        <h2 className="text-sm font-semibold">Keyboard shortcut</h2>
-        <p className="mt-0.5 text-xs text-zinc-500">Primary trigger. ⌘/Ctrl+K always works as a secondary.</p>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          {(["shift+a", "cmd+k"] as const).map((v) => (
-            <button
-              key={v}
-              onClick={() => setCfg({ ...cfg, trigger: v })}
-              className={\`rounded-xl border px-4 py-3 text-left text-sm transition \${cfg.trigger === v ? "border-violet-600 bg-violet-50 ring-1 ring-violet-600" : "hover:border-zinc-400"}\`}
-            >
-              <span className="font-mono font-semibold">{v === "shift+a" ? "Shift + A" : "⌘/Ctrl + K"}</span>
-              <span className="block text-xs text-zinc-500">{v === "shift+a" ? "Default — plus ⌘K" : "Minimal — ⌘K only"}</span>
-            </button>
-          ))}
-        </div>
-        <p className="mt-2 text-xs text-zinc-500">Try it now — press <kbd className="rounded border bg-zinc-50 px-1.5 py-0.5 font-mono">?</kbd> or your shortcut anywhere on this page.</p>
-      </section>
-
-      <section data-pointery="pointery-settings-brand" className="rounded-2xl border bg-white p-5">
-        <h2 className="text-sm font-semibold">Brand</h2>
-        <p className="mt-0.5 text-xs text-zinc-500">Primary color + corner radius. Preview updates live.</p>
-        <div className="mt-3 grid gap-4 sm:grid-cols-2">
-          <label className="text-sm">
-            <span className="font-medium">Primary color</span>
-            <span className="mt-2 flex items-center gap-3">
-              <input type="color" value={cfg.theme.primary} onChange={(e) => setCfg({ ...cfg, theme: { ...cfg.theme, primary: e.target.value } })} className="h-10 w-14 cursor-pointer rounded" />
-              <code className="font-mono text-xs">{cfg.theme.primary}</code>
-            </span>
-          </label>
-          <label className="text-sm">
-            <span className="font-medium">Corner radius — {cfg.theme.radius}px</span>
-            <input type="range" min={4} max={24} value={cfg.theme.radius} onChange={(e) => setCfg({ ...cfg, theme: { ...cfg.theme, radius: Number(e.target.value) } })} className="mt-3 w-full" />
-          </label>
-        </div>
-        <div className="mt-4 rounded-xl border bg-zinc-50 p-4">
-          <p className="text-xs font-medium uppercase tracking-wider text-zinc-400">Live preview</p>
-          <div className="mt-2 flex flex-wrap items-center gap-3">
-            <span className="rounded-full px-4 py-2 text-sm font-semibold text-white" style={{ background: cfg.theme.primary, borderRadius: cfg.theme.radius }}>
-              Ask Pointery
-            </span>
-            <span className="rounded-full border px-3 py-1 text-xs" style={{ borderRadius: cfg.theme.radius }}>Shift+A toggles · Esc closes</span>
-          </div>
-        </div>
-      </section>
-
-      <section data-pointery="pointery-settings-behavior" className="rounded-2xl border bg-white p-5">
-        <h2 className="text-sm font-semibold">Behavior</h2>
-        <p className="mt-0.5 text-xs text-zinc-500">Position, suggestions, allowlisted actions, palette copy.</p>
-        <label className="mt-3 block text-sm">
-          <span className="font-medium">Palette position</span>
-          <select value={cfg.position} onChange={(e) => setCfg({ ...cfg, position: e.target.value as Config["position"] })} className="mt-2 w-full rounded-lg border px-3 py-2">
-            <option value="top">Top</option>
-            <option value="center">Center</option>
-            <option value="bottom">Bottom</option>
-          </select>
-        </label>
-        <label className="mt-3 block text-sm">
-          <span className="font-medium">Suggestions (one per line)</span>
-          <textarea
-            value={cfg.suggestions.join("\\n")}
-            onChange={(e) => setCfg({ ...cfg, suggestions: e.target.value.split("\\n").map((s) => s.trim()).filter(Boolean) })}
-            rows={3}
-            placeholder={"Where is export?\\nHow do I invite a teammate?"}
-            className="mt-2 w-full rounded-lg border px-3 py-2 font-mono text-xs"
-          />
-        </label>
-        <label className="mt-3 block text-sm">
-          <span className="font-medium">Allowed actions (comma-separated names from the context)</span>
-          <input
-            value={cfg.allowActions.join(", ")}
-            onChange={(e) => setCfg({ ...cfg, allowActions: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })}
-            placeholder="export-pipeline, invite-teammate"
-            className="mt-2 w-full rounded-lg border px-3 py-2 font-mono text-xs"
-          />
-        </label>
-        <div className="mt-3 grid gap-3 sm:grid-cols-3">
-          <label className="text-sm">
-            <span className="font-medium">Placeholder</span>
-            <input value={cfg.labels?.placeholder ?? ""} onChange={(e) => setCfg({ ...cfg, labels: { ...cfg.labels, placeholder: e.target.value } })} placeholder='Ask "where is export?"…' className="mt-2 w-full rounded-lg border px-3 py-2 text-xs" />
-          </label>
-          <label className="text-sm">
-            <span className="font-medium">Empty state</span>
-            <input value={cfg.labels?.empty ?? ""} onChange={(e) => setCfg({ ...cfg, labels: { ...cfg.labels, empty: e.target.value } })} placeholder="No match — try…" className="mt-2 w-full rounded-lg border px-3 py-2 text-xs" />
-          </label>
-          <label className="text-sm">
-            <span className="font-medium">Confirm title</span>
-            <input value={cfg.labels?.confirmTitle ?? ""} onChange={(e) => setCfg({ ...cfg, labels: { ...cfg.labels, confirmTitle: e.target.value } })} placeholder="Run this action?" className="mt-2 w-full rounded-lg border px-3 py-2 text-xs" />
-          </label>
-        </div>
-      </section>
-
-      <div className="flex items-center gap-3">
-        <button onClick={saveNow} className="w-fit rounded-full bg-violet-700 px-6 py-2.5 text-sm font-semibold text-white hover:bg-violet-600">
-          {saveState === "saved" ? "Saved ✓" : "Save now"}
-        </button>
-        <p className="text-xs text-zinc-500">Edits auto-save ~1s after you stop typing — no reload needed.</p>
-      </div>
-    </div>
-  );
-}
-`;
 
 // One-shot map-maker prompt. Same content ships as POINTERY_PROMPT.md
 // so `init` alone gives the buyer everything: package + prompt.
-const STARTER_PROMPT = `# POINTERY_PROMPT.md — the map-maker (ships with \`npx pointery init\`, per stack)
+const STARTER_PROMPT = `# POINTERY_PROMPT.md - the map-maker (ships with \`npx pointery init\`, per stack)
 
 Paste this into your coding agent (Cursor / Claude / Copilot). It scans your
-app and fills \`pointery.context.json\` — the context file your LLM reads on
-every ask (\`/api/ask\` forwards \`{ query, context }\` to your own model, or
-the bundled keyword resolver when no LLM is set). Re-run whenever your UI changes.
+app and fills \`pointery.context.json\` - the ship-time index of stable UI anchors
+your LLM ranks on every ask (\`/api/ask\` sends the top-ranked slice as system
+context in an OpenAI-compatible \`{ model, messages }\` call to your own model - the LLM is required, there is no
+keyless mode). Re-run whenever your UI changes.
 
 ---
 
@@ -369,56 +113,73 @@ the bundled keyword resolver when no LLM is set). Re-run whenever your UI change
 
 > My app uses Pointery (in-app ask-anything: palette → /api/ask → pulse /
 > navigate / guide / action). The file \`pointery.context.json\` is the context
-> my LLM gets with every query — keep it accurate and small. Do this:
+> my LLM gets with every query - keep it accurate and small. Do this:
 >
-> 1. Scan \`app/**\` (routes, components). Find every user-facing control or
->    value a user might ask for: nav items, buttons, key numbers, tables,
->    search inputs.
+> 1. Scan \`app/**\` (routes, components). Find every user-facing control a user
+>    might ask for: nav items, buttons, tables, search inputs. Index stable
+>    anchors only - never per-record ids (no \`deal-acme\`), never live values
+>    (no \`$8,000\`, counts, totals). For lists, index the container
+>    (\`pipeline-table\`), not the rows; the client finds the row text at runtime.
+>    Mark the container with rows:true so the model can answer instance queries
+>    ("where is the Acme deal") with filter ("Acme") alongside that spot -
+>    the client pulses the matching row, else the container.
 > 2. Add a stable \`data-pointery="kebab-id"\` to each. Only real selectors that
->    exist in the rendered DOM — never invent ids. Keep ids stable across
+>    exist in the rendered DOM - never invent ids. Keep ids stable across
 >    refactors.
-> 3. Update \`pointery.context.json\` to match:
->    \`{ targets: [{ key, page, hint, keywords[] }], guides: [{ id, title,
->    keywords[], steps: [{ text, go, spot }] }], answers: [{ keywords[],
->    answer, spot?, go? }], actions: [{ name, label, confirm, keywords[] }] }\`
->    - \`hint\`: one line a user would understand ("Export — downloads CSV").
->    - \`keywords\`: every phrasing a user might type ("export", "csv",
->      "download report", "where is export").
+> 3. Update \`pointery.context.json\` to match - identity + purpose + place,
+>    no sentences, no live values:
+>    \`{ version: 2, entries: [{ id, page, label, for, type, aliases?, rows? }],
+>    flows: [{ id, title, steps: [entryId...], aliases? }],
+>    actions: [{ name, label, confirm, at, aliases? }],
+>    pins?: [{ match, aliases?, spot?, go?, action?, guide?, hint? }] }\`
+>    - \`pins[]\` = curated fast-path (optional): exact-phrase wins checked
+>      before generic scoring, served locally with no LLM. Strict match only
+>      (no word-overlap). Use for golden demo paths; the rest still
+>      resolves generically. Every \`spot\`/\`action\`/\`guide\` must reference a real
+>      entry id / action name / flow id, and every \`go\` a real entry page.
+>    - \`label\`: the element's own words ("Export"). \`for\`: stable purpose,
+>      one clause ("Downloads the pipeline as CSV") - never an instruction.
+>    - \`aliases\`: non-obvious synonyms only ("csv"). Matching derives from
+>      label + for; never list phrasings ("where is export" doesn't belong here).
+>    - \`flows[].steps\` = entry ids in walk order; wording is generated, not stored.
+>    - \`actions[].at\` = the entry id it runs against.
 >    - \`confirm: true\` for anything destructive (delete, charge, send, close).
->    - \`steps[].go\` = route, \`steps[].spot\` = an id from step 2 on that route.
-> 4. Keep it small: max ~40 targets, ~10 guides, only allowlisted actions.
->    Delete stale keys for removed UI.
-> 5. Run \`npx pointery init --check\` and fix whatever it reports (guide step
->    pointing at a missing target).
-> 6. Brain (my key, my bill): if I want the LLM instead of the keyword
->    resolver, walk me through it — add \`POINTERY_LLM_URL\` (my model
->    endpoint) and \`POINTERY_LLM_KEY\` to \`.env.local\`, restart dev, and
->    verify with “where is export?”. Never print or commit the key.
-> 7. Settings page (\`/pointery\`): \`init\` already dropped a starter
->    (Next: \`app/pointery/page.tsx\` + \`app/api/admin/config/route.ts\`;
->    other stacks: build the equivalent). SaaS-style controls for shortcut
->    (trigger), brand (primary color + radius with live preview), and
->    behavior (position, suggestions, allowActions, palette copy). It loads
->    \`pointery.config.json\` via GET, auto-saves edits via PUT (debounced)
->    plus a Save button (PUT is dev-only by default; production writes need
->    \`POINTERY_ADMIN=1\`), applies theme vars live, and dispatches a
->    \`pointery:config\` CustomEvent with the new config so the mounted
->    \`<Pointery/>\` (whose client wrapper listens for it) updates without
->    reload. Personalize it on first run from the files you just wrote:
->    status probe and example suggestions must use real queries from the
->    context (a guide title, an answer keyword — never the "export"
->    placeholder if the app has no export), and defaults (trigger, theme,
->    position, allowActions) must mirror \`pointery.config.json\`. Tag its
->    controls with \`data-pointery\` ids and keep the matching
->    \`pointery-settings-*\` targets on page \`/pointery\` in sync; re-run step 5.
+>    - rows:true on containers whose children are runtime data (deal, contact,
+>      chat rows). Only then may the model set filter alongside that spot -
+>      the server drops it otherwise, and the keyword fallback never sets it.
+> 4. Keep it small: max ~40 entries, ~10 flows, only allowlisted actions.
+>    Delete stale ids for removed UI.
+> 5. Run \`npx pointery init --check\` and fix whatever it reports (two-way:
+>    code anchors with no map entry AND map entries with no rendered anchor,
+>    plus guide steps pointing at missing targets, live \`$\` data, bloated maps
+>    (max ~40 entries, ~10 flows), instruction-style \`for\` text,
+>    or config errors - unknown keys, bad enums). \`node_modules/pointery/schema.json\` is truth
+>    for \`pointery.config.json\`: position is top|center|bottom, animation is
+>    fade|slide|scale|none. Run \`npx pointery config --validate\` after any config edit.
+> 6. Brain (my key, my bill, required - one step): walk me through it - add \`POINTERY_LLM_URL\` (my model endpoint: OpenAI-compatible chat-completions URL, or native Anthropic \`…/v1/messages\` / Gemini \`…:generateContent\` - auto-detected), \`POINTERY_LLM_KEY\`, AND \`POINTERY_LLM_MODEL\` (exact model id as the provider spells it: \`gpt-4o-mini\`, \`claude-3-5-haiku-latest\`, \`gemini-2-flash\`, …) to \`.env.local\` together, restart dev, and
+>    verify with a real question built from THIS map (a flow title or entry label you just indexed - never the "export" placeholder if the app has no export). Without all three, \`/api/ask\` fails closed (503). OpenAI defaults the model to \`gpt-4o-mini\` when unset; every other provider needs it. Never print or commit the key.
+> 7. First-run copy: set \`suggestions\` to 3-5 real questions for THIS app, built
+>    from the entry labels and flow titles you just indexed (the palette
+>    shows them as its default list) - never the "export" placeholder if
+>    the app has no export - and rewrite the starter \`labels\` placeholder/empty
+>    copy the same way; then tell me the launcher comes in 5 shapes
+>    (\`closed.variant\`: fab circle, pill labeled button, tab edge tab, helper
+>    avatar row, ghost hint-only - default fab), set the one I pick, and re-run
+>    step 5 plus \`npx pointery config --validate\`.
 >
-> Then show me the wiring diff: mount \`<Pointery/>\` once in \`layout.tsx\`
-> (via a client wrapper that loads \`pointery.config.json\` and listens for
-> \`pointery:config\`), ensure \`/api/ask\` calls \`createAskHandler(context)\`
-> (or my LLM with the context), and confirm \`/pointery\` saves to disk, done.
+> Then show me the wiring diff: \`pointery.config.json\` is truth - mount \`<Pointery/>\` once in \`layout.tsx\`
+> via a client wrapper (e.g. \`components/pointery-wrapper.tsx\`) that passes the config file as props and listens for
+> \`pointery:config\`, gated off marketing pages (wrapper returns null on
+> \`/\`, or mount only in the \`(app)\` group layout). Keep every key the starter sets
+> (\`trigger, theme, position, animation, suggestions, allowActions, hiddenRoutes, closed, endpoint, timing, brain\`) flowing through - don't drop keys to match a shorter snippet. Sync the palette to my
+> brand at init: lift my primary color and corner radius from my theme /
+> tokens into \`pointery.config.json\` (props only override it where you explicitly pass them), so it looks native on day one. Ensure
+> \`/api/ask\` calls \`createAskHandler(context, { llm: { url, key, model }, retrieve, limits, cache })\`
+> with \`retrieve/limits/cache\` (plus \`llm.temperature/maxTokens\`) read from \`pointery.config.json\` \`brain\`
+> (required - no keyless mode; never strip tuning to match a shorter snippet), and confirm \`npx pointery init --check\` is clean, done.
 
 **Rules for the agent:** no fake selectors, \`confirm:true\` on destructive,
-re-run on UI change. This file is versioned per stack (Next / Vue / HTML) —
+re-run on UI change. This file is versioned per stack (Next / Vue / HTML) -
 update it without re-publishing npm.
 `;
 
@@ -426,28 +187,33 @@ update it without re-publishing npm.
 // context file in sync, so the LLM never answers from a stale map.
 const AGENTS_START = "<!-- pointery:start -->";
 const AGENTS_END = "<!-- pointery:end -->";
-const AGENTS_BLOCK = `${AGENTS_START} — do not remove; \`npx pointery init --force\` refreshes this block.
-## Pointery — keep pointery.context.json in sync
-- \`pointery.context.json\` is the LLM context for in-app ask-anything (\`/api/ask\` forwards \`{ query, context }\` to our own model). Keep it small and current: max ~40 targets, ~10 guides, allowlisted actions only.
-- Whenever you add, move, rename, or remove a user-facing control, value, or route: update its \`data-pointery="kebab-id"\` in code AND its entry in \`pointery.context.json\` (hint + keywords; \`confirm: true\` for destructive actions). Keep ids stable; never invent selectors — only ids present in the rendered DOM.
-- After any UI change, run \`npx pointery init --check\` (fails when a guide step points at a missing target) and fix what it reports.
+const AGENTS_BLOCK = `${AGENTS_START} - do not remove; \`npx pointery init --force\` refreshes this block.
+## Pointery - keep pointery.context.json in sync
+- \`pointery.context.json\` is the index of stable UI anchors for in-app ask-anything (\`/api/ask\` sends the top-ranked slice as system context in an OpenAI-compatible \`{ model, messages }\` call to our own model). Keep it small and current: max ~40 entries, ~10 flows, allowlisted actions only.
+- Whenever you add, move, rename, or remove a user-facing control or route: update its \`data-pointery="kebab-id"\` in code AND its entry in \`pointery.context.json\` (label + purpose; \`confirm: true\` for destructive actions). Keep ids stable; never invent selectors - only ids present in the rendered DOM.
+- After any UI change, run \`npx pointery init --check\` (two-way: fails on code anchors missing from the map AND map entries missing from rendered code, plus stale steps) and fix what it reports.
+- \`node_modules/pointery/schema.json\` is truth for \`pointery.config.json\` (position: top|center|bottom, animation: fade|slide|scale|none). After any config edit, run \`npx pointery config --validate\`.
+- When you add a new page where Pointery mounts: give it a \`routes\` entry in \`pointery.config.json\` so the palette follows the app's brand (primary/radius from theme tokens) and stays visible (position/animation that doesn't cover the page's key UI). Only tune per-page settings for pages you are adding - never restyle existing pages unprompted. Explicit user instructions always win over these defaults.
+- When the user asks to change how Pointery looks or behaves (shortcut, colors, position, launcher, suggestions, wording, timing): remind them it is all configurable in \`pointery.config.json\` - trigger, theme, closed launcher, position, animation, suggestions, allowActions, labels, timing, zIndex/width/blur, endpoint, plus per-page \`routes\` overrides (\`node_modules/pointery/schema.json\` lists everything). Apply the change to the config - never hardcode it.
 ${AGENTS_END}`;
 
 const SNIPPET = `import { Pointery } from "pointery";
 import "pointery/styles.css";
 
-// once in your root layout, next to {children}:
+// once in your root layout, next to {children} (via a client wrapper that
+// passes pointery.config.json as props and listens for pointery:config):
 <Pointery />
 // API route (app/api/ask/route.ts):
 // import { createAskHandler } from "pointery";
 // import context from "@/pointery.context.json";
-// export const POST = createAskHandler(context);`;
+// import config from "@/pointery.config.json";
+// export const POST = createAskHandler(context, { llm: { url: process.env.POINTERY_LLM_URL ?? "", key: process.env.POINTERY_LLM_KEY ?? "", model: process.env.POINTERY_LLM_MODEL ?? "", temperature: config.brain?.llm?.temperature, maxTokens: config.brain?.llm?.maxTokens }, retrieve: config.brain?.retrieve, limits: config.brain?.limits, cache: config.brain?.cache });`;
 
 function write(name, data) {
   const p = path.join(cwd, name);
   fs.mkdirSync(path.dirname(p), { recursive: true });
   if (fs.existsSync(p) && !force) {
-    console.log(`skip  ${name} (exists — use --force to overwrite)`);
+    console.log(`skip  ${name} (exists - use --force to overwrite)`);
     return;
   }
   fs.writeFileSync(p, typeof data === "string" ? data : JSON.stringify(data, null, 2) + "\n");
@@ -476,34 +242,88 @@ function upsertAgents() {
   console.log(existing === "" ? "wrote AGENTS.md" : "wrote AGENTS.md (pointery block appended)");
 }
 
+if (cmd === "config" && args[1] === "--validate") {
+  const cfg = readConfig(cwd);
+  const errs = validateConfigJson(cfg);
+  console.log(errs.length ? "config invalid:\n- " + errs.join("\n- ") : "config ok");
+  process.exit(errs.length ? 1 : 0);
+}
+
 if (cmd === "init") {
   write("pointery.context.json", STARTER_CONTEXT);
   write("pointery.config.json", STARTER_CONFIG);
   write("POINTERY_PROMPT.md", STARTER_PROMPT);
-  // Starter /pointery settings page (Next App Router only — other stacks: see prompt step 7).
-  if (fs.existsSync(path.join(cwd, "app"))) {
-    write("app/pointery/page.tsx", STARTER_SETTINGS_PAGE);
-    write("app/api/admin/config/route.ts", STARTER_ADMIN_CONFIG_ROUTE);
-  } else {
-    console.log("skip  app/pointery/page.tsx (no app/ dir — non-Next stack; see prompt step 7)");
-  }
   upsertAgents();
   console.log("\nNext: paste POINTERY_PROMPT.md into your coding agent to map your UI,");
   console.log("then mount <Pointery/> once in layout.tsx:\n\n" + SNIPPET);
+  console.log("\nLauncher shapes: closed.variant = fab (circle, default) | pill (labeled button) | tab (edge tab) | helper (avatar row) | ghost (hint only).");
 
   if (check) {
     const ctx = JSON.parse(fs.readFileSync(path.join(cwd, "pointery.context.json"), "utf8"));
     const problems = [];
-    const keys = new Set((ctx.targets || []).map((t) => t.key));
-    (ctx.guides || []).forEach((g, i) =>
+    const ids = new Set((ctx.entries || []).map((t) => t.id));
+    const looksLive = (s) => typeof s === "string" && /\$\s*\d/.test(s);
+    (ctx.entries || []).forEach((t, i) => {
+      if (!t.id) problems.push(`entries[${i}]: missing id`);
+      if (!t.page) problems.push(`entries[${i}] (${t.id || "?"}): missing page`);
+      if (!t.label) problems.push(`entries[${i}] (${t.id || "?"}): missing label`);
+      if (t.label && looksLive(t.label)) problems.push(`entries[${i}] (${t.id}): label looks like live data - keep stable anchors only`);
+      if (t.for && looksLive(t.for)) problems.push(`entries[${i}] (${t.id}): for looks like live data - keep stable anchors only`);
+    });
+    (ctx.flows || []).forEach((g, i) =>
       (g.steps || []).forEach((s) => {
-        if (s.spot && !keys.has(s.spot)) problems.push(`guides[${i}]: spot "${s.spot}" matches no target`);
+        if (!ids.has(s)) problems.push(`flows[${i}]: step "${s}" matches no entry`);
       })
     );
+    (ctx.actions || []).forEach((a, i) => {
+      if (a.at && !ids.has(a.at)) problems.push(`actions[${i}] (${a.name || "?"}): at "${a.at}" matches no entry`);
+    });
+    const _pages = new Set((ctx.entries || []).map((t) => t.page));
+    const _flows = new Set((ctx.flows || []).map((g) => g.id));
+    const _acts = new Set((ctx.actions || []).map((a) => a.name));
+    (ctx.pins || []).forEach((p, i) => {
+      if (!p.match) problems.push(`pins[${i}]: missing match`);
+      if (!p.spot && !p.go && !p.action && !p.guide) problems.push(`pins[${i}] (${p.match || "?"}): needs one of spot/go/action/guide`);
+      if (p.spot && !ids.has(p.spot)) problems.push(`pins[${i}] (${p.match || "?"}): spot "${p.spot}" matches no entry`);
+      if (p.action && !_acts.has(p.action)) problems.push(`pins[${i}] (${p.match || "?"}): action "${p.action}" matches no action`);
+      if (p.guide && !_flows.has(p.guide)) problems.push(`pins[${i}] (${p.match || "?"}): guide "${p.guide}" matches no flow`);
+      if (p.go && ![..._pages].includes(p.go)) problems.push(`pins[${i}] (${p.match || "?"}): go "${p.go}" matches no entry page`);
+    });
+    if ((ctx.entries || []).length > 40) problems.push(`too many entries (${ctx.entries.length}) - keep max ~40`);
+    if ((ctx.flows || []).length > 10) problems.push(`too many flows (${ctx.flows.length}) - keep max ~10`);
+    const looksInstruction = (s) => s.includes("?") || /where is|what is|how (do|to|do i)/i.test(s);
+    (ctx.entries || []).forEach((t, i) => {
+      if (t.for && t.for.length > 140) problems.push(`entries[${i}] (${t.id}): for is ${t.for.length} chars - keep one short clause`);
+      if (t.for && looksInstruction(t.for)) problems.push(`entries[${i}] (${t.id}): for looks like an instruction/question - keep a purpose clause`);
+      for (const a of t.aliases ?? []) if (a.includes("?")) problems.push(`entries[${i}] (${t.id}): alias "${a}" looks like a phrasing - aliases are synonyms only`);
+    });
+    // Two-way drift: code ids without map entries (unaskable UI) + map entries
+    // with no rendered anchor (dead targets). Heuristic: static data-pointery
+    // literals plus key: "..." literals (covers data-pointery={n.key} tables).
+    try {
+      const appDir = path.join(cwd, "app");
+      const codeIds = new Set();
+      const walk = (d) => {
+        for (const f of fs.readdirSync(d, { withFileTypes: true })) {
+          const p = path.join(d, f.name);
+          if (f.isDirectory()) { if (f.name !== "node_modules" && f.name !== ".next") walk(p); continue; }
+          if (!/\.[jt]sx?$/.test(f.name)) continue;
+          const src = fs.readFileSync(p, "utf8");
+          for (const m of src.matchAll(/data-pointery\s*=\s*["']([^"']+)["']/g)) codeIds.add(m[1]);
+          for (const m of src.matchAll(/key\s*:\s*["']([a-z0-9][a-z0-9-]*)["']/g)) codeIds.add(m[1]);
+        }
+      };
+      if (fs.existsSync(appDir)) {
+        walk(appDir);
+        for (const id of codeIds) if (!ids.has(id)) problems.push(`code: data-pointery="${id}" has no entry in pointery.context.json`);
+        for (const id of ids) if (!codeIds.has(id)) problems.push(`entries: "${id}" has no data-pointery in app/** - stale or conditional anchor`);
+      }
+    } catch { /* unreadable tree - static checks above still apply */ }
+    for (const e of validateConfigJson(readConfig(cwd))) problems.push("config: " + e);
     console.log(problems.length ? "\ncheck failed:\n- " + problems.join("\n- ") : "\ncheck ok");
     process.exit(problems.length ? 1 : 0);
   }
 } else {
-  console.log("Usage: npx pointery init [--force] [--check]");
+  console.log("Usage: npx pointery init [--force] [--check] | npx pointery config --validate");
   process.exit(cmd ? 1 : 0);
 }

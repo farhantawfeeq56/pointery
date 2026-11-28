@@ -1,9 +1,10 @@
-# POINTERY_PROMPT.md — the map-maker (ships with `npx pointery init`, per stack)
+# POINTERY_PROMPT.md - the map-maker (ships with `npx pointery init`, per stack)
 
 Paste this into your coding agent (Cursor / Claude / Copilot). It scans your
-app and fills `pointery.context.json` — the context file your LLM reads on
-every ask (`/api/ask` forwards `{ query, context }` to your own model, or
-the bundled keyword resolver when no LLM is set). Re-run whenever your UI changes.
+app and fills `pointery.context.json` - the ship-time index of stable UI anchors
+your LLM ranks on every ask (`/api/ask` sends the top-ranked slice as system
+context in an OpenAI-compatible `{ model, messages }` call to your own model - the LLM is required, there is no
+keyless mode). Re-run whenever your UI changes.
 
 ---
 
@@ -11,59 +12,76 @@ the bundled keyword resolver when no LLM is set). Re-run whenever your UI change
 
 > My app uses Pointery (in-app ask-anything: palette → /api/ask → pulse /
 > navigate / guide / action). The file `pointery.context.json` is the context
-> my LLM gets with every query — keep it accurate and small. Do this:
+> my LLM gets with every query - keep it accurate and small. Do this:
 >
-> 1. Scan `app/**` (routes, components). Find every user-facing control or
->    value a user might ask for: nav items, buttons, key numbers, tables,
->    search inputs.
+> 1. Scan `app/**` (routes, components). Find every user-facing control a user
+>    might ask for: nav items, buttons, tables, search inputs. Index stable
+>    anchors only - never per-record ids (no `deal-acme`), never live values
+>    (no `$8,000`, counts, totals). For lists, index the container
+>    (`pipeline-table`), not the rows; the client finds the row text at runtime.
+>    Mark the container with rows:true so the model can answer instance queries
+>    ("where is the Acme deal") with filter ("Acme") alongside that spot -
+>    the client pulses the matching row, else the container.
 > 2. Add a stable `data-pointery="kebab-id"` to each. Only real selectors that
->    exist in the rendered DOM — never invent ids. Keep ids stable across
+>    exist in the rendered DOM - never invent ids. Keep ids stable across
 >    refactors.
-> 3. Update `pointery.context.json` to match:
->    `{ targets: [{ key, page, hint, keywords[] }], guides: [{ id, title,
->    keywords[], steps: [{ text, go, spot }] }], answers: [{ keywords[],
->    answer, spot?, go? }], actions: [{ name, label, confirm, keywords[] }] }`
->    - `hint`: one line a user would understand ("Export — downloads CSV").
->    - `keywords`: every phrasing a user might type ("export", "csv",
->      "download report", "where is export").
+> 3. Update `pointery.context.json` to match - identity + purpose + place,
+>    no sentences, no live values:
+>    `{ version: 2, entries: [{ id, page, label, for, type, aliases?, rows? }],
+>    flows: [{ id, title, steps: [entryId...], aliases? }],
+>    actions: [{ name, label, confirm, at, aliases? }],
+>    pins?: [{ match, aliases?, spot?, go?, action?, guide?, hint? }] }`
+>    - `pins[]` = curated fast-path (optional): exact-phrase wins checked
+>      before generic scoring, served locally with no LLM. Strict match only
+>      (no word-overlap). Use for golden demo paths; the rest still
+>      resolves generically. Every `spot`/`action`/`guide` must reference a real
+>      entry id / action name / flow id, and every `go` a real entry page.
+>    - `label`: the element's own words ("Export"). `for`: stable purpose,
+>      one clause ("Downloads the pipeline as CSV") - never an instruction.
+>    - `aliases`: non-obvious synonyms only ("csv"). Matching derives from
+>      label + for; never list phrasings ("where is export" doesn't belong here).
+>    - `flows[].steps` = entry ids in walk order; wording is generated, not stored.
+>    - `actions[].at` = the entry id it runs against.
 >    - `confirm: true` for anything destructive (delete, charge, send, close).
->    - `steps[].go` = route, `steps[].spot` = an id from step 2 on that route.
-> 4. Keep it small: max ~40 targets, ~10 guides, only allowlisted actions.
->    Delete stale keys for removed UI.
-> 5. Run `npx pointery init --check` and fix whatever it reports (guide step
->    pointing at a missing target).
-> 6. Brain (my key, my bill): if I want the LLM instead of the keyword
->    resolver, walk me through it — add `POINTERY_LLM_URL` (my model
->    endpoint) and `POINTERY_LLM_KEY` to `.env.local`, restart dev, and
->    verify with “where is export?”. Never print or commit the key.
-> 7. Settings page (`/pointery`): `init` already dropped a starter
->    (Next: `app/pointery/page.tsx` + `app/api/admin/config/route.ts`;
->    other stacks: build the equivalent). SaaS-style controls for shortcut
->    (trigger), brand (primary color + radius with live preview), and
->    behavior (position, suggestions, allowActions, palette copy). It loads
->    `pointery.config.json` via GET, auto-saves edits via PUT (debounced)
->    plus a Save button (PUT is dev-only by default; production writes need
->    `POINTERY_ADMIN=1`), applies theme vars live, and dispatches a
->    `pointery:config` CustomEvent with the new config so the mounted
->    `<Pointery/>` (whose client wrapper listens for it) updates without
->    reload. Personalize it on first run from the files you just wrote:
->    status probe and example suggestions must use real queries from the
->    context (a guide title, an answer keyword — never the "export"
->    placeholder if the app has no export), and defaults (trigger, theme,
->    position, allowActions) must mirror `pointery.config.json`. Tag its
->    controls with `data-pointery` ids and keep the matching
->    `pointery-settings-*` targets on page `/pointery` in sync; re-run step 5.
+>    - rows:true on containers whose children are runtime data (deal, contact,
+>      chat rows). Only then may the model set filter alongside that spot -
+>      the server drops it otherwise, and the keyword fallback never sets it.
+> 4. Keep it small: max ~40 entries, ~10 flows, only allowlisted actions.
+>    Delete stale ids for removed UI.
+> 5. Run `npx pointery init --check` and fix whatever it reports (two-way:
+>    code anchors with no map entry AND map entries with no rendered anchor,
+>    plus guide steps pointing at missing targets, live `$` data, bloated maps
+>    (max ~40 entries, ~10 flows), instruction-style `for` text,
+>    or config errors - unknown keys, bad enums). `node_modules/pointery/schema.json` is truth
+>    for `pointery.config.json`: position is top|center|bottom, animation is
+>    fade|slide|scale|none. Run `npx pointery config --validate` after any config edit.
+> 6. Brain (my key, my bill, required - one step): walk me through it - add `POINTERY_LLM_URL` (my model endpoint: OpenAI-compatible chat-completions URL, or native Anthropic `…/v1/messages` / Gemini `…:generateContent` - auto-detected), `POINTERY_LLM_KEY`, AND `POINTERY_LLM_MODEL` (exact model id as the provider spells it: `gpt-4o-mini`, `claude-3-5-haiku-latest`, `gemini-2-flash`, …) to `.env.local` together, restart dev, and
+>    verify with a real question built from THIS map (a flow title or entry label you just indexed - never the "export" placeholder if the app has no export). Without all three, `/api/ask` fails closed (503). OpenAI defaults the model to `gpt-4o-mini` when unset; every other provider needs it. Never print or commit the key.
+> 7. First-run copy: set `suggestions` to 3-5 real questions for THIS app, built
+>    from the entry labels and flow titles you just indexed (the palette
+>    shows them as its default list) - never the "export" placeholder if
+>    the app has no export - and rewrite the starter `labels` placeholder/empty
+>    copy the same way; then tell me the launcher comes in 5 shapes
+>    (`closed.variant`: fab circle, pill labeled button, tab edge tab, helper
+>    avatar row, ghost hint-only - default fab), set the one I pick, and re-run
+>    step 5 plus `npx pointery config --validate`.
 >
-> Then show me the wiring diff: mount `<Pointery/>` once in `layout.tsx`
-> (via a client wrapper that loads `pointery.config.json` and listens for
-> `pointery:config`), ensure `/api/ask` calls `createAskHandler(context)`
-> (or my LLM with the context), and confirm `/pointery` saves to disk, done.
+> Then show me the wiring diff: `pointery.config.json` is truth - mount `<Pointery/>` once in `layout.tsx`
+> via a client wrapper (e.g. `components/pointery-wrapper.tsx`) that passes the config file as props and listens for
+> `pointery:config`, gated off marketing pages (wrapper returns null on
+> `/`, or mount only in the `(app)` group layout). Keep every key the starter sets
+> (`trigger, theme, position, animation, suggestions, allowActions, hiddenRoutes, closed, endpoint, timing, brain`) flowing through - don't drop keys to match a shorter snippet. Sync the palette to my
+> brand at init: lift my primary color and corner radius from my theme /
+> tokens into `pointery.config.json` (props only override it where you explicitly pass them), so it looks native on day one. Ensure
+> `/api/ask` calls `createAskHandler(context, { llm: { url, key, model }, retrieve, limits, cache })`
+> with `retrieve/limits/cache` (plus `llm.temperature/maxTokens`) read from `pointery.config.json` `brain`
+> (required - no keyless mode; never strip tuning to match a shorter snippet), and confirm `npx pointery init --check` is clean, done.
 
 **Rules for the agent:** no fake selectors, `confirm:true` on destructive,
-re-run on UI change. This file is versioned per stack (Next / Vue / HTML) —
+re-run on UI change. This file is versioned per stack (Next / Vue / HTML) -
 update it without re-publishing npm.
 
-## AGENTS.md — the sync rule (`npx pointery init` appends this)
+## AGENTS.md - the sync rule (`npx pointery init` appends this)
 
 One block, delimited by `<!-- pointery:start -->` / `<!-- pointery:end -->`,
 so every future agent run keeps the map fresh without being asked:

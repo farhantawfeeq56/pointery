@@ -1,0 +1,151 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "pointery-config",
+  "title": "pointery.config.json - schema is truth for every key an app or its AI may change",
+  "type": "object",
+  "properties": {
+    "$schema": { "type": "string" },
+    "trigger": { "type": "string", "description": "'+'-joined combo, e.g. shift+a. ctrl/cmd treated the same." },
+    "theme": {
+      "type": "object",
+      "properties": {
+        "primary": { "type": "string" },
+        "accent": { "type": "string" },
+        "background": { "type": "string" },
+        "text": { "type": "string" },
+        "border": { "type": "string" },
+        "radius": { "type": "number" },
+        "fontFamily": { "type": "string", "description": "CSS font-family stack for the palette/toast/guide. Defaults to bundled Figtree." }
+      },
+      "additionalProperties": false
+    },
+    "cssVars": { "type": "object", "additionalProperties": { "type": "string" } },
+    "zIndex": { "type": "number" },
+    "paletteWidth": { "type": "number" },
+    "overlayBlur": { "type": "number" },
+    "closed": {
+      "type": "object",
+      "description": "Closed-state launcher: shape, icon, wording. Icon URLs (/logo.png, https://…, data:…) render as an image, else as a glyph.",
+      "properties": {
+        "variant": { "type": "string", "enum": ["fab", "pill", "tab", "helper", "ghost"] },
+        "icon": { "type": "string" },
+        "label": { "type": "string" },
+        "hint": { "type": "string" },
+        "showHint": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "fab": { "description": "Legacy: false hides the idle button, string sets its glyph. `closed` wins when set.", "type": ["boolean", "string"] },
+    "hiddenRoutes": { "type": "array", "items": { "type": "string" } },
+    "timing": {
+      "type": "object",
+      "properties": {
+        "toastMs": { "type": "number" },
+        "pulseMs": { "type": "number" },
+        "closeMs": { "type": "number" },
+        "focusMs": { "type": "number" },
+        "navigateMs": { "type": "number" },
+        "navigateIdleMs": { "type": "number" },
+        "askMs": { "type": "number" }
+      },
+      "additionalProperties": false
+    },
+    "position": { "type": "string", "enum": ["top", "center", "bottom"] },
+    "animation": { "type": "string", "enum": ["fade", "slide", "scale", "none"] },
+    "suggestions": { "type": "array", "items": { "type": "string" } },
+    "allowActions": { "type": "array", "items": { "type": "string" } },
+    "labels": {
+      "type": "object",
+      "properties": {
+        "placeholder": { "type": "string" },
+        "empty": { "type": "string" },
+        "confirmTitle": { "type": "string" },
+        "asking": { "type": "string" },
+        "blocked": { "type": "string" },
+        "done": { "type": "string" },
+        "unreachable": { "type": "string" },
+        "missing": { "type": "string" },
+        "timeout": { "type": "string" },
+        "badResponse": { "type": "string" },
+        "emptyQuery": { "type": "string" },
+        "pressEnter": { "type": "string" },
+        "guideComplete": { "type": "string" },
+        "ambiguous": { "type": "string" },
+        "confirmBody": { "type": "string" },
+        "back": { "type": "string" },
+        "next": { "type": "string" },
+        "doneBtn": { "type": "string" },
+        "cancel": { "type": "string" },
+        "confirmBtn": { "type": "string" },
+        "fabLabel": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "endpoint": { "type": "string" },
+    "routes": {
+      "type": "object",
+      "description": "Per-page overrides, keyed by path (exact wins, \"/demo/*\" matches anything under it). Same keys as the top level except hiddenRoutes/brain/routes.",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "trigger": { "type": "string" },
+          "theme": { "$ref": "#/properties/theme" },
+          "cssVars": { "type": "object", "additionalProperties": { "type": "string" } },
+          "zIndex": { "type": "number" },
+          "paletteWidth": { "type": "number" },
+          "overlayBlur": { "type": "number" },
+          "closed": { "$ref": "#/properties/closed" },
+          "fab": { "type": ["boolean", "string"] },
+          "timing": { "$ref": "#/properties/timing" },
+          "position": { "$ref": "#/properties/position" },
+          "animation": { "$ref": "#/properties/animation" },
+          "suggestions": { "type": "array", "items": { "type": "string" } },
+          "allowActions": { "type": "array", "items": { "type": "string" } },
+          "labels": { "$ref": "#/properties/labels" },
+          "endpoint": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "brain": {
+      "type": "object",
+      "properties": {
+        "retrieve": {
+          "type": "object",
+          "properties": {
+            "entries": { "type": "number" },
+            "flows": { "type": "number" },
+            "actions": { "type": "number" }
+          },
+          "additionalProperties": false
+        },
+        "limits": {
+          "type": "object",
+          "properties": {
+            "queryMax": { "type": "number" },
+            "planMax": { "type": "number" }
+          },
+          "additionalProperties": false
+        },
+        "cache": {
+          "type": "object",
+          "properties": {
+            "ttlMs": { "type": "number" },
+            "max": { "type": "number" }
+          },
+          "additionalProperties": false
+        },
+        "llm": {
+          "type": "object",
+          "properties": {
+            "temperature": { "type": "number" },
+            "maxTokens": { "type": "number" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
