@@ -168,6 +168,7 @@
 /* Guide action row sits in the card's right corner: starts 53px in, ends 12px from the edge.
    Scoped to .pointery-guide — the confirm dialog keeps its normal row so buttons never leave the box. */
 .pointery-guide .pointery-guide-row { margin-left: 36px; margin-right: -36px; }
+.pointery-confirm .pointery-guide-row { margin-top: 0.7rem; }
 .pointery-guide-row button { border: 1px solid var(--color-border); border-radius: 999px; padding: 0.4rem 0.9rem; font-size: 0.8rem; font-weight: 600; background: var(--color-surface); color: var(--color-text-primary); }
 .pointery-guide-row button:disabled { opacity: 0.4; }
 .pointery-guide-row button.primary, .pointery-confirm button.primary { background: var(--color-action-primary); border-color: transparent; color: var(--color-text-inverse); }
