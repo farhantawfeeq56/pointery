@@ -229,7 +229,8 @@ export default function Pointery(props: PointeryProps) {
         setGuideIdx(0);
         const first = walkthrough.steps[0];
         // Single toast announcing the guide; top-level go/spot/hint below is skipped for walkthroughs.
-        if (first) goSpot(first.go, first.spot, `${walkthrough.title} — step 1/${walkthrough.steps.length}: ${first.text}`, "filter" in first ? first.filter : undefined);
+        // Card shows the step — announce silently (navigate + pulse only).
+        if (first) goSpot(first.go, first.spot, undefined, "filter" in first ? first.filter : undefined);
         announced = true;
       }
       // Blocked actions fall through to spot/go below — never execute.
