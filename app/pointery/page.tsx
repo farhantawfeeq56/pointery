@@ -378,8 +378,8 @@ export default function PointerySettingsPage() {
 
                     <section data-pointery="pointery-settings-behavior" className="py-6">
             <label className="block text-sm">
-              <span className="font-medium">Palette position</span>
-              <select value={cfg.position} onChange={(e) => setCfg({ ...cfg, position: e.target.value as Config["position"] })} className="mt-2 w-fit rounded-lg border px-2.5 py-1.5">
+              <span className="mb-2 block font-medium">Palette position</span>
+              <select value={cfg.position} onChange={(e) => setCfg({ ...cfg, position: e.target.value as Config["position"] })} className="w-fit rounded-lg border px-2.5 py-1.5">
                 <option value="top">Top</option>
                 <option value="center">Center</option>
                 <option value="bottom">Bottom</option>

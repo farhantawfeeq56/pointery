@@ -348,3 +348,9 @@ Shortcut card hugs content per page feedback.
 
 - `app/pointery/page.tsx` — current-shortcut card `max-w-md` → `w-fit min-w-60` (fits "Shift + A", stable width while recording), gap widened for breathing room.
 - Re-synced via `npm run pointery:sync-page`; `init --check` ok, `tsc` clean.
+
+## Pass 47 (feat/basic-changes, 2026-11-28)
+Fixed stuck label/control pairs per page feedback.
+
+- `app/pointery/page.tsx` — the `w-fit` position select fit on the same line as its inline label title; title is now `mb-2 block` so the dropdown sits on its own line with an 8px gap (select's own `mt-2` removed to avoid doubling). Audited the rest: every other title is already followed by a block-level control, so no other stickers.
+- Re-synced via `npm run pointery:sync-page`; `init --check` ok, `tsc` clean.
